@@ -1,0 +1,124 @@
+{
+  "schema_version": "grounded-relationship-audit-report-v1",
+  "quality_set_id": "crest-five-document-relationship-census-v1",
+  "graph_sha256": "cf5fbb149b91d19699746696e8dc01b13e0896aa759e78b55a8d72a1883de8e1",
+  "relationship_count": 79,
+  "support_counts": {
+    "indeterminate": 1,
+    "partially_supported": 19,
+    "supported": 46,
+    "unsupported": 13
+  },
+  "fully_supported_count": 44,
+  "fully_supported_rate": 0.5569620253164557,
+  "dimension_pass_rates": {
+    "endpoint_fidelity": 0.7215189873417721,
+    "predicate_fidelity": 0.6329113924050633,
+    "direction_fidelity": 0.8227848101265823,
+    "type_fidelity": 0.9620253164556962
+  },
+  "unsupported_relationship_ids": [
+    "relationship:1a598916b481",
+    "relationship:210b74277293",
+    "relationship:54baea1abd6e",
+    "relationship:72439743755c",
+    "relationship:7f4bb80e397d",
+    "relationship:85102c3e15e2",
+    "relationship:85b9e56ae1ca",
+    "relationship:aa082cfa44d1",
+    "relationship:b7671cfc5606",
+    "relationship:c814102982ff",
+    "relationship:cda7477502c1",
+    "relationship:f2560a25732c",
+    "relationship:f9a379094bdf"
+  ],
+  "partially_supported_relationship_ids": [
+    "relationship:01bf36495762",
+    "relationship:0fcd0b0a4327",
+    "relationship:0ff19d7da437",
+    "relationship:14afc4a3b4e6",
+    "relationship:1736debf5a01",
+    "relationship:335436090be1",
+    "relationship:55ae397b6890",
+    "relationship:5df442cb5609",
+    "relationship:6d05794bed26",
+    "relationship:6e72194eb81a",
+    "relationship:6e9b8632b3e4",
+    "relationship:7a90e1460a83",
+    "relationship:7d0126cf5c10",
+    "relationship:a6a2affd1e0f",
+    "relationship:b0f1f870a335",
+    "relationship:bc2676bf0261",
+    "relationship:c031987dfdb6",
+    "relationship:d6d23e12a158",
+    "relationship:d929cf03321f"
+  ],
+  "indeterminate_relationship_ids": [
+    "relationship:b73299bb68c2"
+  ],
+  "by_document": {
+    "05259029": {
+      "relationship_count": 12,
+      "supported_count": 7,
+      "partially_supported_count": 4,
+      "unsupported_count": 1,
+      "indeterminate_count": 0,
+      "fully_supported_count": 7,
+      "fully_supported_rate": 0.5833333333333334
+    },
+    "05259030": {
+      "relationship_count": 17,
+      "supported_count": 13,
+      "partially_supported_count": 1,
+      "unsupported_count": 2,
+      "indeterminate_count": 1,
+      "fully_supported_count": 13,
+      "fully_supported_rate": 0.7647058823529411
+    },
+    "05798947": {
+      "relationship_count": 19,
+      "supported_count": 11,
+      "partially_supported_count": 5,
+      "unsupported_count": 3,
+      "indeterminate_count": 0,
+      "fully_supported_count": 9,
+      "fully_supported_rate": 0.47368421052631576
+    },
+    "cia-rdp67b00446r000500070013-6": {
+      "relationship_count": 14,
+      "supported_count": 9,
+      "partially_supported_count": 2,
+      "unsupported_count": 3,
+      "indeterminate_count": 0,
+      "fully_supported_count": 9,
+      "fully_supported_rate": 0.6428571428571429
+    },
+    "cia-rdp70-00058r000300020010-5": {
+      "relationship_count": 17,
+      "supported_count": 6,
+      "partially_supported_count": 7,
+      "unsupported_count": 4,
+      "indeterminate_count": 0,
+      "fully_supported_count": 6,
+      "fully_supported_rate": 0.35294117647058826
+    }
+  },
+  "corruption_controls": {
+    "missing_relationship": true,
+    "predicate_mutation": true,
+    "unknown_relationship": true,
+    "duplicate_adjudication": true
+  },
+  "decision_rule": {
+    "min_fully_supported_rate": 0.9,
+    "max_unsupported_relationships": 0,
+    "require_all_corruption_controls": true
+  },
+  "passed": false,
+  "licensed_claim": "Semantic precision and fidelity of the 79 relationships emitted in the frozen five-document CREST artifact, as adjudicated from their exact quotes.",
+  "non_claims": [
+    "This output-conditioned census does not measure corpus relationship recall.",
+    "Agent adjudication is not human or independent expert review.",
+    "The five selected documents do not establish quality on the wider CREST corpus."
+  ]
+}

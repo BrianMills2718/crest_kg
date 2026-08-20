@@ -1,0 +1,816 @@
+{
+  "schema_version": "grounded-relationship-audit-v1",
+  "quality_set_id": "crest-five-document-relationship-census-v1",
+  "artifact_path": "cia_kg_output/validated_5_documents.json",
+  "artifact_sha256": "cf5fbb149b91d19699746696e8dc01b13e0896aa759e78b55a8d72a1883de8e1",
+  "selection_mode": "census_of_emitted_relationships",
+  "adjudication_method": "agent_review_of_exact_evidence_quote",
+  "adjudicator": "OpenAI Codex agent",
+  "adjudicated_at": "2026-08-20T23:43:31Z",
+  "candidate_visible_to_adjudicator": true,
+  "output_conditioned": true,
+  "corpus_recall_claimed": false,
+  "decision_rule": {
+    "min_fully_supported_rate": 0.9,
+    "max_unsupported_relationships": 0,
+    "require_all_corruption_controls": true
+  },
+  "cases": [
+    {
+      "relationship_id": "relationship:01bf36495762",
+      "assertion_sha256": "14eeb3a37d306867e2693ef5b6694b1a732657b190c1e175ef19b1f0ea887f17",
+      "support": "partially_supported",
+      "endpoint_fidelity": "unclear",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The quote reports an attempt to bribe Premier Lee and later names the CIA, but the clipped subject does not bind the CIA to the attempt.",
+      "suggested_relation": "Unknown actor attempted-to-bribe Premier Lee of Singapore"
+    },
+    {
+      "relationship_id": "relationship:0fcd0b0a4327",
+      "assertion_sha256": "53f2b34f96a52ae7406f9b9287af85d19810dd9de30af5c2fcdbdda77a4ada87",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote connects KGB experience to Operation Trust, but says it drew on that experience rather than directly stating that this KGB conducted the operation."
+    },
+    {
+      "relationship_id": "relationship:0ff19d7da437",
+      "assertion_sha256": "263d11610cfa18012da6806f0a1ef547d079bfb3958c802bc2235994f8bd9994",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Both the study title and Allen Dulles appear, but the OCR-clipped wording does not cleanly establish that Dulles is the study's subject."
+    },
+    {
+      "relationship_id": "relationship:14afc4a3b4e6",
+      "assertion_sha256": "c324a3b90318d103fd7887c57d49953c690c15483a417a80ededfef11128cfa1",
+      "support": "partially_supported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote says Izvestia first publicized an allegation, but the cited span does not identify that allegation as being about the Jonestown massacre."
+    },
+    {
+      "relationship_id": "relationship:1736debf5a01",
+      "assertion_sha256": "8a6e2dea199f045652482ba5d32844a36f5a3b68ba2080c2b1b9c5366aea65b9",
+      "support": "partially_supported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The evidence calls the World Peace Council Soviet-controlled; replacing the Soviet controller with the separate Moscow entity is an unsupported normalization.",
+      "suggested_relation": "World Peace Council controlled-by Soviet Union"
+    },
+    {
+      "relationship_id": "relationship:19ae19ff9064",
+      "assertion_sha256": "02263bd8b66d7ad66178056902e862bf5640f62b03cc4e65cb8170be8a07acb2",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly describes Moscow's worldwide AIDS-origin disinformation campaign."
+    },
+    {
+      "relationship_id": "relationship:1a598916b481",
+      "assertion_sha256": "dbcbafe877b62f4d4e232822be2219f276452a8c773d3805f424b28976f0f32f",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The clipped list names neither the Department of Disinformation nor USIA, so it cannot ground this asserted edge."
+    },
+    {
+      "relationship_id": "relationship:210b74277293",
+      "assertion_sha256": "84b7a5bcd31f930bddea6b8e9ac9037e617d7680c6b52d90166e3c897c089961",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "fail",
+      "type_fidelity": "pass",
+      "rationale": "The source says Moscow tried to implicate the United States in Olof Palme's death; it does not say Moscow implicated Palme.",
+      "suggested_relation": "Moscow implicated United States in Assassination of Olof Palme"
+    },
+    {
+      "relationship_id": "relationship:30aeb1cb77ef",
+      "assertion_sha256": "346ec46aba777d6864e92057df9de5aebdf514069c651a6a837473ac64c8ceb7",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Despite OCR damage, the bibliographic phrase attributes Inside a Soviet Embassy to Alexander Kaznacheev."
+    },
+    {
+      "relationship_id": "relationship:30e59ebeb903",
+      "assertion_sha256": "fbae3b1393ddf4dc9f6d4cf722b0da538e57ac8f4ca48cc9a4f6c4274040a3b6",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly says the department is headed by General Ivan Ivanovich Agayants."
+    },
+    {
+      "relationship_id": "relationship:335436090be1",
+      "assertion_sha256": "64cf6231dae4f67e05a45153c382b1faa8512852c25d8e3f540f827b46dfe4a9",
+      "support": "partially_supported",
+      "endpoint_fidelity": "unclear",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The span says Kaznacheev described a program, but the clipped text does not unambiguously identify that program as Department D."
+    },
+    {
+      "relationship_id": "relationship:34b98b4a9c14",
+      "assertion_sha256": "40a04cc7ea55f35fb7e2b98cc0feb634f1fe51e0ae0dce0d90aeed8c1bc5c281",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The organizational header places the Foreign Subversion and Instability Center within the Office of Global Issues."
+    },
+    {
+      "relationship_id": "relationship:3a322d99e9a7",
+      "assertion_sha256": "4ec59b00eb51f8da1b470e30c71a8d1aed87cb99c095683a915dce9065e6f848",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The address block and salutation directly establish that the letter is addressed to Resistance International."
+    },
+    {
+      "relationship_id": "relationship:47063d93fc53",
+      "assertion_sha256": "7eecc6f3cf194019ce50400b14cde2b41a75dd4aa38d6503e5730af8b281f51e",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly states that Radio Moscow began playing up rumors shortly after the Fiji coup."
+    },
+    {
+      "relationship_id": "relationship:485344992a46",
+      "assertion_sha256": "40bccd5339b7ab7bab03fc68bbfd9fa71eb7901230b71a38baca14b61e5e38a1",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "fail",
+      "rationale": "The report was prepared at Fritz Ermarth's request, but the report is mistyped as an event rather than a work."
+    },
+    {
+      "relationship_id": "relationship:4f83943485bc",
+      "assertion_sha256": "124d6db2f32a839561d9671072028eb97c7e4041e1d332eb0bc04782c6a1881e",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly describes Moscow pushing anti-US disinformation at home and abroad."
+    },
+    {
+      "relationship_id": "relationship:54baea1abd6e",
+      "assertion_sha256": "c920d07dda20e0527233c624b354b76fc64759d220dc33715d6657701ac80ec1",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The quote says a Golitsyn item was approved by the DO for release; it neither makes Pereira the approver nor treats Golitsyn himself as the released object.",
+      "suggested_relation": "Directorate of Operations approved-release-of Golitsyn letter"
+    },
+    {
+      "relationship_id": "relationship:55ae397b6890",
+      "assertion_sha256": "d066a20f175b8cbe789dc92861ddf55fb13e92ad1a7519b47a23a8efd3cc811d",
+      "support": "partially_supported",
+      "endpoint_fidelity": "unclear",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote says Brezhnev made no changes in an activity, but the clipped antecedent does not cleanly bind that activity to support for Department D."
+    },
+    {
+      "relationship_id": "relationship:56323fa0f0c5",
+      "assertion_sha256": "3ad4c204541edeec6303cdf970c19b16c0aa2b8b391e5626999a663c49b8af08",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Golitsyn calls his book an expose and realistic description of the Communist Strategic Disinformation Program."
+    },
+    {
+      "relationship_id": "relationship:59b74f87b763",
+      "assertion_sha256": "a77a33dd7d4ca038b5fb2be65d82081307fba31f9ee21ff7da2e847e77d2b8c6",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Golitsyn explicitly says Navrozov made malicious attacks and insinuations against him."
+    },
+    {
+      "relationship_id": "relationship:5df442cb5609",
+      "assertion_sha256": "a4f4cecc048551648f08028a56f5ad92dd7955bb66a42c8fea6fad1d69bc84fd",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "A Resistance International invitation to its conference makes sponsorship plausible, but the quote does not directly state that the organization organized it."
+    },
+    {
+      "relationship_id": "relationship:5ff03a85983f",
+      "assertion_sha256": "9d6f5b4645d48d9d8f2743737d82b534db555631d225a2ee220d5540e9a7ce63",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The phrase Fritz Ermarth at the NSC directly supports his affiliation with the National Security Council."
+    },
+    {
+      "relationship_id": "relationship:64835d24dd6d",
+      "assertion_sha256": "439e4641e5d7aff71189f7fed0b52000a92560d3c20a89b2a1eebff7cb062db8",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "fail",
+      "rationale": "The memorandum says it was prepared by the named center in the Office of Global Issues, but the report endpoint is mistyped as an event."
+    },
+    {
+      "relationship_id": "relationship:6b1245a9ecfe",
+      "assertion_sha256": "9dbf20b462440778344039c80562595dbd882ffa877dc3647c1f4aac60791160",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The letter explicitly describes the author's thoughts as attached for distribution to conference participants."
+    },
+    {
+      "relationship_id": "relationship:6b97984ccb4f",
+      "assertion_sha256": "bdc7f15ad964d9a3b0661312e56124f071f8ba730aa52b51dd8ac3bb2b2f541d",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Golitsyn explicitly states that he personally witnessed the formation of the Disinformation Department."
+    },
+    {
+      "relationship_id": "relationship:6d05794bed26",
+      "assertion_sha256": "ed19a9d368f610e1d953556eb23c08aff82e77ea0079bb3bb2f61a62dabe23c2",
+      "support": "partially_supported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote is a letter-to-the-editor header for the New York Tribune, but the cited span does not identify Golitsyn as its author."
+    },
+    {
+      "relationship_id": "relationship:6e72194eb81a",
+      "assertion_sha256": "7b95d544b901c6cba7769ea0e3aa59c4face5cf788d9c51ae9bab393093e63d1",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Soviet outlets exploited the Fiji coup by spreading rumors, but attributing that directly to the Moscow entity is a metonymic inference."
+    },
+    {
+      "relationship_id": "relationship:6e9b8632b3e4",
+      "assertion_sha256": "89ffe7592095c4b442a7a0e743f831f4ddb814c4ad6dc434127980ec95f1de44",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote describes Fulbright's effort to expose the CIA's role; calling that an investigation overstates the cited wording.",
+      "suggested_relation": "Senator Fulbright sought-to-expose CIA"
+    },
+    {
+      "relationship_id": "relationship:72439743755c",
+      "assertion_sha256": "23539c16548814b966278d46c176d15f41c341c4714bafe48c43a8d19f53a688",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The clipped list does not name the Peace Corps or bind it to a Department of Disinformation assignment."
+    },
+    {
+      "relationship_id": "relationship:78033f507b5c",
+      "assertion_sha256": "ac047505705c14e67965e5078bba3dd024c56c5d3f30f90c2dd02f1b2b07608b",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The source explicitly names Navrozov's attacks on James Jesus Angleton."
+    },
+    {
+      "relationship_id": "relationship:7a90e1460a83",
+      "assertion_sha256": "3e1d078aa3e0697c37a90c4d54e99ba11aefa1e139c92ed72d807e5b813811c4",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The document header connects Golitsyn with New Lies For Old, but does not itself state that he authored the book."
+    },
+    {
+      "relationship_id": "relationship:7d0126cf5c10",
+      "assertion_sha256": "295208eb5114de1cb41a40dd74904024429a66d6a38ca65e5d6edd54930a2d9c",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote describes a thrust against the FBI and J. Edgar Hoover, but the clipped sentence does not cleanly bind that thrust to Department D."
+    },
+    {
+      "relationship_id": "relationship:7e8afeb053f9",
+      "assertion_sha256": "6e9aaa49162b25f7edef706342a1f8773674cec46077ca6486d1311c35582c67",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The source describes Department D as a specialized department of the Soviet State Security Service, supporting its KGB membership."
+    },
+    {
+      "relationship_id": "relationship:7f4bb80e397d",
+      "assertion_sha256": "6b8c3307298184827ec64818393fa571c855f1e544b36d67572d0754706d341f",
+      "support": "unsupported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The quote groups TASS with Soviet information and media organs under special care; it does not state that TASS is part of the KGB."
+    },
+    {
+      "relationship_id": "relationship:85102c3e15e2",
+      "assertion_sha256": "96400e1229b269af50d363a35828739f045e857024e2eeeb395859cc582b5980",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The cited span is only a target list fragment and does not identify the Department of Disinformation as the actor."
+    },
+    {
+      "relationship_id": "relationship:8584cace8f04",
+      "assertion_sha256": "a5028eab1f28c98628c2ecce29c114bba5660629d79f18f4e34680b2b3c3a59c",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The address block identifies Joseph Douglass as director of a JAYCOR division, directly supporting employment."
+    },
+    {
+      "relationship_id": "relationship:85b9e56ae1ca",
+      "assertion_sha256": "09392a7fe16b47e5ce8594fba7ff36a17189a43964a82f34c1e02e69bddae709",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The span says Kaznacheev served in Burma as an information officer but does not mention Vozny or a reporting relationship."
+    },
+    {
+      "relationship_id": "relationship:90f121658406",
+      "assertion_sha256": "b0bf263dde4b91ce8071907154d7e63b7fd7d0083a8a6fce292e224f4700c937",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly describes the department's assignment from the Politburo."
+    },
+    {
+      "relationship_id": "relationship:91e43dc9d55f",
+      "assertion_sha256": "c9d57453504f3965e7a65dd6fbc6951fbd25d4cd6906b2411735a26bb2f60a2c",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The text explicitly says the Soviet KGB established a special Department of Disinformation branch."
+    },
+    {
+      "relationship_id": "relationship:9285844ada42",
+      "assertion_sha256": "2ad126a62cdafbcf207ea9210e49634d279db119354d0c2b30417dcb339272ad",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The AIDS story is explicitly described as a means of heightening opposition to the United States."
+    },
+    {
+      "relationship_id": "relationship:938e9791eeb0",
+      "assertion_sha256": "ff6e6db72713f322838acd900ba766fecfd0d63657e04f25b68385b799edbfd2",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote states that the manuscript was researched in Moscow by Colonel Vasily Sitnikov."
+    },
+    {
+      "relationship_id": "relationship:9660a8caa070",
+      "assertion_sha256": "cb1592018d18e46845a2450ce2dea8d080409020230ad414a30dece7ba424146",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The editorial header identifies the New York Post and the titled work, establishing publication."
+    },
+    {
+      "relationship_id": "relationship:96bdfe1d1ed8",
+      "assertion_sha256": "33c7a858602525d24f87de2c37589ef7d52c4a3458b105ff872991a6d3cf943a",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The source explicitly describes a Soviet secret-intelligence campaign to stigmatize and defame the CIA."
+    },
+    {
+      "relationship_id": "relationship:a6479094ec6a",
+      "assertion_sha256": "b8dfb56cc5dd873dc1dc996b6c4eee5ab663365ba0fb03a9bd833f160a17b001",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote directly describes Department D's activity against the Central Intelligence Agency."
+    },
+    {
+      "relationship_id": "relationship:a64b189b822a",
+      "assertion_sha256": "6df8cb7d96d3ee81977201bf63f4d19ba3ca09fe7f9a88731d843ad814958b03",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The editorial text criticizes the CIA document and agency as crude and disquieting."
+    },
+    {
+      "relationship_id": "relationship:a6a2affd1e0f",
+      "assertion_sha256": "7396e634f2a00d42e08de6a69ccf7de77cbc7624e132ba5ba8a6d211305d7c58",
+      "support": "partially_supported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The letterhead establishes a CIA Directorate of Intelligence context, but the cited quote does not name the Office of Global Issues."
+    },
+    {
+      "relationship_id": "relationship:a8ee730a8940",
+      "assertion_sha256": "1b6b0132464ae6ebe6396c14a61f4a261fd685dc3a09a46e1dd1772469ec4498",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The memorandum's enumerated list explicitly references the letter to Joseph Douglass."
+    },
+    {
+      "relationship_id": "relationship:aa082cfa44d1",
+      "assertion_sha256": "aa807aa0412b8bdb533526c2a0f5358feede1c6bb52b45a2a513919dfd5882f7",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The quote mentions Bob Edwards in a disinformation narrative but does not identify him as the attributed author of A Study of a Master Spy."
+    },
+    {
+      "relationship_id": "relationship:ab3cc9a8fe33",
+      "assertion_sha256": "6fd281a371ed7a23bee0f192255567266d40849d2c47cc9719fea3f0d57486a8",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly identifies David Wise as a Herald Tribune correspondent."
+    },
+    {
+      "relationship_id": "relationship:ade4bebfb22c",
+      "assertion_sha256": "13230332d373f4f34dc61aad6d5ea63e8650ec414f5c05eee25dd74b4ad48603",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The memorandum's numbered list explicitly references the Resistance International letter."
+    },
+    {
+      "relationship_id": "relationship:af7716ca822e",
+      "assertion_sha256": "580048d1b70949862ea28991a0104198c884bd78b77d905d376a0a9c3c5e5ffa",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The address block identifies Vladmir Maximov as Resistance International's executive president."
+    },
+    {
+      "relationship_id": "relationship:b0f1f870a335",
+      "assertion_sha256": "b2da6b40cbaa5b9ba22217bd183e96f7a2eaff87e768cb0202a82d3cf8144b61",
+      "support": "partially_supported",
+      "endpoint_fidelity": "unclear",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The damaged text says Khrushchev gave high priority to an activity, but the cited span does not cleanly bind that support to Department D."
+    },
+    {
+      "relationship_id": "relationship:b23e279f79e3",
+      "assertion_sha256": "970a298ec57bda0ee058d92cb1b4c3e481961ff7f168c50243d1b25d15903052",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly calls David Wise a coauthor of The Invisible Government."
+    },
+    {
+      "relationship_id": "relationship:b6af249316a6",
+      "assertion_sha256": "96efc7c8e998dcacc9b64f7281fc4077a6763cd28011bde0ef9c4bf33c52d77f",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The closing signature A. Golitsyn establishes authorship of the letter containing it."
+    },
+    {
+      "relationship_id": "relationship:b73299bb68c2",
+      "assertion_sha256": "c26c3aecb908ddb3c6ba415ce5436792c1fae8f0812bc2b7fa4cbb839966e34b",
+      "support": "indeterminate",
+      "endpoint_fidelity": "unclear",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The header juxtaposes CI Staff and Pereira's signature block, but its routing direction is ambiguous in the cited text."
+    },
+    {
+      "relationship_id": "relationship:b7671cfc5606",
+      "assertion_sha256": "6d50eabd8e18ec2880abd2edb0ec8ab5bf129f2a4ee1ae6efa05de5a8fcdc705",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "fail",
+      "type_fidelity": "pass",
+      "rationale": "The quote says a Novosti book alleged that the CIA instigated the massacre; the event itself is not the object whose involvement Moscow alleged.",
+      "suggested_relation": "Novosti alleged CIA instigated Jonestown massacre"
+    },
+    {
+      "relationship_id": "relationship:bc2676bf0261",
+      "assertion_sha256": "ca046ef7a5db9a90f1999326841c1acd7a4d359dea012114a614b3d640f6df07",
+      "support": "partially_supported",
+      "endpoint_fidelity": "unclear",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote says Kosygin made no changes in an activity, but the clipped antecedent does not clearly establish continued support of Department D."
+    },
+    {
+      "relationship_id": "relationship:c031987dfdb6",
+      "assertion_sha256": "918b7b3838a4ec42a2e705e92478d4df89bf4a81a99b8edc55b590e933b9c44c",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The author places Sakharov's activist role in the program's interpretive context, but associated-with is too vague to capture the qualified claim."
+    },
+    {
+      "relationship_id": "relationship:c1880c573e6f",
+      "assertion_sha256": "332ea165310b576ef7c762ab7879ff1d29e933ba91e45f6246dd855230807919",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Golitsyn explicitly says he was a student at the KGB Institute."
+    },
+    {
+      "relationship_id": "relationship:c28d6fdcb72e",
+      "assertion_sha256": "bf4f1be0467f70f01460ac0af5a57f01c87714bb86997fba29221e093b35e54d",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly states that the Central Committee directed the KGB Institute to prepare studies."
+    },
+    {
+      "relationship_id": "relationship:c428278eae83",
+      "assertion_sha256": "59f382b5c69a802ccfd3e20186dd8c6c68d04e2848ee1d6ebe553373eae6f692",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The span explicitly describes a TASS story in the ongoing discussion of the Fiji coup."
+    },
+    {
+      "relationship_id": "relationship:c814102982ff",
+      "assertion_sha256": "1019a247b40b28e43cfbc78a4d25facf7d58777c8a1f244d2b4d39f90ff51831",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote says Golitsyn compromised with his publisher but never names Dodd, Mead Publishing Company as that publisher."
+    },
+    {
+      "relationship_id": "relationship:cd309db9b4d9",
+      "assertion_sha256": "ca3eefb72e6dc068231da6020757152cea357ebb54af50333a67f17f2b155102",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The full address block and salutation establish that the letter is addressed to Joseph Douglass."
+    },
+    {
+      "relationship_id": "relationship:cda7477502c1",
+      "assertion_sha256": "b7c856a5acf8fc049750eb7fa3228667d3499bc69865b91441fcbcd8b0a72af1",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The source says the KGB planted a rumor in the Congo; it does not characterize the KGB as an instrument of Moscow."
+    },
+    {
+      "relationship_id": "relationship:ce87d923c90d",
+      "assertion_sha256": "c210e3020096c6e46d808e1d989b39c5b3f84a713fe2e6730aee165339f35751",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Golitsyn explicitly says he was a senior Soviet Intelligence officer at KGB Headquarters."
+    },
+    {
+      "relationship_id": "relationship:d6d23e12a158",
+      "assertion_sha256": "83a50c36b4974adb967a756296894e156a0de247099d81e0a9b4609928ba389e",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "fail",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "fail",
+      "rationale": "The quote reports Moscow allegations about US facilities and SDI, but alleged-involvement-of is malformed and SDI is a program rather than an event."
+    },
+    {
+      "relationship_id": "relationship:d8c3ab7cafa5",
+      "assertion_sha256": "2bbe75cd47b6446cd73af7df67c931d23d3077d338e0efe9f2ebb919611fde50",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote says Moscow used the assassination as the occasion for a concerted effort to implicate the United States."
+    },
+    {
+      "relationship_id": "relationship:d929cf03321f",
+      "assertion_sha256": "d9e28ec724e087a51e6c3310d9795b373a55674762d2253dae6dd326cb6e95f6",
+      "support": "partially_supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The source records Hanson Baldwin questioning Dulles on a TV roundtable, but interviewed is stronger than the format explicitly establishes."
+    },
+    {
+      "relationship_id": "relationship:da9e8d436d85",
+      "assertion_sha256": "7fffa208288a02a77646537701111d676d170a6634e8cad8a3abcd73fd235688",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly states that the department's assignment includes discrediting the FBI."
+    },
+    {
+      "relationship_id": "relationship:dfca876312a5",
+      "assertion_sha256": "d06ef76d3bceb7ccb1063267cb328d9d578c3c5f4ac424944eda04a2c5d43d4d",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The damaged but readable quote explicitly says Agayants controlled the French spy Georges Pasques."
+    },
+    {
+      "relationship_id": "relationship:e93a60169b4a",
+      "assertion_sha256": "228c8c374c783730c6b9ccc516aa37a30074995272219838cf04fb04b385b543",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The memorandum's numbered list explicitly references the Parade Magazine letter."
+    },
+    {
+      "relationship_id": "relationship:ebc45a4bae78",
+      "assertion_sha256": "f1fb90dbdb679d44f460c8277f018a2861f52c9efa12977a92561148e4fd0eb1",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "Pereira's name and title appear in the memorandum's authorship/signature block."
+    },
+    {
+      "relationship_id": "relationship:ebcbb8732786",
+      "assertion_sha256": "f1f758d811e9ff122e45d11ad18555a7ee3dedc45723643c1a7714b4e9b071ac",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The A. Golitsyn closing signature supports authorship of the letter to Joseph Douglass."
+    },
+    {
+      "relationship_id": "relationship:ec27116716b9",
+      "assertion_sha256": "2559d84eb5182c63b2755b5e32971dbb1c0d21b22ce740199becdd366dc2fe05",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly states that the department's Politburo assignment includes discrediting the CIA."
+    },
+    {
+      "relationship_id": "relationship:ed173e76db72",
+      "assertion_sha256": "c1fec27cf13218bdd482a44a7267498b07c8feafd482b490f09b372733cc4669",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The statement title explicitly identifies the conference participants for whom it was prepared."
+    },
+    {
+      "relationship_id": "relationship:ee6ac8ac2b98",
+      "assertion_sha256": "0a9da8f2b2bfde6b1ddc3c9a061d1471a2a3985eac10b2255b921fce15824bfb",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote explicitly says Novosti published a book making claims about the Jonestown massacre."
+    },
+    {
+      "relationship_id": "relationship:f2560a25732c",
+      "assertion_sha256": "4101b5ac14a54c5380a6ab358c38be117763e87a572b0cee91cbdd1e9e0e719b",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "unclear",
+      "direction_fidelity": "unclear",
+      "type_fidelity": "pass",
+      "rationale": "The cited evidence is only an Approved for Release stamp and contains neither Golitsyn nor the Parade Magazine letter."
+    },
+    {
+      "relationship_id": "relationship:f5c261a33a92",
+      "assertion_sha256": "d7cde4b1c82ec6c77acde8186151950e0964ba8694b1a39ecde4d84ca029b7cb",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The letter explicitly discusses the recipient's review of New Lies For Old."
+    },
+    {
+      "relationship_id": "relationship:f9a379094bdf",
+      "assertion_sha256": "6bffc48201dc44e84c6be17a2e1df468cfbe86c56658a4ca455fab8cfbeaaa6f",
+      "support": "unsupported",
+      "endpoint_fidelity": "fail",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The span contains a first-person submission statement and the paper title, but it does not identify the speaker as Mr. Price."
+    }
+  ]
+}

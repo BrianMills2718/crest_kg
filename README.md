@@ -80,12 +80,33 @@ on 2026-08-20:
 An independent replay also matched all five source hashes and all 177 entity
 and relationship evidence spans back to the original corpus text.
 
+## Semantic relationship audit
+
+Structural grounding did not imply semantic relationship quality. An
+agent-adjudicated census of all 79 emitted relationships found 44 (55.7%) that
+were both fully supported by their cited quote and faithful in endpoints,
+predicate, direction, and types. Thirteen were unsupported, 19 partially
+supported, and one indeterminate. The artifact therefore fails the frozen 90%
+scale-unchanged gate even though all integrity checks above still pass.
+
+Run the deterministic audit:
+
+```bash
+python crest_relationship_eval.py
+```
+
+See [`evaluation/README.md`](evaluation/README.md) for the decision rule,
+case-set provenance, exact readout, limitations, and the cross-project reuse
+boundary. This is transparently agent-adjudicated and output-conditioned; it
+does not claim human review or corpus relationship recall.
+
 ## Focused verification
 
 ```bash
-python -m pytest -q tests/test_crest_pipeline.py
+python -m pytest -q tests/test_crest_pipeline.py tests/test_crest_relationship_eval.py
 ```
 
 The focused suite covers deterministic selection, rejection of dangling
 relationships, exact line-to-character evidence grounding, typed identity, five-document graph
-integrity, serialization round-tripping, and overwrite refusal.
+integrity, serialization round-tripping, overwrite refusal, frozen semantic
+audit binding, complete adjudication coverage, and corruption detection.
