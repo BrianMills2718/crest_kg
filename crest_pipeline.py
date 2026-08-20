@@ -1,0 +1,853 @@
+#!/usr/bin/env python3
+"""Deterministic, provenance-preserving CREST knowledge-graph pipeline.
+
+This is the canonical extraction path for the archived CREST prototype.  It
+keeps corpus selection deterministic, validates model output with Pydantic,
+grounds every assertion in an exact source quote, and refuses to write graphs
+that violate referential integrity.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import sys
+import tempfile
+import unicodedata
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any, Literal, Self
+
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
+
+PIPELINE_VERSION: Literal["crest-kg-v1"] = "crest-kg-v1"
+PROMPT_PATH = Path(__file__).with_name("prompts") / "crest_extraction.yaml"
+MAX_EVIDENCE_LINES = 5
+DOCUMENT_NUMBER_KEYS = (
+    "Document Number (FOIA) /ESDN (CREST)",
+    "Document Number",
+    "CREST Number",
+)
+
+
+class StrictModel(BaseModel):
+    """Base model for boundaries that must reject unexpected fields."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+
+class EntityKind(str, Enum):
+    """Entity classes supported by the bounded CREST extraction contract."""
+
+    PERSON = "person"
+    ORGANIZATION = "organization"
+    LOCATION = "location"
+    EVENT = "event"
+    CONCEPT = "concept"
+    TIME = "time"
+    WORK = "work"
+    OTHER = "other"
+
+
+class RawDocument(BaseModel):
+    """Validated source record loaded from a CREST corpus export."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    url: str | None = Field(default=None, description="Public source URL for the CREST record.")
+    title: str = Field(min_length=1, description="Document title from the source record.")
+    metadata: dict[str, str] = Field(
+        default_factory=dict,
+        description="Source metadata normalized to string values.",
+    )
+    body_text: str = Field(min_length=1, description="OCR or transcription text to analyze.")
+
+    @field_validator("title")
+    @classmethod
+    def strip_title(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("value must contain non-whitespace text")
+        return value
+
+    @field_validator("body_text")
+    @classmethod
+    def preserve_source_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("body_text must contain non-whitespace text")
+        return value
+
+    @field_validator("metadata", mode="before")
+    @classmethod
+    def normalize_metadata(cls, value: Any) -> dict[str, str]:
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise TypeError("metadata must be an object")
+        return {
+            str(key).strip(): str(item).strip()
+            for key, item in value.items()
+            if str(key).strip() and item is not None
+        }
+
+
+class SourceDocument(StrictModel):
+    """Stable manifest entry for the exact source slice shown to the model."""
+
+    document_id: str = Field(min_length=1, description="Stable CREST or FOIA document identifier.")
+    title: str = Field(min_length=1, description="Source document title.")
+    source_url: str | None = Field(default=None, description="Public source URL, when available.")
+    corpus_path: str = Field(min_length=1, description="Corpus path supplied to the pipeline.")
+    body_sha256: str = Field(
+        pattern=r"^[0-9a-f]{64}$",
+        description="SHA-256 digest of the complete source body text.",
+    )
+    total_chars: int = Field(ge=1, description="Character count of the complete source body.")
+    analyzed_start: int = Field(ge=0, description="Inclusive source offset shown to the model.")
+    analyzed_end: int = Field(gt=0, description="Exclusive source offset shown to the model.")
+    analyzed_lines: int = Field(
+        ge=1,
+        description="Count of numbered source lines shown to the model.",
+    )
+
+    @model_validator(mode="after")
+    def validate_window(self) -> Self:
+        if self.analyzed_start >= self.analyzed_end:
+            raise ValueError("analyzed_start must be before analyzed_end")
+        if self.analyzed_end > self.total_chars:
+            raise ValueError("analyzed window exceeds source text")
+        return self
+
+
+@dataclass(frozen=True)
+class SourceLine:
+    """One numbered source line and its exact character offsets."""
+
+    number: int
+    start_char: int
+    end_char: int
+
+
+@dataclass(frozen=True)
+class LoadedDocument:
+    """In-memory source document paired with its portable manifest."""
+
+    manifest: SourceDocument
+    metadata: dict[str, str]
+    analysis_text: str
+    source_lines: tuple[SourceLine, ...]
+
+
+class EvidenceCandidate(StrictModel):
+    """Bounded source-line citation emitted by the extractor."""
+
+    line_start: int = Field(
+        ge=1,
+        description="First cited L-number from the supplied document, inclusive.",
+    )
+    line_end: int = Field(
+        ge=1,
+        description="Last cited L-number from the supplied document, inclusive.",
+    )
+
+    @model_validator(mode="after")
+    def validate_line_range(self) -> Self:
+        if self.line_end < self.line_start:
+            raise ValueError("line_end must be greater than or equal to line_start")
+        if self.line_end - self.line_start + 1 > MAX_EVIDENCE_LINES:
+            raise ValueError(f"evidence may span at most {MAX_EVIDENCE_LINES} lines")
+        return self
+
+
+class EntityCandidate(StrictModel):
+    """Document-local entity proposed by the model."""
+
+    local_id: str = Field(
+        min_length=1,
+        pattern=r"^[A-Za-z0-9_.:-]+$",
+        description="Document-local identifier referenced by relationships.",
+    )
+    name: str = Field(min_length=1, description="Entity name exactly as supported by the document.")
+    entity_type: EntityKind = Field(alias="type", description="Semantic class of the entity.")
+    attributes: dict[str, str] = Field(
+        default_factory=dict,
+        description="Only attributes explicitly supported by the evidence quote.",
+    )
+    evidence: EvidenceCandidate = Field(description="Bounded source lines supporting this entity.")
+
+    @field_validator("local_id", "name")
+    @classmethod
+    def strip_entity_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("value must contain non-whitespace text")
+        return value
+
+
+class RelationshipCandidate(StrictModel):
+    """Document-local directed assertion proposed by the model."""
+
+    source_entity_id: str = Field(
+        min_length=1,
+        description="local_id of the relationship source entity.",
+    )
+    target_entity_id: str = Field(
+        min_length=1,
+        description="local_id of the relationship target entity.",
+    )
+    relationship_type: str = Field(
+        alias="type",
+        min_length=1,
+        description="Short directed predicate supported by the evidence quote.",
+    )
+    attributes: dict[str, str] = Field(
+        default_factory=dict,
+        description="Only relationship attributes explicitly supported by the quote.",
+    )
+    evidence: EvidenceCandidate = Field(description="Bounded source lines supporting the relationship.")
+
+    @field_validator("source_entity_id", "target_entity_id", "relationship_type")
+    @classmethod
+    def strip_relationship_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("value must contain non-whitespace text")
+        return value
+
+
+class DocumentExtraction(StrictModel):
+    """Validated structured model output for one source document."""
+
+    entities: list[EntityCandidate] = Field(
+        description="Entities supported by exact quotes in this document. Use an empty list when none qualify."
+    )
+    relationships: list[RelationshipCandidate] = Field(
+        description="Directed relationships whose endpoints are declared entities. Use an empty list when none qualify."
+    )
+
+    @model_validator(mode="after")
+    def validate_local_graph(self) -> Self:
+        entity_ids = [entity.local_id for entity in self.entities]
+        if len(entity_ids) != len(set(entity_ids)):
+            raise ValueError("entity local_id values must be unique within a document")
+
+        known_ids = set(entity_ids)
+        seen_relationships: set[tuple[str, str, str, int, int]] = set()
+        for relationship in self.relationships:
+            if relationship.source_entity_id not in known_ids:
+                raise ValueError(
+                    f"relationship source is undeclared: {relationship.source_entity_id}"
+                )
+            if relationship.target_entity_id not in known_ids:
+                raise ValueError(
+                    f"relationship target is undeclared: {relationship.target_entity_id}"
+                )
+            key = (
+                relationship.source_entity_id,
+                relationship.target_entity_id,
+                normalize_text(relationship.relationship_type),
+                relationship.evidence.line_start,
+                relationship.evidence.line_end,
+            )
+            if key in seen_relationships:
+                raise ValueError("duplicate relationship assertion within a document")
+            seen_relationships.add(key)
+        return self
+
+
+class Provenance(StrictModel):
+    """Verifiable source location for one entity or relationship assertion."""
+
+    document_id: str = Field(min_length=1, description="Source document identifier.")
+    source_url: str | None = Field(default=None, description="Public source URL, when available.")
+    corpus_path: str = Field(min_length=1, description="Corpus artifact containing the source record.")
+    body_sha256: str = Field(
+        pattern=r"^[0-9a-f]{64}$",
+        description="Digest binding the quote offsets to exact source text.",
+    )
+    quote: str = Field(min_length=1, description="Exact supporting source quote.")
+    line_start: int = Field(ge=1, description="First cited source line, inclusive.")
+    line_end: int = Field(ge=1, description="Last cited source line, inclusive.")
+    start_char: int = Field(ge=0, description="Inclusive quote offset in the complete body text.")
+    end_char: int = Field(gt=0, description="Exclusive quote offset in the complete body text.")
+
+    @model_validator(mode="after")
+    def validate_offsets(self) -> Self:
+        if self.end_char - self.start_char != len(self.quote):
+            raise ValueError("quote length does not match source offsets")
+        if self.line_end < self.line_start:
+            raise ValueError("line_end must be greater than or equal to line_start")
+        return self
+
+
+class GraphEntity(StrictModel):
+    """Canonical typed entity with aggregated grounded observations."""
+
+    id: str = Field(min_length=1, description="Deterministic typed identity key.")
+    name: str = Field(min_length=1, description="Preferred observed entity name.")
+    entity_type: EntityKind = Field(alias="type", description="Semantic class included in identity.")
+    attributes: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Distinct observed attribute values without destructive overwrites.",
+    )
+    evidence: list[Provenance] = Field(
+        min_length=1,
+        description="Source observations supporting the entity.",
+    )
+
+
+class GraphRelationship(StrictModel):
+    """Canonical directed relationship with one or more grounded observations."""
+
+    id: str = Field(min_length=1, description="Deterministic relationship identifier.")
+    source: str = Field(min_length=1, description="Canonical source entity ID.")
+    target: str = Field(min_length=1, description="Canonical target entity ID.")
+    relationship_type: str = Field(alias="type", min_length=1, description="Directed predicate.")
+    attributes: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Distinct observed relationship attribute values.",
+    )
+    evidence: list[Provenance] = Field(
+        min_length=1,
+        description="Source observations supporting this relationship.",
+    )
+
+
+class GraphArtifact(StrictModel):
+    """Complete validated and provenance-preserving knowledge-graph artifact."""
+
+    schema_version: Literal["crest-kg-v1"] = Field(description="Graph contract version.")
+    generated_at: datetime = Field(description="UTC time when the run completed.")
+    model: str = Field(min_length=1, description="Resolved model used for extraction.")
+    trace_id: str = Field(min_length=1, description="Root llm_client observability trace.")
+    max_budget_usd: float = Field(gt=0, description="User-authorized run budget ceiling.")
+    observed_cost_usd: float = Field(ge=0, description="Cost reported by llm_client.")
+    documents: list[SourceDocument] = Field(
+        min_length=1,
+        description="Exact, deterministic source selection for this run.",
+    )
+    entities: list[GraphEntity] = Field(description="Canonical grounded entities.")
+    relationships: list[GraphRelationship] = Field(description="Canonical grounded relationships.")
+
+    @model_validator(mode="after")
+    def validate_graph_integrity(self) -> Self:
+        if self.observed_cost_usd > self.max_budget_usd:
+            raise ValueError("observed cost exceeds the authorized budget")
+
+        document_ids = [document.document_id for document in self.documents]
+        if len(document_ids) != len(set(document_ids)):
+            raise ValueError("document IDs must be unique")
+        known_documents = set(document_ids)
+
+        entity_ids = [entity.id for entity in self.entities]
+        if len(entity_ids) != len(set(entity_ids)):
+            raise ValueError("entity IDs must be unique")
+        known_entities = set(entity_ids)
+
+        relationship_ids = [relationship.id for relationship in self.relationships]
+        if len(relationship_ids) != len(set(relationship_ids)):
+            raise ValueError("relationship IDs must be unique")
+
+        for entity in self.entities:
+            _validate_provenance_documents(entity.evidence, known_documents)
+        for relationship in self.relationships:
+            if relationship.source not in known_entities:
+                raise ValueError(f"dangling relationship source: {relationship.source}")
+            if relationship.target not in known_entities:
+                raise ValueError(f"dangling relationship target: {relationship.target}")
+            _validate_provenance_documents(relationship.evidence, known_documents)
+        return self
+
+
+def _validate_provenance_documents(
+    evidence: list[Provenance], known_documents: set[str]
+) -> None:
+    for item in evidence:
+        if item.document_id not in known_documents:
+            raise ValueError(f"provenance references unknown document: {item.document_id}")
+
+
+def normalize_text(value: str) -> str:
+    """Normalize text for deterministic identity comparisons."""
+
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    return " ".join(normalized.split())
+
+
+def safe_token(value: str, *, fallback: str = "item") -> str:
+    """Return a portable lowercase token for IDs and trace segments."""
+
+    token = re.sub(r"[^a-z0-9]+", "-", normalize_text(value)).strip("-")
+    return token[:60] or fallback
+
+
+def _body_digest(body_text: str) -> str:
+    return hashlib.sha256(body_text.encode("utf-8")).hexdigest()
+
+
+def build_source_lines(text: str) -> tuple[SourceLine, ...]:
+    """Map numbered prompt lines back to exact source character offsets."""
+
+    lines: list[SourceLine] = []
+    cursor = 0
+    for number, raw_line in enumerate(text.splitlines(keepends=True), start=1):
+        content = raw_line.rstrip("\r\n")
+        lines.append(
+            SourceLine(
+                number=number,
+                start_char=cursor,
+                end_char=cursor + len(content),
+            )
+        )
+        cursor += len(raw_line)
+    if not lines:
+        lines.append(SourceLine(number=1, start_char=0, end_char=len(text)))
+    return tuple(lines)
+
+
+def render_numbered_source(document: LoadedDocument) -> str:
+    """Render the exact analysis window with stable, model-citable line labels."""
+
+    return "\n".join(
+        f"L{line.number:04d} | "
+        f"{document.analysis_text[line.start_char:line.end_char]}"
+        for line in document.source_lines
+    )
+
+
+def derive_document_id(document: RawDocument) -> str:
+    """Derive a stable source identifier without depending on list position."""
+
+    for key in DOCUMENT_NUMBER_KEYS:
+        value = document.metadata.get(key)
+        if value:
+            return safe_token(value, fallback="document")
+    if document.url:
+        tail = document.url.rstrip("/").rsplit("/", 1)[-1]
+        if tail:
+            return safe_token(tail, fallback="document")
+    digest = hashlib.sha256(f"{document.title}\0{document.body_text}".encode()).hexdigest()[:16]
+    return f"document-{digest}"
+
+
+def load_corpus(corpus_path: Path, *, limit: int, max_chars: int) -> list[LoadedDocument]:
+    """Load, validate, sort, and select an explicit CREST corpus."""
+
+    if limit <= 0:
+        raise ValueError("limit must be positive")
+    if max_chars <= 0:
+        raise ValueError("max_chars must be positive")
+    if not corpus_path.is_file():
+        raise ValueError(f"corpus is not a file: {corpus_path}")
+
+    payload = json.loads(corpus_path.read_text(encoding="utf-8"))
+    if isinstance(payload, dict) and isinstance(payload.get("documents"), list):
+        raw_documents = payload["documents"]
+    elif isinstance(payload, list):
+        raw_documents = payload
+    else:
+        raise TypeError("corpus must be a list or an object with a documents list")
+
+    parsed = [RawDocument.model_validate(item) for item in raw_documents]
+    if len(parsed) < limit:
+        raise ValueError(f"corpus contains {len(parsed)} documents, fewer than limit={limit}")
+
+    corpus_label = corpus_path.as_posix()
+    loaded: list[LoadedDocument] = []
+    seen_ids: set[str] = set()
+    for document in parsed:
+        document_id = derive_document_id(document)
+        if document_id in seen_ids:
+            raise ValueError(f"duplicate source document ID: {document_id}")
+        seen_ids.add(document_id)
+        analyzed_end = min(len(document.body_text), max_chars)
+        analysis_text = document.body_text[:analyzed_end]
+        source_lines = build_source_lines(analysis_text)
+        manifest = SourceDocument(
+            document_id=document_id,
+            title=document.title,
+            source_url=document.url,
+            corpus_path=corpus_label,
+            body_sha256=_body_digest(document.body_text),
+            total_chars=len(document.body_text),
+            analyzed_start=0,
+            analyzed_end=analyzed_end,
+            analyzed_lines=len(source_lines),
+        )
+        loaded.append(
+            LoadedDocument(
+                manifest=manifest,
+                metadata=document.metadata,
+                analysis_text=analysis_text,
+                source_lines=source_lines,
+            )
+        )
+
+    loaded.sort(key=lambda item: item.manifest.document_id)
+    return loaded[:limit]
+
+
+def locate_evidence(document: LoadedDocument, evidence: EvidenceCandidate) -> Provenance:
+    """Materialize a bounded model line citation as exact original source text."""
+
+    if evidence.line_end > len(document.source_lines):
+        raise ValueError(
+            f"evidence line L{evidence.line_end:04d} exceeds "
+            f"{document.manifest.document_id}'s {len(document.source_lines)} supplied lines"
+        )
+    first = document.source_lines[evidence.line_start - 1]
+    last = document.source_lines[evidence.line_end - 1]
+    start = first.start_char
+    end = last.end_char
+    quote = document.analysis_text[start:end]
+    if not quote.strip():
+        raise ValueError(
+            f"evidence lines L{evidence.line_start:04d}-L{evidence.line_end:04d} "
+            f"contain no source text in {document.manifest.document_id}"
+        )
+    return Provenance(
+        document_id=document.manifest.document_id,
+        source_url=document.manifest.source_url,
+        corpus_path=document.manifest.corpus_path,
+        body_sha256=document.manifest.body_sha256,
+        quote=quote,
+        line_start=evidence.line_start,
+        line_end=evidence.line_end,
+        start_char=start,
+        end_char=end,
+    )
+
+
+def validate_extraction_grounding(
+    document: LoadedDocument, extraction: DocumentExtraction
+) -> None:
+    """Fail immediately when any model citation cannot bind to supplied source lines."""
+
+    for entity in extraction.entities:
+        locate_evidence(document, entity.evidence)
+    for relationship in extraction.relationships:
+        locate_evidence(document, relationship.evidence)
+
+
+def canonical_entity_id(entity: EntityCandidate) -> str:
+    """Build a stable ID that cannot collapse entities across semantic types."""
+
+    identity = f"{entity.entity_type.value}\0{normalize_text(entity.name)}"
+    digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
+    return f"{entity.entity_type.value}:{safe_token(entity.name)}:{digest}"
+
+
+def _merge_attributes(target: dict[str, list[str]], additions: dict[str, str]) -> None:
+    for raw_key, raw_value in additions.items():
+        key = raw_key.strip()
+        value = raw_value.strip()
+        if not key or not value:
+            continue
+        values = target.setdefault(key, [])
+        if value not in values:
+            values.append(value)
+
+
+def _append_provenance(target: list[Provenance], item: Provenance) -> None:
+    key = (item.document_id, item.start_char, item.end_char, item.quote)
+    existing = {
+        (entry.document_id, entry.start_char, entry.end_char, entry.quote)
+        for entry in target
+    }
+    if key not in existing:
+        target.append(item)
+
+
+def build_graph(
+    documents: list[LoadedDocument],
+    extractions: list[DocumentExtraction],
+    *,
+    model: str,
+    trace_id: str,
+    max_budget_usd: float,
+    observed_cost_usd: float,
+) -> GraphArtifact:
+    """Merge validated per-document extractions into one integrity-checked graph."""
+
+    if len(documents) != len(extractions):
+        raise ValueError("each selected document must have exactly one extraction")
+
+    entities_by_id: dict[str, GraphEntity] = {}
+    local_id_maps: list[dict[str, str]] = []
+
+    for document, extraction in zip(documents, extractions, strict=True):
+        local_map: dict[str, str] = {}
+        for entity_candidate in extraction.entities:
+            entity_id = canonical_entity_id(entity_candidate)
+            local_map[entity_candidate.local_id] = entity_id
+            provenance = locate_evidence(document, entity_candidate.evidence)
+            entity = entities_by_id.get(entity_id)
+            if entity is None:
+                entity = GraphEntity(
+                    id=entity_id,
+                    name=entity_candidate.name,
+                    type=entity_candidate.entity_type,
+                    attributes={},
+                    evidence=[provenance],
+                )
+                entities_by_id[entity_id] = entity
+            else:
+                _append_provenance(entity.evidence, provenance)
+            _merge_attributes(entity.attributes, entity_candidate.attributes)
+        local_id_maps.append(local_map)
+
+    relationships_by_key: dict[tuple[str, str, str], GraphRelationship] = {}
+    for document, extraction, local_map in zip(
+        documents, extractions, local_id_maps, strict=True
+    ):
+        for relationship_candidate in extraction.relationships:
+            source = local_map[relationship_candidate.source_entity_id]
+            target = local_map[relationship_candidate.target_entity_id]
+            normalized_type = safe_token(
+                relationship_candidate.relationship_type, fallback="related-to"
+            )
+            key = (source, target, normalized_type)
+            provenance = locate_evidence(document, relationship_candidate.evidence)
+            relationship = relationships_by_key.get(key)
+            if relationship is None:
+                digest = hashlib.sha256("\0".join(key).encode("utf-8")).hexdigest()[:12]
+                relationship = GraphRelationship(
+                    id=f"relationship:{digest}",
+                    source=source,
+                    target=target,
+                    type=normalized_type,
+                    attributes={},
+                    evidence=[provenance],
+                )
+                relationships_by_key[key] = relationship
+            else:
+                _append_provenance(relationship.evidence, provenance)
+            _merge_attributes(relationship.attributes, relationship_candidate.attributes)
+
+    return GraphArtifact(
+        schema_version=PIPELINE_VERSION,
+        generated_at=datetime.now(timezone.utc),
+        model=model,
+        trace_id=trace_id,
+        max_budget_usd=max_budget_usd,
+        observed_cost_usd=observed_cost_usd,
+        documents=[document.manifest for document in documents],
+        entities=sorted(entities_by_id.values(), key=lambda entity: entity.id),
+        relationships=sorted(
+            relationships_by_key.values(), key=lambda relationship: relationship.id
+        ),
+    )
+
+
+def run_extraction(
+    documents: list[LoadedDocument],
+    *,
+    model_override: str | None,
+    model_justification_override: str | None,
+    trace_id: str,
+    max_budget_usd: float,
+) -> GraphArtifact:
+    """Execute one fully traced structured extraction per selected document."""
+
+    from llm_client import call_llm_structured, get_model, render_prompt
+
+    model = model_override or get_model("graph_building", use_performance=False)
+    if model_override:
+        model_justification = (model_justification_override or "").strip()
+        if not model_justification:
+            raise ValueError("--model requires --model-justification")
+    else:
+        model_justification = (
+            "Resolved through llm_client get_model('graph_building', "
+            "use_performance=False) for structured CREST graph extraction."
+        )
+    extractions: list[DocumentExtraction] = []
+    observed_cost = 0.0
+
+    for document in documents:
+        messages = render_prompt(
+            PROMPT_PATH,
+            document_id=document.manifest.document_id,
+            title=document.manifest.title,
+            source_url=document.manifest.source_url or "",
+            metadata_json=json.dumps(document.metadata, ensure_ascii=False, sort_keys=True),
+            numbered_body_text=render_numbered_source(document),
+        )
+        extraction, result = call_llm_structured(
+            model,
+            messages,
+            response_model=DocumentExtraction,
+            task="crest_kg.entity_relationship_extraction",
+            trace_id=f"{trace_id}/documents/{safe_token(document.manifest.document_id)}",
+            budget_scope_trace_id=trace_id,
+            max_budget=max_budget_usd,
+            model_policy="enforce_allowlist",
+            model_justification=model_justification,
+            prompt_ref="crest_kg.crest_extraction@1",
+        )
+        # Re-validate explicitly at the project boundary even though llm_client
+        # already returns the declared Pydantic type.
+        validated = DocumentExtraction.model_validate(extraction.model_dump())
+        validate_extraction_grounding(document, validated)
+        extractions.append(validated)
+        observed_cost += float(result.cost or 0.0)
+
+    return build_graph(
+        documents,
+        extractions,
+        model=model,
+        trace_id=trace_id,
+        max_budget_usd=max_budget_usd,
+        observed_cost_usd=observed_cost,
+    )
+
+
+def write_graph(graph: GraphArtifact, output_path: Path, *, force: bool) -> None:
+    """Atomically write a graph, refusing silent overwrite."""
+
+    if output_path.exists() and not force:
+        raise ValueError(f"output already exists; pass --force to replace it: {output_path}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = graph.model_dump_json(by_alias=True, indent=2) + "\n"
+    temp_name: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=output_path.parent,
+            prefix=f".{output_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temp_name = handle.name
+            handle.write(serialized)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_name, output_path)
+    except Exception:
+        if temp_name:
+            Path(temp_name).unlink(missing_ok=True)
+        raise
+
+
+def validate_graph_file(graph_path: Path) -> GraphArtifact:
+    """Load and validate a graph artifact against the full contract."""
+
+    return GraphArtifact.model_validate_json(graph_path.read_text(encoding="utf-8"))
+
+
+def _positive_float(value: str) -> float:
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("value must be greater than zero")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("value must be greater than zero")
+    return parsed
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    def add_corpus_arguments(command: argparse.ArgumentParser) -> None:
+        command.add_argument("--corpus", type=Path, required=True)
+        command.add_argument("--limit", type=_positive_int, default=5)
+        command.add_argument("--max-chars", type=_positive_int, default=15_000)
+
+    inspect_parser = subparsers.add_parser(
+        "inspect-corpus", help="Show the exact deterministic source selection without an LLM call."
+    )
+    add_corpus_arguments(inspect_parser)
+
+    extract_parser = subparsers.add_parser(
+        "extract", help="Run traced structured extraction and write a validated graph."
+    )
+    add_corpus_arguments(extract_parser)
+    extract_parser.add_argument("--output", type=Path, required=True)
+    extract_parser.add_argument(
+        "--max-budget-usd",
+        type=_positive_float,
+        required=True,
+        help="Explicit total dollar ceiling shared by all document calls.",
+    )
+    extract_parser.add_argument("--model", help="Optional model override; defaults to graph_building.")
+    extract_parser.add_argument(
+        "--model-justification",
+        help="Required rationale when --model overrides the graph_building registry route.",
+    )
+    extract_parser.add_argument("--trace-id", help="Optional root trace ID.")
+    extract_parser.add_argument("--force", action="store_true")
+
+    validate_parser = subparsers.add_parser(
+        "validate", help="Validate a generated graph and print its integrity counts."
+    )
+    validate_parser.add_argument("--graph", type=Path, required=True)
+    return parser
+
+
+def _default_trace_id() -> str:
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return f"crest_kg/extraction/{timestamp}"
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        if args.command == "inspect-corpus":
+            documents = load_corpus(args.corpus, limit=args.limit, max_chars=args.max_chars)
+            print(
+                json.dumps(
+                    [document.manifest.model_dump(mode="json") for document in documents],
+                    indent=2,
+                )
+            )
+            return 0
+
+        if args.command == "extract":
+            documents = load_corpus(args.corpus, limit=args.limit, max_chars=args.max_chars)
+            graph = run_extraction(
+                documents,
+                model_override=args.model,
+                model_justification_override=args.model_justification,
+                trace_id=args.trace_id or _default_trace_id(),
+                max_budget_usd=args.max_budget_usd,
+            )
+            write_graph(graph, args.output, force=args.force)
+            print(
+                f"wrote {args.output}: {len(graph.documents)} documents, "
+                f"{len(graph.entities)} entities, {len(graph.relationships)} relationships, "
+                f"cost=${graph.observed_cost_usd:.6f}"
+            )
+            return 0
+
+        graph = validate_graph_file(args.graph)
+        print(
+            f"valid {graph.schema_version}: {len(graph.documents)} documents, "
+            f"{len(graph.entities)} entities, {len(graph.relationships)} relationships; "
+            "duplicate_ids=0 dangling_relationships=0 ungrounded_relationships=0"
+        )
+        return 0
+    except (OSError, ValueError, json.JSONDecodeError, ValidationError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,8 @@
+# Keep source and documentation line endings portable.
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+
+# Preserve provenance-bearing artifacts byte-for-byte on every platform.
+cia_documents/disinformation_complete_20250517_002848.json -text -diff
+cia_kg_output/validated_5_documents.json -text

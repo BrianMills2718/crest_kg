@@ -1,0 +1,3789 @@
+{
+  "schema_version": "crest-kg-v1",
+  "generated_at": "2026-08-20T23:02:10.962353Z",
+  "model": "openrouter/minimax/minimax-m3",
+  "trace_id": "crest_kg/extraction/20260820-line-grounded-five-document",
+  "max_budget_usd": 0.22,
+  "observed_cost_usd": 0.039241059999999994,
+  "documents": [
+    {
+      "document_id": "05259029",
+      "title": "LETTER TO EDITOR, NY TRIBUNE, FROM ANATOLYI GOLITSYN RE \"NEW LIES FOR OLD\"",
+      "source_url": "https://www.cia.gov/readingroom/document/05259029",
+      "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+      "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+      "total_chars": 15341,
+      "analyzed_start": 0,
+      "analyzed_end": 15000,
+      "analyzed_lines": 300
+    },
+    {
+      "document_id": "05259030",
+      "title": "THREE ARTICLES SUBMITTED FOR APPROVAL BY ANATOLYI GOLITSYN",
+      "source_url": "https://www.cia.gov/readingroom/document/05259030",
+      "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+      "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+      "total_chars": 18713,
+      "analyzed_start": 0,
+      "analyzed_end": 15000,
+      "analyzed_lines": 292
+    },
+    {
+      "document_id": "05798947",
+      "title": "THE CONTINUING SOVIET DISINFORMATION BLITZ",
+      "source_url": "https://www.cia.gov/readingroom/document/05798947",
+      "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+      "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+      "total_chars": 11944,
+      "analyzed_start": 0,
+      "analyzed_end": 11944,
+      "analyzed_lines": 295
+    },
+    {
+      "document_id": "cia-rdp67b00446r000500070013-6",
+      "title": "(UNTITLED)",
+      "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+      "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+      "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+      "total_chars": 3393,
+      "analyzed_start": 0,
+      "analyzed_end": 3393,
+      "analyzed_lines": 61
+    },
+    {
+      "document_id": "cia-rdp70-00058r000300020010-5",
+      "title": "CONGRESSIONAL RECORD",
+      "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+      "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+      "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+      "total_chars": 13266,
+      "analyzed_start": 0,
+      "analyzed_end": 13266,
+      "analyzed_lines": 107
+    }
+  ],
+  "entities": [
+    {
+      "id": "event:assassination-of-olof-palme:b18a3aec72df",
+      "name": "Assassination of Olof Palme",
+      "type": "event",
+      "attributes": {
+        "date": [
+          "February 1986"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Since the February 1986 assassination of Swedish Prime \nMinister Olof Palme, Moscow has made a concerted effort to \nimplicate the United States in his death. In addition to ",
+          "line_start": 86,
+          "line_end": 88,
+          "start_char": 3288,
+          "end_char": 3463
+        }
+      ]
+    },
+    {
+      "id": "event:bay-of-pigs:016c5ea9ec9e",
+      "name": "Bay of Pigs",
+      "type": "event",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " CONIHIbUTIUNS TO THE BAY OF PIGS FIASCO WAS THE (?FAULT) OF KGb,",
+          "line_start": 36,
+          "line_end": 36,
+          "start_char": 1925,
+          "end_char": 1990
+        }
+      ]
+    },
+    {
+      "id": "event:communist-strategic-disinformation-program:ff096494353d",
+      "name": "Communist Strategic Disinformation Program",
+      "type": "event",
+      "attributes": {
+        "type": [
+          "program launched in 1958"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "an expose and a realistic description of the Communise' \nStrategic Disinformation Program in action. This program, \nwhich was launched in 1958, has seriously damaged Western \ninterests and greatly benefitted our Communist adversaries. \nIt has further generated a great deal of confusion regarding ",
+          "line_start": 94,
+          "line_end": 98,
+          "start_char": 3084,
+          "end_char": 3381
+        }
+      ]
+    },
+    {
+      "id": "event:conference-on-disinformation-in-the-modern-world:725fae69b616",
+      "name": "Conference on Disinformation In The Modern World",
+      "type": "event",
+      "attributes": {
+        "organized_by": [
+          "Resistance International"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "On \"Disinformation In The Modern World\". ",
+          "line_start": 201,
+          "line_end": 201,
+          "start_char": 9484,
+          "end_char": 9525
+        }
+      ]
+    },
+    {
+      "id": "event:dominican-crisis:b673d29ec1a2",
+      "name": "Dominican Crisis",
+      "type": "event",
+      "attributes": {
+        "date": [
+          "April"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " CIA IN FEEDING THE PRESIDENT FAULTY INFORMATION IN LAST APRIL'S\n DOMINICAN CRISIS THE WORK OF AN AGENT OF THE DEPARTMENT OF",
+          "line_start": 39,
+          "line_end": 40,
+          "start_char": 2126,
+          "end_char": 2250
+        }
+      ]
+    },
+    {
+      "id": "event:fiji-military-coup:97f762a702fa",
+      "name": "Fiji military coup",
+      "type": "event",
+      "attributes": {
+        "date": [
+          "May 1987"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Shortly after the military coup in Fiji in May, Radio \nMoscow, TASS and Izvestia all began to play up rumors of \nUS involvement. On 18 May, for example, Radio Moscow ",
+          "line_start": 75,
+          "line_end": 77,
+          "start_char": 2676,
+          "end_char": 2844
+        }
+      ]
+    },
+    {
+      "id": "event:jonestown-massacre:73556a9a15e2",
+      "name": "Jonestown massacre",
+      "type": "event",
+      "attributes": {
+        "date": [
+          "1978"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "a book published by Novosti--claiming that the CIA \ninstigated the 1978 Jonestown massacre in order to prevent \n.cult members from emigrating to the Soviet Union. Since ",
+          "line_start": 122,
+          "line_end": 124,
+          "start_char": 4745,
+          "end_char": 4914
+        }
+      ]
+    },
+    {
+      "id": "event:operation-trust:fa37079a373e",
+      "name": "Operation Trust",
+      "type": "event",
+      "attributes": {
+        "type": [
+          "KGB operation manipulating controlled political opposition"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "described how the KGB, under Shelepin, drawing on its experience \nin successfully manipulating its controlled political opposition \nagainst the West, as in the well known operation \"Trust\", decided \nto again use the KGB controlled opposition in the framework of \ntheir long range strategy. Such KGB designs provide an oppor-",
+          "line_start": 156,
+          "line_end": 160,
+          "start_char": 6749,
+          "end_char": 7073
+        }
+      ]
+    },
+    {
+      "id": "event:soviet-disinformation-campaign-on-aids-origin:b4915ed3c9f8",
+      "name": "Soviet disinformation campaign on AIDS origin",
+      "type": "event",
+      "attributes": {
+        "start_date": [
+          "October 1985"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o In our view, a central element of this effort is Moscow's \nworldwide campaign, begun in October 1985, charging that \nAIDS is the result of US biological warfare experiments. ",
+          "line_start": 153,
+          "line_end": 155,
+          "start_char": 6324,
+          "end_char": 6500
+        }
+      ]
+    },
+    {
+      "id": "event:strategic-defense-initiative:bd7ed55dff81",
+      "name": "Strategic Defense Initiative",
+      "type": "event",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Moscow has also surfaced allegations that some existing US \nmilitary facilities will be used in the Strategic Defense \nInitiative (SDI) program and that the United States is ",
+          "line_start": 174,
+          "line_end": 176,
+          "start_char": 7248,
+          "end_char": 7424
+        }
+      ]
+    },
+    {
+      "id": "event:the-continuing-soviet-disinformation-blitz:ab5956b2f040",
+      "name": "The Continuing Soviet Disinformation Blitz",
+      "type": "event",
+      "attributes": {
+        "document_type": [
+          "CIA memorandum"
+        ],
+        "date": [
+          "8 July 1987"
+        ],
+        "reference": [
+          "GI M 87-20122"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "The Continuing Soviet Disinformation Blitz \nGI M 87-20122, July 1987, ",
+          "line_start": 26,
+          "line_end": 27,
+          "start_char": 898,
+          "end_char": 968
+        }
+      ]
+    },
+    {
+      "id": "organization:central-committee:c3905589513f",
+      "name": "Central Committee",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "directed KGB Institute studies on intelligence strategy"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "of Soviet Intelligence at KGB Headquarters in Moscow. During \nthe period 1957 - 1959, the KGB Institute was directed, by the \nCentral Committee, to prepare numerous studies regarding the \nuse of intelligence and security assets for inclusion in the \nstrategies against the West. These studies were made available ",
+          "line_start": 69,
+          "line_end": 73,
+          "start_char": 1711,
+          "end_char": 2024
+        }
+      ]
+    },
+    {
+      "id": "organization:central-intelligence-agency-cia:41bc03616177",
+      "name": "Central Intelligence Agency (CIA)",
+      "type": "organization",
+      "attributes": {
+        "primary_target": [
+          "Soviet disinformation program"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " 2. CIA, In Its Intelligence role, is feared by  and agencies engaged ? in 'anti-Communist     1'2. A study of Soviet disinformation\n the Soviets for Its responsibility and Ability  and cold war activity.                        , that the Soviets are engaged In an Impressive",
+          "line_start": 59,
+          "line_end": 60,
+          "start_char": 6336,
+          "end_char": 6611
+        }
+      ]
+    },
+    {
+      "id": "organization:central-intelligence-agency:cfcdf2497018",
+      "name": "Central Intelligence Agency",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "publisher"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Lentral Intelligence Agency \nWashington. D. C. 20505 \nDIRECTORATE OF INTELLIGENCE ",
+          "line_start": 37,
+          "line_end": 39,
+          "start_char": 1111,
+          "end_char": 1193
+        }
+      ]
+    },
+    {
+      "id": "organization:ci-staff:69c64d19eace",
+      "name": "CI Staff",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "CI Staff ",
+          "line_start": 6,
+          "line_end": 6,
+          "start_char": 95,
+          "end_char": 104
+        }
+      ]
+    },
+    {
+      "id": "organization:cia:e9e55ea29acf",
+      "name": "CIA",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " (TEXT) A MACABRE CIA DOCUMENT REPORTEDLY BEING CIRCULATED AMONG\n SELECT CONGRESSMEN WILL ACCENTUATE NATIONAL DISQUIET OVER THIS\n AGENCY.  THIS CRUDE OPERATION STIRS ANEW THE ~iUESTION OF WHETHER",
+          "line_start": 4,
+          "line_end": 6,
+          "start_char": 139,
+          "end_char": 334
+        }
+      ]
+    },
+    {
+      "id": "organization:congressional-watchdog-committee:0a5b85176faf",
+      "name": "Congressional Watchdog Committee",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " wASHIWGTON AS DESIGNED TO BLOCK A NEW EFFORT TO ESTABLISH A\n CONGRESSIONAL WATCHDOG COMMITTEE TO OVERSEE THE AGANCY AS WELL AS\n TO COUNTER SOME OF THE CRITICISMS BEING LEVELED AGAINST IT.",
+          "line_start": 45,
+          "line_end": 47,
+          "start_char": 2463,
+          "end_char": 2651
+        }
+      ]
+    },
+    {
+      "id": "organization:department-of-disinformation:65f688750874",
+      "name": "Department of Disinformation",
+      "type": "organization",
+      "attributes": {
+        "parent": [
+          "Soviet KGB"
+        ],
+        "assignment_from": [
+          "Politburo"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " KGB, IT IS SAID, HAS ESTABLISHED A SPECIAL BRANCH, A \"DEPARTMENT OF\n DISINFORMATION,\" WHOSE ASSIGNMENT FROM THE POLITBURO IS TO DISCREDIT\n THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE\n PACE CORPS, AND THE USIA.  THIS DEPARTMENT OF DISINFORMATION,",
+          "line_start": 16,
+          "line_end": 19,
+          "start_char": 812,
+          "end_char": 1079
+        }
+      ]
+    },
+    {
+      "id": "organization:disinformation-department:eb99975a7c05",
+      "name": "Disinformation Department",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "KGB department whose formation Golitsyn witnessed"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "well as many secret consultations between KGB officials and \nsecurity chiefs of the bloc countries. I personally witnessed \nthe formation of the Disinformation Department and monitored \nits beginning. \nApproved for Release: 2018/04/10 C05259029 ",
+          "line_start": 84,
+          "line_end": 88,
+          "start_char": 2673,
+          "end_char": 2918
+        }
+      ]
+    },
+    {
+      "id": "organization:dodd-mead-publishing-company:71e6db7f6f47",
+      "name": "Dodd, Mead Publishing Company",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "reasons, must be through the Dodd, Mead Publishing Company. ",
+          "line_start": 165,
+          "line_end": 165,
+          "start_char": 8212,
+          "end_char": 8272
+        }
+      ]
+    },
+    {
+      "id": "organization:fbi:7a1e002fdf84",
+      "name": "FBI",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "organization:foreign-subversion-and-instability-center:c0d676634946",
+      "name": "Foreign Subversion and Instability Center",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "preparing component"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "2. This memorandum was prepared by Foreign \nSubversion and Instability Center, Office-cYr-UTO,tal-T-sues. Your \ncomments or questions are welcome and may be directed to the  ",
+          "line_start": 17,
+          "line_end": 19,
+          "start_char": 540,
+          "end_char": 714
+        }
+      ]
+    },
+    {
+      "id": "organization:herald-tribune:3f066dc201a1",
+      "name": "Herald Tribune",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " ACCORDING TO DAVID WISE, HERALD TRIBUNE CORRESPONDENT AND COAUTHOR",
+          "line_start": 11,
+          "line_end": 11,
+          "start_char": 478,
+          "end_char": 545
+        }
+      ]
+    },
+    {
+      "id": "organization:izvestia:e7fa4f782e7a",
+      "name": "Izvestia",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "edition of Izvestia, it has been replayed in the pro-\nSoviet Indian press and in the Communist press of Uruguay \nand East Germany. Moreover, the Novosti book has been ",
+          "line_start": 126,
+          "line_end": 128,
+          "start_char": 4970,
+          "end_char": 5137
+        }
+      ]
+    },
+    {
+      "id": "organization:jaycor:eba8d46a7e5e",
+      "name": "JAYCOR",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Dir. National Sec. Div. of JAYCOR ",
+          "line_start": 118,
+          "line_end": 118,
+          "start_char": 5457,
+          "end_char": 5491
+        }
+      ]
+    },
+    {
+      "id": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "name": "KGB Department of Disinformation (Department D)",
+      "type": "organization",
+      "attributes": {
+        "established": [
+          "1959"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " markedly In quantity and  Intensity since. program,                  Department D is still directly tied , most recent Soviet articles on the Agency\n the estailishment of the KGB Department, into the Presidium In the planning of its            are exclusively \"documented\" from Western\n of Disinformation In 105D.' This  program' work.'                                             books, articles, and newspapers,",
+          "line_start": 46,
+          "line_end": 48,
+          "start_char": 4523,
+          "end_char": 4937
+        }
+      ]
+    },
+    {
+      "id": "organization:kgb-institute:307f78343ee5",
+      "name": "KGB Institute",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "Soviet institute where Golitsyn studied"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "available to me because I had witnessed these preparations while \nI was both a student at the KGB Institute and a senior officer \nof Soviet Intelligence at KGB Headquarters in Moscow. During \nthe period 1957 - 1959, the KGB Institute was directed, by the \nCentral Committee, to prepare numerous studies regarding the ",
+          "line_start": 67,
+          "line_end": 71,
+          "start_char": 1581,
+          "end_char": 1898
+        }
+      ]
+    },
+    {
+      "id": "organization:kgb:47f63745a050",
+      "name": "KGB",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "Soviet intelligence and security agency"
+        ],
+        "full_name": [
+          "Soviet State Security Service"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "you and your readers that my knowledge about the Central \nCommittee's and KGB's preparations for the adoption of the new \nlong range policy and the active role of the KGB in it, was \navailable to me because I had witnessed these preparations while \nI was both a student at the KGB Institute and a senior officer ",
+          "line_start": 64,
+          "line_end": 68,
+          "start_char": 1398,
+          "end_char": 1710
+        },
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "  In addition, US Embassy \nindicates that the KGB: \nPlanted a rumor in the Congo this spring alleging ",
+          "line_start": 100,
+          "line_end": 102,
+          "start_char": 3935,
+          "end_char": 4037
+        },
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " spollsibilitiCS for national                             security   has    6. Soviet disinformation activity is planned  lion  was  then  Immediately          sent back  to\"\n 'been conducted by the Soviet and Com-  and directed by a specialized dep artinent, of  Moscow, this time through Tass channels.'\n fnunist bloc a1nce 1040.  IUO\\ it operates tho  Soviet  Stato  Security  Service.  This     \"The last stage of this grandiose forgery$S explained  Ili? a Paper,  \"The  SOVICt  KGB department, which was created to in-   was under the special care of  the  Soviet",
+          "line_start": 15,
+          "line_end": 17,
+          "start_char": 1737,
+          "end_char": 2305
+        }
+      ]
+    },
+    {
+      "id": "organization:moscow:75e913749bd9",
+      "name": "Moscow",
+      "type": "organization",
+      "attributes": {
+        "alias": [
+          "USSR"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Although Moscow claims to be reporting on its domestic \nproblems with a new truthfulness, it continues to push a heavy \nagenda of anti-US disinformation at home and abroad. A major ",
+          "line_start": 44,
+          "line_end": 46,
+          "start_char": 1270,
+          "end_char": 1451
+        }
+      ]
+    },
+    {
+      "id": "organization:national-security-council:acace66b909d",
+      "name": "National Security Council",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "1. At the request of Fritz Ermarth at the NSC, we have \nprepared a brief report describing recent Soviet disinformation ",
+          "line_start": 12,
+          "line_end": 13,
+          "start_char": 232,
+          "end_char": 352
+        }
+      ]
+    },
+    {
+      "id": "organization:new-york-post:b9602430d111",
+      "name": "New York Post",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " (NEW YORK POST EDITORIAL 30 SEPTEMBER \"THE CIA'S NEW REVELATIONS\")",
+          "line_start": 3,
+          "line_end": 3,
+          "start_char": 71,
+          "end_char": 138
+        }
+      ]
+    },
+    {
+      "id": "organization:new-york-tribune:9fd74c0b6da5",
+      "name": "New York Tribune",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "recipient newspaper for the letter"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "The attached letter to the \nEditor of the New York Tribune \nCI Staff \nfrom Golitsyn re \"New Lies For \nOld\" is approved by the DO for ",
+          "line_start": 22,
+          "line_end": 26,
+          "start_char": 481,
+          "end_char": 614
+        }
+      ]
+    },
+    {
+      "id": "organization:novosti:5a5e69e4b705",
+      "name": "Novosti",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "a book published by Novosti--claiming that the CIA \ninstigated the 1978 Jonestown massacre in order to prevent \n.cult members from emigrating to the Soviet Union. Since ",
+          "line_start": 122,
+          "line_end": 124,
+          "start_char": 4745,
+          "end_char": 4914
+        }
+      ]
+    },
+    {
+      "id": "organization:office-of-global-issues:353f775b7953",
+      "name": "Office of Global Issues",
+      "type": "organization",
+      "attributes": {
+        "role": [
+          "preparer"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Office of Global Issues \nDirectorate of Intelligence \nAttachment: ",
+          "line_start": 23,
+          "line_end": 25,
+          "start_char": 831,
+          "end_char": 897
+        }
+      ]
+    },
+    {
+      "id": "organization:peace-corps:b1e6429ade48",
+      "name": "Peace Corps",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "organization:politburo:27986e0592af",
+      "name": "Politburo",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " DISINFORMATION,\" WHOSE ASSIGNMENT FROM THE POLITBURO IS TO DISCREDIT",
+          "line_start": 17,
+          "line_end": 17,
+          "start_char": 881,
+          "end_char": 950
+        }
+      ]
+    },
+    {
+      "id": "organization:radio-moscow:7766c7172089",
+      "name": "Radio Moscow",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Moscow, TASS and Izvestia all began to play up rumors of \nUS involvement. On 18 May, for example, Radio Moscow \nreported a statement by the Soviet-controlled World Peace ",
+          "line_start": 76,
+          "line_end": 78,
+          "start_char": 2733,
+          "end_char": 2903
+        }
+      ]
+    },
+    {
+      "id": "organization:resistance-international:6117f00c785f",
+      "name": "Resistance International",
+      "type": "organization",
+      "attributes": {
+        "address": [
+          "102 Avenue Des Champs Elysees, 75008, Paris, France"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Resistance International \n102 Avenue Des Champs Elysees ",
+          "line_start": 173,
+          "line_end": 174,
+          "start_char": 8411,
+          "end_char": 8467
+        }
+      ]
+    },
+    {
+      "id": "organization:soviet-kgb:42946f034662",
+      "name": "Soviet KGB",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " KGB, IT IS SAID, HAS ESTABLISHED A SPECIAL BRANCH, A \"DEPARTMENT OF",
+          "line_start": 16,
+          "line_end": 16,
+          "start_char": 812,
+          "end_char": 880
+        }
+      ]
+    },
+    {
+      "id": "organization:soviet-operatives-in-malaysia:f17af0fec083",
+      "name": "Soviet operatives in Malaysia",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " SOVIET OPERATIVES IN MALAYSIA.   IS THE CiA SUGGESTING THAT ITS",
+          "line_start": 35,
+          "line_end": 35,
+          "start_char": 1860,
+          "end_char": 1924
+        }
+      ]
+    },
+    {
+      "id": "organization:soviet-secret-intelligence:2ae0144e61f1",
+      "name": "Soviet Secret Intelligence",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " TO DESCRIBE A MASSIVE CAMPAIGN BEING WATED BY THE SOVIET SECRET\n INTELLIGENCE APPARATUS TO STIGMATIZE AND DEFAME THE CIA.  THE SOVIET",
+          "line_start": 14,
+          "line_end": 15,
+          "start_char": 677,
+          "end_char": 811
+        }
+      ]
+    },
+    {
+      "id": "organization:state-department:aa5fd0980beb",
+      "name": "State Department",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "organization:tass:443f5ad8de84",
+      "name": "TASS",
+      "type": "organization",
+      "attributes": {
+        "type": [
+          "Soviet information bureau"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Moscow, TASS and Izvestia all began to play up rumors of \nUS involvement. On 18 May, for example, Radio Moscow \nreported a statement by the Soviet-controlled World Peace ",
+          "line_start": 76,
+          "line_end": 78,
+          "start_char": 2733,
+          "end_char": 2903
+        },
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " fnunist bloc a1nce 1040.  IUO\\ it operates tho  Soviet  Stato  Security  Service.  This     \"The last stage of this grandiose forgery$S explained  Ili? a Paper,  \"The  SOVICt  KGB department, which was created to in-   was under the special care of  the  Soviet\n tensify  Soviet  disinformation  activity,   is Information  Bureau,  Toss,           Radio-Moscow,",
+          "line_start": 17,
+          "line_end": 18,
+          "start_char": 2043,
+          "end_char": 2406
+        }
+      ]
+    },
+    {
+      "id": "organization:the-soviet-and-communist-bloc-defamation-campaign:346085c37d03",
+      "name": "The Soviet and Communist Bloc Defamation Campaign",
+      "type": "organization",
+      "attributes": {
+        "description": [
+          "Paper submitted by Mr. Price for printing in the Congressional Record"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " BLOC DEFAMATION CAMPAIGN                tionally and operationally, on dlshtformation   slight changes in style, and sign it from 'Our\n activity.  Communist bloc services,, in turn,   special correspondent in Singapore.' for\n In- PRICE asked and was given pCi'-     are playing their part in this work.            stance. Upon publication of such an article;",
+          "line_start": 3,
+          "line_end": 5,
+          "start_char": 195,
+          "end_char": 554
+        }
+      ]
+    },
+    {
+      "id": "organization:u-s-government:b164a985cd94",
+      "name": "U.S. Government",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " SOVIET GOVERNMENT SEEKS SYSTEMATICALLY TO FRUSTRATE ANU COUNTER THE\n EFFURST OF THE U.S. GOVERNMENT? ARE THE CIA AND THE FbI ANY MORE",
+          "line_start": 26,
+          "line_end": 27,
+          "start_char": 1381,
+          "end_char": 1515
+        }
+      ]
+    },
+    {
+      "id": "organization:united-states:6ebac5e73588",
+      "name": "United States",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "emotional appeals--has been to portray the United States as a \npractitioner of terrorism and subversion and a violator of human \nrights. Moscow also works hard at fostering opposition to US ",
+          "line_start": 48,
+          "line_end": 50,
+          "start_char": 1512,
+          "end_char": 1702
+        }
+      ]
+    },
+    {
+      "id": "organization:usia:bfa02e2b044b",
+      "name": "USIA",
+      "type": "organization",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE\n PACE CORPS, AND THE USIA.  THIS DEPARTMENT OF DISINFORMATION,",
+          "line_start": 18,
+          "line_end": 19,
+          "start_char": 951,
+          "end_char": 1079
+        }
+      ]
+    },
+    {
+      "id": "organization:world-peace-council:7224caf3caaf",
+      "name": "World Peace Council",
+      "type": "organization",
+      "attributes": {
+        "characteristic": [
+          "Soviet-controlled"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "US involvement. On 18 May, for example, Radio Moscow \nreported a statement by the Soviet-controlled World Peace \nCouncil--which cited a leftist British newspaper--that ",
+          "line_start": 77,
+          "line_end": 79,
+          "start_char": 2791,
+          "end_char": 2959
+        }
+      ]
+    },
+    {
+      "id": "person:alexander-kaznacheev:8d2efb488034",
+      "name": "Alexander Kaznacheev",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Former Soviet information officer who served in Burma"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " 3. Defranation and forgery operations are       the Soviet system and are now In the United'  was a prominent maverick Labor Member of\n conceived, directed, and perpetrated by A       States.   One  of  theses Alexander  Iiazna-: Parliament, one Bob Edwards, who was sup-\n single organization located outside the target                    cheev, who served in Burma as an Informs-`    posedly assisted In the effort by A. British",
+          "line_start": 77,
+          "line_end": 79,
+          "start_char": 8884,
+          "end_char": 9314
+        }
+      ]
+    },
+    {
+      "id": "person:allen-klots:15d8c99ceaf2",
+      "name": "Allen Klots",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Vice President, Dodd, Mead & Co."
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Att. Mr. Allen Klots, Vice President ",
+          "line_start": 195,
+          "line_end": 195,
+          "start_char": 9274,
+          "end_char": 9311
+        }
+      ]
+    },
+    {
+      "id": "person:allen-w-dulles:722709d38e4d",
+      "name": "Allen W. Dulles",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Former Director of Central Intelligence"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " oration among the non-Communist coun-           emphasized, havo been established by thel     the former Director of Central Intelligence,\n tries In order to carry out Soviet long-term i highest elements of party and government;      Mr.  Allen W. Dulles, entitled \"A Study of a",
+          "line_start": 72,
+          "line_end": 73,
+          "start_char": 8187,
+          "end_char": 8466
+        }
+      ]
+    },
+    {
+      "id": "person:anatolyi-golitsyn:501c9a114c35",
+      "name": "Anatolyi Golitsyn",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "former KGB officer; author of 'New Lies For Old'; letter author"
+        ],
+        "also_referenced_as": [
+          "A. Golitsyn"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Letter to Editor, NY Tribune, from Anatolyi Golitsyn re \"New Lies for Old\" \nFROM: , \niJohn F. Pereira \nChief, Information Management Staff \nEXTENSION ",
+          "line_start": 5,
+          "line_end": 9,
+          "start_char": 94,
+          "end_char": 244
+        },
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Three Articles Submitted For Approval \nby Anatolyi Golitsyn ",
+          "line_start": 9,
+          "line_end": 10,
+          "start_char": 159,
+          "end_char": 219
+        }
+      ]
+    },
+    {
+      "id": "person:andrei-sakharov:d07837ad9f53",
+      "name": "Andrei Sakharov",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "academician referenced in connection with Strategic Disinformation Program"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "It is in this context that one should examine the actiVist role \nof the academician SAKHAROV or the writer TWARDOUSKIY. Such an \nexamination would explain why the omnipotent KGB tolerated the \nactivist role of SAKHAROV up until 1980 and his long and unin-\nterrupted contacts with prominent Western correspondents in ",
+          "line_start": 131,
+          "line_end": 135,
+          "start_char": 5206,
+          "end_char": 5522
+        }
+      ]
+    },
+    {
+      "id": "person:art-buchwald:1a33d4a3c14a",
+      "name": "Art Buchwald",
+      "type": "person",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " DISINFORMATION?  THE CIA REPORT WOULD SOUND LIKE SOMETHING ART",
+          "line_start": 41,
+          "line_end": 41,
+          "start_char": 2251,
+          "end_char": 2314
+        }
+      ]
+    },
+    {
+      "id": "person:bob-edwards:9212323620d4",
+      "name": "Bob Edwards",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "British Labor Member of Parliament"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " 3. Defranation and forgery operations are       the Soviet system and are now In the United'  was a prominent maverick Labor Member of\n conceived, directed, and perpetrated by A       States.   One  of  theses Alexander  Iiazna-: Parliament, one Bob Edwards, who was sup-",
+          "line_start": 77,
+          "line_end": 78,
+          "start_char": 8884,
+          "end_char": 9156
+        }
+      ]
+    },
+    {
+      "id": "person:chairman-kosygin:47c79ebca3ce",
+      "name": "Chairman Kosygin",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Chairman of the Council of Ministers"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " for national security has been underway campaign against American leadership and              articles cited In any of the anti-CIA pamph-\n since 1948.  A major program Is aimed at the                               activity.  Chairman Kosygln and First Ssscre- lets reveals extensive use of Western source",
+          "line_start": 43,
+          "line_end": 44,
+          "start_char": 4071,
+          "end_char": 4377
+        }
+      ]
+    },
+    {
+      "id": "person:col-vasily-sitnikov:fb28205f8529",
+      "name": "Col. Vasily Sitnikov",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Senior KGB disinformation officer"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " .or pro-Communist propagandists and of co-                     process In a recent personal memoir;          uscript  was  researched  In  Moscow by  a\n operating Communist bloc Intelligence and    \"Articles were originated in KGB head-           senior KGB disinformation officer, Col. Vas-\n security services.  Although such undertak-                         quarters lu,Moscow-for example, about al-     ally Sitnikov, and then served up for final",
+          "line_start": 81,
+          "line_end": 83,
+          "start_char": 9452,
+          "end_char": 9903
+        }
+      ]
+    },
+    {
+      "id": "person:david-wise:f5b39a927744",
+      "name": "David Wise",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Herald Tribune correspondent"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " ACCORDING TO DAVID WISE, HERALD TRIBUNE CORRESPONDENT AND COAUTHOR\n OF A VOLUME CALLED \"THE INVISIBLE GOVERNMENT,\" A THOUGHTFUL AND",
+          "line_start": 11,
+          "line_end": 12,
+          "start_char": 478,
+          "end_char": 610
+        }
+      ]
+    },
+    {
+      "id": "person:dean-rusk:68e72ffcb957",
+      "name": "Dean Rusk",
+      "type": "person",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THAN DEAN RUSK AND SARGENT SHRIVER, TO bE IMMUNE FROM LEGITIMATE",
+          "line_start": 28,
+          "line_end": 28,
+          "start_char": 1516,
+          "end_char": 1581
+        }
+      ]
+    },
+    {
+      "id": "person:fritz-ermarth:99b56f6e65b5",
+      "name": "Fritz Ermarth",
+      "type": "person",
+      "attributes": {
+        "affiliation": [
+          "National Security Council"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "1. At the request of Fritz Ermarth at the NSC, we have \nprepared a brief report describing recent Soviet disinformation ",
+          "line_start": 12,
+          "line_end": 13,
+          "start_char": 232,
+          "end_char": 352
+        }
+      ]
+    },
+    {
+      "id": "person:gen-ivan-ivanovich-agayants:a10d78db58f8",
+      "name": "Gen. Ivan Ivanovich Agayants",
+      "type": "person",
+      "attributes": {
+        "alias": [
+          "Ivan Ivanovich Avalov"
+        ],
+        "role": [
+          "Head of KGB Department D (Disinformation)"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " tensify  Soviet  disinformation  activity,   is Information  Bureau,  Toss,           Radio-Moscow,\n and Comnumist?I3ioc Defamation Caill-   headed by Gen, Ivan Ivnnovich A ;ayants, a I the Soviet press, And Soviet diplomatic rep-",
+          "line_start": 18,
+          "line_end": 19,
+          "start_char": 2306,
+          "end_char": 2537
+        }
+      ]
+    },
+    {
+      "id": "person:georges-pasques:fc538ea6b509",
+      "name": "Georges Pasques",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "French spy"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " in  France  he  controlled  the  French  spy 10. Although the KGB Is able to fabricate\n 'Georges Pasqucs who was sentenced to life , In A4\n oscow whatever material idd f",
+          "line_start": 30,
+          "line_end": 32,
+          "start_char": 3190,
+          "end_char": 3360
+        }
+      ]
+    },
+    {
+      "id": "person:hanson-baldwin:7b42d40d29e5",
+      "name": "Hanson Baldwin",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "TV roundtable interviewer"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " meat D, which is headed by Gen. Ivan Ivano-      bodla'a  sovereignty,  subversive  Activity  of a TV roundtable on.,' arch 2D, 1064:\n vich Agayant? they are reviewed and passed       Japan In' the region, etc.    The articles were \"Mr. HANsoN BA:,DWIN. Well, that bring.",
+          "line_start": 86,
+          "line_end": 87,
+          "start_char": 10185,
+          "end_char": 10457
+        }
+      ]
+    },
+    {
+      "id": "person:ivan-mikhailovich-vozny:d582b2550f26",
+      "name": "Ivan Mikhailovich Vozny",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "KGB Head of Special Intelligence in Burma"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " Union.  The Soviet leadership has she: ged .       ' Ivan Z ikhailovich Vozny, a KGB I           gnbassy\" (New York, I061\n Q0 soviet at'ato Doc   ty Sorvic4, Ibo z0ba    Was head of the   SSttaal Intelligence e'. ?ou ,                       ..~, )  pp. IZ-39J.",
+          "line_start": 106,
+          "line_end": 107,
+          "start_char": 13005,
+          "end_char": 13266
+        }
+      ]
+    },
+    {
+      "id": "person:j-edgar-hoover:7bfa52fa7812",
+      "name": "J. Edgar Hoover",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "FBI Director"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        },
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " ,on  the  Intelligence  community with par-- and other non-Communist countries, there - ;       In  Western  publications  and  newspapers,\n ticular thrust Against the ?DI and Mr. J.       by contributing directly to the breakup oil'  This study also has confirmed the deep in.\n Edgar hoover.    The objective of the overall   the NATO Alliance.                            terest of the Soviet services In the develop.",
+          "line_start": 64,
+          "line_end": 66,
+          "start_char": 7080,
+          "end_char": 7499
+        }
+      ]
+    },
+    {
+      "id": "person:james-jesus-angleton:a82a89b09233",
+      "name": "James Jesus Angleton",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "expert on disinformation criticized by Navrozov"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Mr. Navrozov's attacks on Mr. Angleton, Mr. Hackett, Mr. \nArnaud de Borchgrave, Mr. Robert Moss, the British S.I.S., this \nauthor and many other experts on disinformation are not only \nirresponsible, but rather pretentious. I characterize this \noverall attack as grossly irresponsible because 'such persons as ",
+          "line_start": 185,
+          "line_end": 189,
+          "start_char": 8285,
+          "end_char": 8595
+        }
+      ]
+    },
+    {
+      "id": "person:john-f-pereira:8a4d21b33513",
+      "name": "John F. Pereira",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Chief, Information Management Staff (C/IMS)",
+          "Chief, Information Management Staff"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "iJohn F. Pereira \nChief, Information Management Staff \nEXTENSION \nNO \nDATE ",
+          "line_start": 7,
+          "line_end": 11,
+          "start_char": 179,
+          "end_char": 254
+        },
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "John F. Pereira \nChief, Information Management Staff ",
+          "line_start": 7,
+          "line_end": 8,
+          "start_char": 105,
+          "end_char": 158
+        }
+      ]
+    },
+    {
+      "id": "person:joseph-d-douglass-jr:b937be55c77e",
+      "name": "Joseph D. Douglass Jr.",
+      "type": "person",
+      "attributes": {
+        "title": [
+          "Dir. National Sec. Div. of JAYCOR"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Mr. Joseph D. Douglass Jr. \nDir. National Sec. Div. of JAYCOR ",
+          "line_start": 117,
+          "line_end": 118,
+          "start_char": 5429,
+          "end_char": 5491
+        }
+      ]
+    },
+    {
+      "id": "person:leonid-brezhnev:0a9c23fa082c",
+      "name": "Leonid Brezhnev",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "First Secretary"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " since 1948.  A major program Is aimed at the                               activity.  Chairman Kosygln and First Ssscre- lets reveals extensive use of Western source\n Central Intelligence Agency and has grown                 Lary Brczhnov have made no changes in that material, often taken out of context.  The",
+          "line_start": 44,
+          "line_end": 45,
+          "start_char": 4211,
+          "end_char": 4522
+        }
+      ]
+    },
+    {
+      "id": "person:lev-navrozov:7ad3f9cc3675",
+      "name": "Lev Navrozov",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "critic whose articles Golitsyn disputes"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Lev Navrozov, in his articles published in the August 23rd \nand October 1, 1984 issues of the New York Tribune, made a \nnumber of malicious attacks and insinuations against me and my \nrecent book, \"New Lies For Old.\" In his articles, he questions' \nthe historic evidence which I produced and also my access to ",
+          "line_start": 57,
+          "line_end": 61,
+          "start_char": 963,
+          "end_char": 1273
+        }
+      ]
+    },
+    {
+      "id": "person:mr-price:cb06da6d4d62",
+      "name": "Mr. Price",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Member of Congress who submitted the paper"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " In- PRICE asked and was given pCi'-     are playing their part in this work.            stance. Upon publication of such an article;\n mi,'~sioil to extend his remarks in the     5. What  are  dIsln.formation operations?   the illegitimate  creation  of Soviet lntcll--",
+          "line_start": 5,
+          "line_end": 6,
+          "start_char": 421,
+          "end_char": 690
+        }
+      ]
+    },
+    {
+      "id": "person:nikita-khrushchev:c2a616c00094",
+      "name": "Nikita Khrushchev",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Former Chairman of the Presidium"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " to defame and discredit U.S. departments -high priority that the then Chairman of the         planted there by earlier disinformation ac.\n and agencies that have major responsibilities             PresIditun, Niklta Khrushchc?, gave to the tivltles. An examination of the books and",
+          "line_start": 41,
+          "line_end": 42,
+          "start_char": 3788,
+          "end_char": 4070
+        }
+      ]
+    },
+    {
+      "id": "person:olof-palme:76415cda4e27",
+      "name": "Olof Palme",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Swedish Prime Minister"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Since the February 1986 assassination of Swedish Prime \nMinister Olof Palme, Moscow has made a concerted effort to \nimplicate the United States in his death. In addition to ",
+          "line_start": 86,
+          "line_end": 88,
+          "start_char": 3288,
+          "end_char": 3463
+        }
+      ]
+    },
+    {
+      "id": "person:premier-lee-of-singapore:9608b1f3ecad",
+      "name": "Premier Lee of Singapore",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Premier of Singapore"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " TRIED TO bRIBE PREMIER LEE OF SINGAPORE.?  THAT OPERATION DID MORE",
+          "line_start": 33,
+          "line_end": 33,
+          "start_char": 1726,
+          "end_char": 1793
+        }
+      ]
+    },
+    {
+      "id": "person:sargent-shriver:3a88d317d343",
+      "name": "Sargent Shriver",
+      "type": "person",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THAN DEAN RUSK AND SARGENT SHRIVER, TO bE IMMUNE FROM LEGITIMATE",
+          "line_start": 28,
+          "line_end": 28,
+          "start_char": 1516,
+          "end_char": 1581
+        }
+      ]
+    },
+    {
+      "id": "person:senator-fulbright:5444a17a755e",
+      "name": "Senator Fulbright",
+      "type": "person",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " SCRUTINY?  WAS SENATOR FULBRIGHT'S EFFORT TO EXPOSE THE RULE OF THE",
+          "line_start": 38,
+          "line_end": 38,
+          "start_char": 2057,
+          "end_char": 2125
+        }
+      ]
+    },
+    {
+      "id": "person:shelepin:592a2133cd9d",
+      "name": "Shelepin",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "KGB figure who authored a secret report on KGB political tasks"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "of the Institute. At that time, I read the secret report of \nShelepin regarding the new political tasks of the KGB. The KGB \nInstitute played a major role in the re-assessment of Stalin's \npolitical practices and the shift to a Leninist approach. While \nat KGB Headquarters during 1959 and 1960, I personally witnessed ",
+          "line_start": 75,
+          "line_end": 79,
+          "start_char": 2090,
+          "end_char": 2409
+        }
+      ]
+    },
+    {
+      "id": "person:twardouskiy:ecfc25d8381c",
+      "name": "Twardouskiy",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "writer referenced in connection with Strategic Disinformation Program"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "It is in this context that one should examine the actiVist role \nof the academician SAKHAROV or the writer TWARDOUSKIY. Such an \nexamination would explain why the omnipotent KGB tolerated the \nactivist role of SAKHAROV up until 1980 and his long and unin-\nterrupted contacts with prominent Western correspondents in ",
+          "line_start": 131,
+          "line_end": 135,
+          "start_char": 5206,
+          "end_char": 5522
+        }
+      ]
+    },
+    {
+      "id": "person:vladmir-maximov:57e4ccdb5038",
+      "name": "Vladmir Maximov",
+      "type": "person",
+      "attributes": {
+        "role": [
+          "Executive President, Resistance International"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Att. Mr. Vladmir Maximov, Executive President ",
+          "line_start": 176,
+          "line_end": 176,
+          "start_char": 8490,
+          "end_char": 8536
+        }
+      ]
+    },
+    {
+      "id": "work:a-statement-by-a-golitsyn-to-the-participants-of-the-confere:5b4e14831814",
+      "name": "A Statement By A. Golitsyn To The Participants Of The Conference On Disinformation In The Modern World",
+      "type": "work",
+      "attributes": {
+        "date": [
+          "16 October 1984"
+        ],
+        "author": [
+          "A. Golitsyn"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "A Statement By A. Golitsyn To The Participants Of The Conference \nOn \"Disinformation In The Modern World\". ",
+          "line_start": 200,
+          "line_end": 201,
+          "start_char": 9418,
+          "end_char": 9525
+        }
+      ]
+    },
+    {
+      "id": "work:a-study-of-a-master-spy:f22945439c09",
+      "name": "A Study of a Master Spy",
+      "type": "work",
+      "attributes": {
+        "subject": [
+          "Allen W. Dulles"
+        ],
+        "publication_location": [
+          "London"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " tries In order to carry out Soviet long-term i highest elements of party and government;      Mr.  Allen W. Dulles, entitled \"A Study of a\n stratcgie plans for subversion, political up-, In the Soviet Union,                           Master Spy\" (Allen Dulles), was printed And",
+          "line_start": 73,
+          "line_end": 74,
+          "start_char": 8327,
+          "end_char": 8605
+        }
+      ]
+    },
+    {
+      "id": "work:cia-over-asia:3ee908dbabfb",
+      "name": "CIA Over Asia",
+      "type": "work",
+      "attributes": {
+        "publication_location": [
+          "Kanpur, India"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " tory items anually.  Communist press and                  estimated  40  to  50  geographical  and 11. In the 58 pages of \"CIA Over Asia,\"\n radio attacks against the Agency reveal an functional specialists in Moscow alone; it         a slanderous booklet published in Kanpur,",
+          "line_start": 50,
+          "line_end": 51,
+          "start_char": 5025,
+          "end_char": 5301
+        }
+      ]
+    },
+    {
+      "id": "work:inside-a-soviet-embassy:6b27b40926e0",
+      "name": "Inside a Soviet Embassy",
+      "type": "work",
+      "attributes": {
+        "authored_by": [
+          "Alexander Kaznacheev"
+        ],
+        "publication_year": [
+          "1961"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " ulumatoly advant,'tgaous only to the Soviet ?of,dislnformatlon,                                     ?Alexa.ilder l'Cnznae.hcev, 'Inside is Snvict\n Union.  The Soviet leadership has she: ged .       ' Ivan Z ikhailovich Vozny, a KGB I           gnbassy\" (New York, I061\n Q0 soviet at'ato Doc   ty Sorvic4, Ibo z0ba    Was head of the   SSttaal Intelligence e'. ?ou ,                       ..~, )  pp. IZ-39J.",
+          "line_start": 105,
+          "line_end": 107,
+          "start_char": 12858,
+          "end_char": 13266
+        }
+      ]
+    },
+    {
+      "id": "work:letter-to-editor-of-parade-magazine:3ffcee54edc8",
+      "name": "Letter to Editor of Parade Magazine",
+      "type": "work",
+      "attributes": {
+        "date": [
+          "23 October 1984"
+        ],
+        "author": [
+          "A. Golitsyn"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "1. Letter to Editor of Parade Magazine ",
+          "line_start": 15,
+          "line_end": 15,
+          "start_char": 322,
+          "end_char": 361
+        }
+      ]
+    },
+    {
+      "id": "work:letter-to-mr-joseph-douglass-jr-re-new-lies-for-old:3e345e65b3f1",
+      "name": "Letter to Mr. Joseph Douglass Jr. re New Lies for Old",
+      "type": "work",
+      "attributes": {
+        "date": [
+          "23 October 1984"
+        ],
+        "author": [
+          "A. Golitsyn"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "2. Letter to Mr. Joseph Douglass Jr. \nre \"New Lies for Old\" ",
+          "line_start": 16,
+          "line_end": 17,
+          "start_char": 362,
+          "end_char": 422
+        }
+      ]
+    },
+    {
+      "id": "work:letter-to-resistance-international-re-disinformation:c2569cae25de",
+      "name": "Letter to Resistance International re Disinformation",
+      "type": "work",
+      "attributes": {
+        "date": [
+          "16 October 1984"
+        ],
+        "author": [
+          "A. Golitsyn"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "3. Letter to Resistance International \nre \"Disinformation\" ",
+          "line_start": 18,
+          "line_end": 19,
+          "start_char": 423,
+          "end_char": 482
+        }
+      ]
+    },
+    {
+      "id": "work:memorandum-on-three-articles-submitted-for-approval-by-anato:752cf6eba614",
+      "name": "Memorandum on Three Articles Submitted For Approval by Anatolyi Golitsyn",
+      "type": "work",
+      "attributes": {
+        "date": [
+          "30 October 1984"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Three Articles Submitted For Approval \nby Anatolyi Golitsyn ",
+          "line_start": 9,
+          "line_end": 10,
+          "start_char": 159,
+          "end_char": 219
+        }
+      ]
+    },
+    {
+      "id": "work:new-lies-for-old:e0d9dc052d18",
+      "name": "New Lies For Old",
+      "type": "work",
+      "attributes": {
+        "type": [
+          "book authored by Anatolyi Golitsyn"
+        ],
+        "author": [
+          "A. Golitsyn"
+        ],
+        "subject": [
+          "Strategic Disinformation"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "CI Staff \nfrom Golitsyn re \"New Lies For \nOld\" is approved by the DO for \nrelease. \n3. ",
+          "line_start": 24,
+          "line_end": 28,
+          "start_char": 541,
+          "end_char": 628
+        },
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Strategic Disinformation in my current book, \"New Lies for Old\". ",
+          "line_start": 94,
+          "line_end": 94,
+          "start_char": 4498,
+          "end_char": 4563
+        }
+      ]
+    },
+    {
+      "id": "work:soviet-and-communist-bloc-defamation-campaign-paper:88e04f14be76",
+      "name": "Soviet and Communist Bloc Defamation Campaign (paper)",
+      "type": "work",
+      "attributes": {
+        "authored_by": [
+          "Mr. Price"
+        ],
+        "submitted_by": [
+          "Mr. Price"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " body of the l r,coaD and to include there- , \"Dezinformatsiy.,\" in Soviet terminology, 1s                     genco receives an appearance of legitimacy\n uilii a paper entitled \"The Soviet and  false, incomplete, or misleading information    and becomes a sort of document.\n th.,t Is passed, fed, or confirmed to a targetted     -\"But the work was not yet finished. 1'\n Communist  Bloc  Defamation cam.        Individual, group, or country. \"Propaganda,\" ,  then took the published Article and checked",
+          "line_start": 7,
+          "line_end": 10,
+          "start_char": 691,
+          "end_char": 1193
+        }
+      ]
+    },
+    {
+      "id": "work:the-cia-s-new-revelations:85d566ddc52f",
+      "name": "The CIA's New Revelations",
+      "type": "work",
+      "attributes": {
+        "date": [
+          "30 September"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " (NEW YORK POST EDITORIAL 30 SEPTEMBER \"THE CIA'S NEW REVELATIONS\")",
+          "line_start": 3,
+          "line_end": 3,
+          "start_char": 71,
+          "end_char": 138
+        }
+      ]
+    },
+    {
+      "id": "work:the-invisible-government:801a861cd83a",
+      "name": "The Invisible Government",
+      "type": "work",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " OF A VOLUME CALLED \"THE INVISIBLE GOVERNMENT,\" A THOUGHTFUL AND",
+          "line_start": 12,
+          "line_end": 12,
+          "start_char": 546,
+          "end_char": 610
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship:01bf36495762",
+      "source": "organization:cia:e9e55ea29acf",
+      "target": "person:premier-lee-of-singapore:9608b1f3ecad",
+      "type": "targeted",
+      "attributes": {
+        "action": [
+          "bribe attempt"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " TRIED TO bRIBE PREMIER LEE OF SINGAPORE.?  THAT OPERATION DID MORE\n TO DAMAGE THE CIA AND IHE UNITcu STATES THAN THE WORK OF ALL THE",
+          "line_start": 33,
+          "line_end": 34,
+          "start_char": 1726,
+          "end_char": 1859
+        }
+      ]
+    },
+    {
+      "id": "relationship:0fcd0b0a4327",
+      "source": "organization:kgb:47f63745a050",
+      "target": "event:operation-trust:fa37079a373e",
+      "type": "conducted",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "described how the KGB, under Shelepin, drawing on its experience \nin successfully manipulating its controlled political opposition \nagainst the West, as in the well known operation \"Trust\", decided \nto again use the KGB controlled opposition in the framework of \ntheir long range strategy. Such KGB designs provide an oppor-",
+          "line_start": 156,
+          "line_end": 160,
+          "start_char": 6749,
+          "end_char": 7073
+        }
+      ]
+    },
+    {
+      "id": "relationship:0ff19d7da437",
+      "source": "work:a-study-of-a-master-spy:f22945439c09",
+      "target": "person:allen-w-dulles:722709d38e4d",
+      "type": "subject-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " oration among the non-Communist coun-           emphasized, havo been established by thel     the former Director of Central Intelligence,\n tries In order to carry out Soviet long-term i highest elements of party and government;      Mr.  Allen W. Dulles, entitled \"A Study of a",
+          "line_start": 72,
+          "line_end": 73,
+          "start_char": 8187,
+          "end_char": 8466
+        }
+      ]
+    },
+    {
+      "id": "relationship:14afc4a3b4e6",
+      "source": "organization:izvestia:e7fa4f782e7a",
+      "target": "event:jonestown-massacre:73556a9a15e2",
+      "type": "publicized-allegation-about",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "the allegation was first publicized in the 30 January \nedition of Izvestia, it has been replayed in the pro-\nSoviet Indian press and in the Communist press of Uruguay ",
+          "line_start": 125,
+          "line_end": 127,
+          "start_char": 4915,
+          "end_char": 5082
+        }
+      ]
+    },
+    {
+      "id": "relationship:1736debf5a01",
+      "source": "organization:world-peace-council:7224caf3caaf",
+      "target": "organization:moscow:75e913749bd9",
+      "type": "controlled-by",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "US involvement. On 18 May, for example, Radio Moscow \nreported a statement by the Soviet-controlled World Peace \nCouncil--which cited a leftist British newspaper--that ",
+          "line_start": 77,
+          "line_end": 79,
+          "start_char": 2791,
+          "end_char": 2959
+        }
+      ]
+    },
+    {
+      "id": "relationship:19ae19ff9064",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "event:soviet-disinformation-campaign-on-aids-origin:b4915ed3c9f8",
+      "type": "conducts-campaign",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o In our view, a central element of this effort is Moscow's \nworldwide campaign, begun in October 1985, charging that \nAIDS is the result of US biological warfare experiments. ",
+          "line_start": 153,
+          "line_end": 155,
+          "start_char": 6324,
+          "end_char": 6500
+        }
+      ]
+    },
+    {
+      "id": "relationship:1a598916b481",
+      "source": "organization:department-of-disinformation:65f688750874",
+      "target": "organization:usia:bfa02e2b044b",
+      "type": "discredits",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "relationship:210b74277293",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "person:olof-palme:76415cda4e27",
+      "type": "implicates-in-death",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Minister Olof Palme, Moscow has made a concerted effort to \nimplicate the United States in his death. In addition to \nnumerous Soviet and Bloc press accounts alleging US ",
+          "line_start": 87,
+          "line_end": 89,
+          "start_char": 3346,
+          "end_char": 3516
+        }
+      ]
+    },
+    {
+      "id": "relationship:30aeb1cb77ef",
+      "source": "person:alexander-kaznacheev:8d2efb488034",
+      "target": "work:inside-a-soviet-embassy:6b27b40926e0",
+      "type": "authored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " ulumatoly advant,'tgaous only to the Soviet ?of,dislnformatlon,                                     ?Alexa.ilder l'Cnznae.hcev, 'Inside is Snvict\n Union.  The Soviet leadership has she: ged .       ' Ivan Z ikhailovich Vozny, a KGB I           gnbassy\" (New York, I061\n Q0 soviet at'ato Doc   ty Sorvic4, Ibo z0ba    Was head of the   SSttaal Intelligence e'. ?ou ,                       ..~, )  pp. IZ-39J.",
+          "line_start": 105,
+          "line_end": 107,
+          "start_char": 12858,
+          "end_char": 13266
+        }
+      ]
+    },
+    {
+      "id": "relationship:30e59ebeb903",
+      "source": "person:gen-ivan-ivanovich-agayants:a10d78db58f8",
+      "target": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "type": "headed",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " fnunist bloc a1nce 1040.  IUO\\ it operates tho  Soviet  Stato  Security  Service.  This     \"The last stage of this grandiose forgery$S explained  Ili? a Paper,  \"The  SOVICt  KGB department, which was created to in-   was under the special care of  the  Soviet\n tensify  Soviet  disinformation  activity,   is Information  Bureau,  Toss,           Radio-Moscow,\n and Comnumist?I3ioc Defamation Caill-   headed by Gen, Ivan Ivnnovich A ;ayants, a I the Soviet press, And Soviet diplomatic rep-",
+          "line_start": 17,
+          "line_end": 19,
+          "start_char": 2043,
+          "end_char": 2537
+        }
+      ]
+    },
+    {
+      "id": "relationship:335436090be1",
+      "source": "person:alexander-kaznacheev:8d2efb488034",
+      "target": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "type": "described",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " 3. Defranation and forgery operations are       the Soviet system and are now In the United'  was a prominent maverick Labor Member of\n conceived, directed, and perpetrated by A       States.   One  of  theses Alexander  Iiazna-: Parliament, one Bob Edwards, who was sup-\n single organization located outside the target                    cheev, who served in Burma as an Informs-`    posedly assisted In the effort by A. British",
+          "line_start": 77,
+          "line_end": 79,
+          "start_char": 8884,
+          "end_char": 9314
+        }
+      ]
+    },
+    {
+      "id": "relationship:34b98b4a9c14",
+      "source": "organization:foreign-subversion-and-instability-center:c0d676634946",
+      "target": "organization:office-of-global-issues:353f775b7953",
+      "type": "part-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Chief, Foreign Subversion and Instability Center \nOffice of Global Issues \nDirectorate of Intelligence ",
+          "line_start": 22,
+          "line_end": 24,
+          "start_char": 781,
+          "end_char": 884
+        }
+      ]
+    },
+    {
+      "id": "relationship:3a322d99e9a7",
+      "source": "work:letter-to-resistance-international-re-disinformation:c2569cae25de",
+      "target": "organization:resistance-international:6117f00c785f",
+      "type": "addressed-to",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Resistance International \n102 Avenue Des Champs Elysees \n75008, Paris, France \nAtt. Mr. Vladmir Maximov, Executive President \ni. Dear Mr. Maximov: ",
+          "line_start": 173,
+          "line_end": 177,
+          "start_char": 8411,
+          "end_char": 8558
+        }
+      ]
+    },
+    {
+      "id": "relationship:47063d93fc53",
+      "source": "organization:radio-moscow:7766c7172089",
+      "target": "event:fiji-military-coup:97f762a702fa",
+      "type": "reported-on",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Shortly after the military coup in Fiji in May, Radio \nMoscow, TASS and Izvestia all began to play up rumors of \nUS involvement. On 18 May, for example, Radio Moscow ",
+          "line_start": 75,
+          "line_end": 77,
+          "start_char": 2676,
+          "end_char": 2844
+        }
+      ]
+    },
+    {
+      "id": "relationship:485344992a46",
+      "source": "event:the-continuing-soviet-disinformation-blitz:ab5956b2f040",
+      "target": "person:fritz-ermarth:99b56f6e65b5",
+      "type": "requested-by",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "1. At the request of Fritz Ermarth at the NSC, we have \nprepared a brief report describing recent Soviet disinformation \nactivities. It illustrates that Moscow continues to publicize a ",
+          "line_start": 12,
+          "line_end": 14,
+          "start_char": 232,
+          "end_char": 417
+        }
+      ]
+    },
+    {
+      "id": "relationship:4f83943485bc",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "organization:united-states:6ebac5e73588",
+      "type": "targets-with-disinformation",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Although Moscow claims to be reporting on its domestic \nproblems with a new truthfulness, it continues to push a heavy \nagenda of anti-US disinformation at home and abroad. A major ",
+          "line_start": 44,
+          "line_end": 46,
+          "start_char": 1270,
+          "end_char": 1451
+        }
+      ]
+    },
+    {
+      "id": "relationship:54baea1abd6e",
+      "source": "person:john-f-pereira:8a4d21b33513",
+      "target": "person:anatolyi-golitsyn:501c9a114c35",
+      "type": "approved-release-of",
+      "attributes": {
+        "context": [
+          "approved by the DO for release"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "from Golitsyn re \"New Lies For \nOld\" is approved by the DO for \nrelease. \n3. \n4. ",
+          "line_start": 25,
+          "line_end": 29,
+          "start_char": 551,
+          "end_char": 632
+        }
+      ]
+    },
+    {
+      "id": "relationship:55ae397b6890",
+      "source": "person:leonid-brezhnev:0a9c23fa082c",
+      "target": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "type": "continued-support-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " for national security has been underway campaign against American leadership and              articles cited In any of the anti-CIA pamph-\n since 1948.  A major program Is aimed at the                               activity.  Chairman Kosygln and First Ssscre- lets reveals extensive use of Western source\n Central Intelligence Agency and has grown                 Lary Brczhnov have made no changes in that material, often taken out of context.  The",
+          "line_start": 43,
+          "line_end": 45,
+          "start_char": 4071,
+          "end_char": 4522
+        }
+      ]
+    },
+    {
+      "id": "relationship:56323fa0f0c5",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "event:communist-strategic-disinformation-program:ff096494353d",
+      "type": "exposed",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Given this evidence, the substance of my book is not \ngroundless fantasy as intimated by Mr. Navrozov, but instead \nan expose and a realistic description of the Communise' \nStrategic Disinformation Program in action. This program, \nwhich was launched in 1958, has seriously damaged Western ",
+          "line_start": 92,
+          "line_end": 96,
+          "start_char": 2968,
+          "end_char": 3258
+        }
+      ]
+    },
+    {
+      "id": "relationship:59b74f87b763",
+      "source": "person:lev-navrozov:7ad3f9cc3675",
+      "target": "person:anatolyi-golitsyn:501c9a114c35",
+      "type": "criticized",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Lev Navrozov, in his articles published in the August 23rd \nand October 1, 1984 issues of the New York Tribune, made a \nnumber of malicious attacks and insinuations against me and my \nrecent book, \"New Lies For Old.\" In his articles, he questions' \nthe historic evidence which I produced and also my access to ",
+          "line_start": 57,
+          "line_end": 61,
+          "start_char": 963,
+          "end_char": 1273
+        }
+      ]
+    },
+    {
+      "id": "relationship:5df442cb5609",
+      "source": "organization:resistance-international:6117f00c785f",
+      "target": "event:conference-on-disinformation-in-the-modern-world:725fae69b616",
+      "type": "organized",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Thank you very much for your kind invitation. Unfortunately, \nI am unable to attend and to participate in your conference. \nHowever, as one who is very concerned with the subject of \"Dis-",
+          "line_start": 178,
+          "line_end": 180,
+          "start_char": 8559,
+          "end_char": 8746
+        }
+      ]
+    },
+    {
+      "id": "relationship:5ff03a85983f",
+      "source": "person:fritz-ermarth:99b56f6e65b5",
+      "target": "organization:national-security-council:acace66b909d",
+      "type": "affiliated-with",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "1. At the request of Fritz Ermarth at the NSC, we have \nprepared a brief report describing recent Soviet disinformation ",
+          "line_start": 12,
+          "line_end": 13,
+          "start_char": 232,
+          "end_char": 352
+        }
+      ]
+    },
+    {
+      "id": "relationship:64835d24dd6d",
+      "source": "event:the-continuing-soviet-disinformation-blitz:ab5956b2f040",
+      "target": "organization:office-of-global-issues:353f775b7953",
+      "type": "prepared-by",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "2. This memorandum was prepared by Foreign \nSubversion and Instability Center, Office-cYr-UTO,tal-T-sues. Your \ncomments or questions are welcome and may be directed to the  ",
+          "line_start": 17,
+          "line_end": 19,
+          "start_char": 540,
+          "end_char": 714
+        }
+      ]
+    },
+    {
+      "id": "relationship:6b1245a9ecfe",
+      "source": "work:letter-to-resistance-international-re-disinformation:c2569cae25de",
+      "target": "work:a-statement-by-a-golitsyn-to-the-participants-of-the-confere:5b4e14831814",
+      "type": "attaches",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "my thoughts on the subject,(attached), with a request that you \nmake them available to the participants of the conference. ",
+          "line_start": 182,
+          "line_end": 183,
+          "start_char": 8812,
+          "end_char": 8935
+        }
+      ]
+    },
+    {
+      "id": "relationship:6b97984ccb4f",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "organization:disinformation-department:eb99975a7c05",
+      "type": "witnessed-formation-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "well as many secret consultations between KGB officials and \nsecurity chiefs of the bloc countries. I personally witnessed \nthe formation of the Disinformation Department and monitored \nits beginning. \nApproved for Release: 2018/04/10 C05259029 ",
+          "line_start": 84,
+          "line_end": 88,
+          "start_char": 2673,
+          "end_char": 2918
+        }
+      ]
+    },
+    {
+      "id": "relationship:6d05794bed26",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "organization:new-york-tribune:9fd74c0b6da5",
+      "type": "wrote-letter-to",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "! November 1984 \nA Letter to the Editor of the New York Tribune \nSirs: \nLev Navrozov, in his articles published in the August 23rd \nand October 1, 1984 issues of the New York Tribune, made a ",
+          "line_start": 54,
+          "line_end": 58,
+          "start_char": 891,
+          "end_char": 1082
+        }
+      ]
+    },
+    {
+      "id": "relationship:6e72194eb81a",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "event:fiji-military-coup:97f762a702fa",
+      "type": "exploited-event",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Shortly after the military coup in Fiji in May, Radio \nMoscow, TASS and Izvestia all began to play up rumors of \nUS involvement. On 18 May, for example, Radio Moscow ",
+          "line_start": 75,
+          "line_end": 77,
+          "start_char": 2676,
+          "end_char": 2844
+        }
+      ]
+    },
+    {
+      "id": "relationship:6e9b8632b3e4",
+      "source": "person:senator-fulbright:5444a17a755e",
+      "target": "organization:cia:e9e55ea29acf",
+      "type": "investigated",
+      "attributes": {
+        "context": [
+          "Dominican Crisis"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " SCRUTINY?  WAS SENATOR FULBRIGHT'S EFFORT TO EXPOSE THE RULE OF THE\n CIA IN FEEDING THE PRESIDENT FAULTY INFORMATION IN LAST APRIL'S",
+          "line_start": 38,
+          "line_end": 39,
+          "start_char": 2057,
+          "end_char": 2190
+        }
+      ]
+    },
+    {
+      "id": "relationship:72439743755c",
+      "source": "organization:department-of-disinformation:65f688750874",
+      "target": "organization:peace-corps:b1e6429ade48",
+      "type": "discredits",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "relationship:78033f507b5c",
+      "source": "person:lev-navrozov:7ad3f9cc3675",
+      "target": "person:james-jesus-angleton:a82a89b09233",
+      "type": "attacked",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Mr. Navrozov's attacks on Mr. Angleton, Mr. Hackett, Mr. \nArnaud de Borchgrave, Mr. Robert Moss, the British S.I.S., this \nauthor and many other experts on disinformation are not only \nirresponsible, but rather pretentious. I characterize this \noverall attack as grossly irresponsible because 'such persons as ",
+          "line_start": 185,
+          "line_end": 189,
+          "start_char": 8285,
+          "end_char": 8595
+        }
+      ]
+    },
+    {
+      "id": "relationship:7a90e1460a83",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "work:new-lies-for-old:e0d9dc052d18",
+      "type": "authored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "Letter to Editor, NY Tribune, from Anatolyi Golitsyn re \"New Lies for Old\" \nFROM: , \niJohn F. Pereira \nChief, Information Management Staff \nEXTENSION ",
+          "line_start": 5,
+          "line_end": 9,
+          "start_char": 94,
+          "end_char": 244
+        }
+      ]
+    },
+    {
+      "id": "relationship:7d0126cf5c10",
+      "source": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "target": "person:j-edgar-hoover:7bfa52fa7812",
+      "type": "targeted",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " ,on  the  Intelligence  community with par-- and other non-Communist countries, there - ;       In  Western  publications  and  newspapers,\n ticular thrust Against the ?DI and Mr. J.       by contributing directly to the breakup oil'  This study also has confirmed the deep in.\n Edgar hoover.    The objective of the overall   the NATO Alliance.                            terest of the Soviet services In the develop.",
+          "line_start": 64,
+          "line_end": 66,
+          "start_char": 7080,
+          "end_char": 7499
+        }
+      ]
+    },
+    {
+      "id": "relationship:7e8afeb053f9",
+      "source": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "target": "organization:kgb:47f63745a050",
+      "type": "part-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " spollsibilitiCS for national                             security   has    6. Soviet disinformation activity is planned  lion  was  then  Immediately          sent back  to\"\n 'been conducted by the Soviet and Com-  and directed by a specialized dep artinent, of  Moscow, this time through Tass channels.'\n fnunist bloc a1nce 1040.  IUO\\ it operates tho  Soviet  Stato  Security  Service.  This     \"The last stage of this grandiose forgery$S explained  Ili? a Paper,  \"The  SOVICt  KGB department, which was created to in-   was under the special care of  the  Soviet",
+          "line_start": 15,
+          "line_end": 17,
+          "start_char": 1737,
+          "end_char": 2305
+        }
+      ]
+    },
+    {
+      "id": "relationship:7f4bb80e397d",
+      "source": "organization:tass:443f5ad8de84",
+      "target": "organization:kgb:47f63745a050",
+      "type": "part-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " fnunist bloc a1nce 1040.  IUO\\ it operates tho  Soviet  Stato  Security  Service.  This     \"The last stage of this grandiose forgery$S explained  Ili? a Paper,  \"The  SOVICt  KGB department, which was created to in-   was under the special care of  the  Soviet\n tensify  Soviet  disinformation  activity,   is Information  Bureau,  Toss,           Radio-Moscow,",
+          "line_start": 17,
+          "line_end": 18,
+          "start_char": 2043,
+          "end_char": 2406
+        }
+      ]
+    },
+    {
+      "id": "relationship:85102c3e15e2",
+      "source": "organization:department-of-disinformation:65f688750874",
+      "target": "organization:state-department:aa5fd0980beb",
+      "type": "discredits",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 18,
+          "line_end": 18,
+          "start_char": 951,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "relationship:8584cace8f04",
+      "source": "person:joseph-d-douglass-jr:b937be55c77e",
+      "target": "organization:jaycor:eba8d46a7e5e",
+      "type": "employed-by",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Mr. Joseph D. Douglass Jr. \nDir. National Sec. Div. of JAYCOR ",
+          "line_start": 117,
+          "line_end": 118,
+          "start_char": 5429,
+          "end_char": 5491
+        }
+      ]
+    },
+    {
+      "id": "relationship:85b9e56ae1ca",
+      "source": "person:alexander-kaznacheev:8d2efb488034",
+      "target": "person:ivan-mikhailovich-vozny:d582b2550f26",
+      "type": "served-under",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " conceived, directed, and perpetrated by A       States.   One  of  theses Alexander  Iiazna-: Parliament, one Bob Edwards, who was sup-\n single organization located outside the target                    cheev, who served in Burma as an Informs-`    posedly assisted In the effort by A. British\n areas which makes use of local Communist        tion officer-described the pro; ram and the: journalist.  it Is now known that the man-",
+          "line_start": 78,
+          "line_end": 80,
+          "start_char": 9020,
+          "end_char": 9451
+        }
+      ]
+    },
+    {
+      "id": "relationship:90f121658406",
+      "source": "organization:politburo:27986e0592af",
+      "target": "organization:department-of-disinformation:65f688750874",
+      "type": "assigned",
+      "attributes": {
+        "task": [
+          "discredit CIA, FBI, State Department, Peace Corps, USIA"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " DISINFORMATION,\" WHOSE ASSIGNMENT FROM THE POLITBURO IS TO DISCREDIT\n THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 17,
+          "line_end": 18,
+          "start_char": 881,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "relationship:91e43dc9d55f",
+      "source": "organization:soviet-kgb:42946f034662",
+      "target": "organization:department-of-disinformation:65f688750874",
+      "type": "established",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " KGB, IT IS SAID, HAS ESTABLISHED A SPECIAL BRANCH, A \"DEPARTMENT OF",
+          "line_start": 16,
+          "line_end": 16,
+          "start_char": 812,
+          "end_char": 880
+        }
+      ]
+    },
+    {
+      "id": "relationship:9285844ada42",
+      "source": "event:soviet-disinformation-campaign-on-aids-origin:b4915ed3c9f8",
+      "target": "organization:united-states:6ebac5e73588",
+      "type": "targets-with-disinformation",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "AIDS is the result of US biological warfare experiments. \nDuring the past several months the USSR has repeatedly \nused the AIDS story as a means of heightening opposition ",
+          "line_start": 155,
+          "line_end": 157,
+          "start_char": 6443,
+          "end_char": 6614
+        }
+      ]
+    },
+    {
+      "id": "relationship:938e9791eeb0",
+      "source": "person:col-vasily-sitnikov:fb28205f8529",
+      "target": "work:a-study-of-a-master-spy:f22945439c09",
+      "type": "researched",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " .or pro-Communist propagandists and of co-                     process In a recent personal memoir;          uscript  was  researched  In  Moscow by  a\n operating Communist bloc Intelligence and    \"Articles were originated in KGB head-           senior KGB disinformation officer, Col. Vas-\n security services.  Although such undertak-                         quarters lu,Moscow-for example, about al-     ally Sitnikov, and then served up for final",
+          "line_start": 81,
+          "line_end": 83,
+          "start_char": 9452,
+          "end_char": 9903
+        }
+      ]
+    },
+    {
+      "id": "relationship:9660a8caa070",
+      "source": "organization:new-york-post:b9602430d111",
+      "target": "work:the-cia-s-new-revelations:85d566ddc52f",
+      "type": "published",
+      "attributes": {
+        "date": [
+          "30 September"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " (NEW YORK POST EDITORIAL 30 SEPTEMBER \"THE CIA'S NEW REVELATIONS\")",
+          "line_start": 3,
+          "line_end": 3,
+          "start_char": 71,
+          "end_char": 138
+        }
+      ]
+    },
+    {
+      "id": "relationship:96bdfe1d1ed8",
+      "source": "organization:soviet-secret-intelligence:2ae0144e61f1",
+      "target": "organization:cia:e9e55ea29acf",
+      "type": "campaigns-against",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " TO DESCRIBE A MASSIVE CAMPAIGN BEING WATED BY THE SOVIET SECRET\n INTELLIGENCE APPARATUS TO STIGMATIZE AND DEFAME THE CIA.  THE SOVIET",
+          "line_start": 14,
+          "line_end": 15,
+          "start_char": 677,
+          "end_char": 811
+        }
+      ]
+    },
+    {
+      "id": "relationship:a6479094ec6a",
+      "source": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "target": "organization:central-intelligence-agency-cia:41bc03616177",
+      "type": "targeted",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " lective of the Soviet intelligence services Is  the new nations of Africa and As;Li.          D's activity against the CIA may be judged\n the destruction of effective security collab-     These. purposes and objectives, it must be' from a single epLcode.  A booklet Attacking",
+          "line_start": 70,
+          "line_end": 71,
+          "start_char": 7910,
+          "end_char": 8186
+        }
+      ]
+    },
+    {
+      "id": "relationship:a64b189b822a",
+      "source": "work:the-cia-s-new-revelations:85d566ddc52f",
+      "target": "organization:cia:e9e55ea29acf",
+      "type": "criticizes",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " (TEXT) A MACABRE CIA DOCUMENT REPORTEDLY BEING CIRCULATED AMONG\n SELECT CONGRESSMEN WILL ACCENTUATE NATIONAL DISQUIET OVER THIS\n AGENCY.  THIS CRUDE OPERATION STIRS ANEW THE ~iUESTION OF WHETHER",
+          "line_start": 4,
+          "line_end": 6,
+          "start_char": 139,
+          "end_char": 334
+        }
+      ]
+    },
+    {
+      "id": "relationship:a6a2affd1e0f",
+      "source": "organization:office-of-global-issues:353f775b7953",
+      "target": "organization:central-intelligence-agency:cfcdf2497018",
+      "type": "part-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "Lentral Intelligence Agency \nWashington. D. C. 20505 \nDIRECTORATE OF INTELLIGENCE ",
+          "line_start": 37,
+          "line_end": 39,
+          "start_char": 1111,
+          "end_char": 1193
+        }
+      ]
+    },
+    {
+      "id": "relationship:a8ee730a8940",
+      "source": "work:memorandum-on-three-articles-submitted-for-approval-by-anato:752cf6eba614",
+      "target": "work:letter-to-mr-joseph-douglass-jr-re-new-lies-for-old:3e345e65b3f1",
+      "type": "references",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "2. Letter to Mr. Joseph Douglass Jr. \nre \"New Lies for Old\" ",
+          "line_start": 16,
+          "line_end": 17,
+          "start_char": 362,
+          "end_char": 422
+        }
+      ]
+    },
+    {
+      "id": "relationship:aa082cfa44d1",
+      "source": "work:a-study-of-a-master-spy:f22945439c09",
+      "target": "person:bob-edwards:9212323620d4",
+      "type": "attributed-author",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " 3. Defranation and forgery operations are       the Soviet system and are now In the United'  was a prominent maverick Labor Member of\n conceived, directed, and perpetrated by A       States.   One  of  theses Alexander  Iiazna-: Parliament, one Bob Edwards, who was sup-",
+          "line_start": 77,
+          "line_end": 78,
+          "start_char": 8884,
+          "end_char": 9156
+        }
+      ]
+    },
+    {
+      "id": "relationship:ab3cc9a8fe33",
+      "source": "person:david-wise:f5b39a927744",
+      "target": "organization:herald-tribune:3f066dc201a1",
+      "type": "corresponds-for",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " ACCORDING TO DAVID WISE, HERALD TRIBUNE CORRESPONDENT AND COAUTHOR",
+          "line_start": 11,
+          "line_end": 11,
+          "start_char": 478,
+          "end_char": 545
+        }
+      ]
+    },
+    {
+      "id": "relationship:ade4bebfb22c",
+      "source": "work:memorandum-on-three-articles-submitted-for-approval-by-anato:752cf6eba614",
+      "target": "work:letter-to-resistance-international-re-disinformation:c2569cae25de",
+      "type": "references",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "3. Letter to Resistance International \nre \"Disinformation\" ",
+          "line_start": 18,
+          "line_end": 19,
+          "start_char": 423,
+          "end_char": 482
+        }
+      ]
+    },
+    {
+      "id": "relationship:af7716ca822e",
+      "source": "person:vladmir-maximov:57e4ccdb5038",
+      "target": "organization:resistance-international:6117f00c785f",
+      "type": "employed-by",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Att. Mr. Vladmir Maximov, Executive President ",
+          "line_start": 176,
+          "line_end": 176,
+          "start_char": 8490,
+          "end_char": 8536
+        }
+      ]
+    },
+    {
+      "id": "relationship:b0f1f870a335",
+      "source": "person:nikita-khrushchev:c2a616c00094",
+      "target": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "type": "supported",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " to defame and discredit U.S. departments -high priority that the then Chairman of the         planted there by earlier disinformation ac.\n and agencies that have major responsibilities             PresIditun, Niklta Khrushchc?, gave to the tivltles. An examination of the books and",
+          "line_start": 41,
+          "line_end": 42,
+          "start_char": 3788,
+          "end_char": 4070
+        }
+      ]
+    },
+    {
+      "id": "relationship:b23e279f79e3",
+      "source": "person:david-wise:f5b39a927744",
+      "target": "work:the-invisible-government:801a861cd83a",
+      "type": "coauthored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " OF A VOLUME CALLED \"THE INVISIBLE GOVERNMENT,\" A THOUGHTFUL AND",
+          "line_start": 12,
+          "line_end": 12,
+          "start_char": 546,
+          "end_char": 610
+        }
+      ]
+    },
+    {
+      "id": "relationship:b6af249316a6",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "work:letter-to-resistance-international-re-disinformation:c2569cae25de",
+      "type": "authored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Sincerely, \nA. Golitsyn ",
+          "line_start": 188,
+          "line_end": 189,
+          "start_char": 9153,
+          "end_char": 9177
+        }
+      ]
+    },
+    {
+      "id": "relationship:b73299bb68c2",
+      "source": "person:john-f-pereira:8a4d21b33513",
+      "target": "organization:ci-staff:69c64d19eace",
+      "type": "addressed-to",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "CI Staff \nJohn F. Pereira \nChief, Information Management Staff ",
+          "line_start": 6,
+          "line_end": 8,
+          "start_char": 95,
+          "end_char": 158
+        }
+      ]
+    },
+    {
+      "id": "relationship:b7671cfc5606",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "event:jonestown-massacre:73556a9a15e2",
+      "type": "alleged-involvement-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "a book published by Novosti--claiming that the CIA \ninstigated the 1978 Jonestown massacre in order to prevent \n.cult members from emigrating to the Soviet Union. Since ",
+          "line_start": 122,
+          "line_end": 124,
+          "start_char": 4745,
+          "end_char": 4914
+        }
+      ]
+    },
+    {
+      "id": "relationship:bc2676bf0261",
+      "source": "person:chairman-kosygin:47c79ebca3ce",
+      "target": "organization:kgb-department-of-disinformation-department-d:33703de92138",
+      "type": "continued-support-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " for national security has been underway campaign against American leadership and              articles cited In any of the anti-CIA pamph-\n since 1948.  A major program Is aimed at the                               activity.  Chairman Kosygln and First Ssscre- lets reveals extensive use of Western source\n Central Intelligence Agency and has grown                 Lary Brczhnov have made no changes in that material, often taken out of context.  The",
+          "line_start": 43,
+          "line_end": 45,
+          "start_char": 4071,
+          "end_char": 4522
+        }
+      ]
+    },
+    {
+      "id": "relationship:c031987dfdb6",
+      "source": "person:andrei-sakharov:d07837ad9f53",
+      "target": "event:communist-strategic-disinformation-program:ff096494353d",
+      "type": "associated-with",
+      "attributes": {
+        "context": [
+          "used by Strategic Disinformation Program"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "It is in this context that one should examine the actiVist role \nof the academician SAKHAROV or the writer TWARDOUSKIY. Such an \nexamination would explain why the omnipotent KGB tolerated the \nactivist role of SAKHAROV up until 1980 and his long and unin-\nterrupted contacts with prominent Western correspondents in ",
+          "line_start": 131,
+          "line_end": 135,
+          "start_char": 5206,
+          "end_char": 5522
+        }
+      ]
+    },
+    {
+      "id": "relationship:c1880c573e6f",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "organization:kgb-institute:307f78343ee5",
+      "type": "studied-at",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "available to me because I had witnessed these preparations while \nI was both a student at the KGB Institute and a senior officer \nof Soviet Intelligence at KGB Headquarters in Moscow. During \nthe period 1957 - 1959, the KGB Institute was directed, by the \nCentral Committee, to prepare numerous studies regarding the ",
+          "line_start": 67,
+          "line_end": 71,
+          "start_char": 1581,
+          "end_char": 1898
+        }
+      ]
+    },
+    {
+      "id": "relationship:c28d6fdcb72e",
+      "source": "organization:central-committee:c3905589513f",
+      "target": "organization:kgb-institute:307f78343ee5",
+      "type": "directed",
+      "attributes": {
+        "context": [
+          "to prepare studies on use of intelligence assets"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "of Soviet Intelligence at KGB Headquarters in Moscow. During \nthe period 1957 - 1959, the KGB Institute was directed, by the \nCentral Committee, to prepare numerous studies regarding the \nuse of intelligence and security assets for inclusion in the \nstrategies against the West. These studies were made available ",
+          "line_start": 69,
+          "line_end": 73,
+          "start_char": 1711,
+          "end_char": 2024
+        }
+      ]
+    },
+    {
+      "id": "relationship:c428278eae83",
+      "source": "organization:tass:443f5ad8de84",
+      "target": "event:fiji-military-coup:97f762a702fa",
+      "type": "reported-on",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "in the event. Moscow stepped up its disinformation \ncampaign on 1 June with a TASS story implicating the CIA \nand US Secret Service. This report was replayed the next ",
+          "line_start": 82,
+          "line_end": 84,
+          "start_char": 3077,
+          "end_char": 3244
+        }
+      ]
+    },
+    {
+      "id": "relationship:c814102982ff",
+      "source": "work:new-lies-for-old:e0d9dc052d18",
+      "target": "organization:dodd-mead-publishing-company:71e6db7f6f47",
+      "type": "published-by",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Because of its length I compromised with my publisher to publish \nonly the second volume as \"New Lies for Old', since it was the ",
+          "line_start": 145,
+          "line_end": 146,
+          "start_char": 7041,
+          "end_char": 7170
+        }
+      ]
+    },
+    {
+      "id": "relationship:cd309db9b4d9",
+      "source": "work:letter-to-mr-joseph-douglass-jr-re-new-lies-for-old:3e345e65b3f1",
+      "target": "person:joseph-d-douglass-jr:b937be55c77e",
+      "type": "addressed-to",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Mr. Joseph D. Douglass Jr. \nDir. National Sec. Div. of JAYCOR \n205 South Whiting Street \nAlexandria, Va. 22304 \nDear Mr. Douglass Jr.: ",
+          "line_start": 117,
+          "line_end": 121,
+          "start_char": 5429,
+          "end_char": 5564
+        }
+      ]
+    },
+    {
+      "id": "relationship:cda7477502c1",
+      "source": "organization:kgb:47f63745a050",
+      "target": "organization:moscow:75e913749bd9",
+      "type": "instrument-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "  In addition, US Embassy \nindicates that the KGB: \nPlanted a rumor in the Congo this spring alleging ",
+          "line_start": 100,
+          "line_end": 102,
+          "start_char": 3935,
+          "end_char": 4037
+        }
+      ]
+    },
+    {
+      "id": "relationship:ce87d923c90d",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "organization:kgb:47f63745a050",
+      "type": "served-at",
+      "attributes": {
+        "role": [
+          "senior officer of Soviet Intelligence"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "05259029",
+          "source_url": "https://www.cia.gov/readingroom/document/05259029",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "fdc2801f16f57084f34025af846b3de2b4f8ea9dcdd94b9b65294b8aca2829e0",
+          "quote": "long range policy and the active role of the KGB in it, was \navailable to me because I had witnessed these preparations while \nI was both a student at the KGB Institute and a senior officer \nof Soviet Intelligence at KGB Headquarters in Moscow. During \nthe period 1957 - 1959, the KGB Institute was directed, by the ",
+          "line_start": 66,
+          "line_end": 70,
+          "start_char": 1520,
+          "end_char": 1836
+        }
+      ]
+    },
+    {
+      "id": "relationship:d6d23e12a158",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "event:strategic-defense-initiative:bd7ed55dff81",
+      "type": "alleged-involvement-of",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Moscow has also surfaced allegations that some existing US \nmilitary facilities will be used in the Strategic Defense \nInitiative (SDI) program and that the United States is ",
+          "line_start": 174,
+          "line_end": 176,
+          "start_char": 7248,
+          "end_char": 7424
+        }
+      ]
+    },
+    {
+      "id": "relationship:d8c3ab7cafa5",
+      "source": "organization:moscow:75e913749bd9",
+      "target": "event:assassination-of-olof-palme:b18a3aec72df",
+      "type": "exploited-event",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "o Since the February 1986 assassination of Swedish Prime \nMinister Olof Palme, Moscow has made a concerted effort to \nimplicate the United States in his death. In addition to ",
+          "line_start": 86,
+          "line_end": 88,
+          "start_char": 3288,
+          "end_char": 3463
+        }
+      ]
+    },
+    {
+      "id": "relationship:d929cf03321f",
+      "source": "person:hanson-baldwin:7b42d40d29e5",
+      "target": "person:allen-w-dulles:722709d38e4d",
+      "type": "interviewed",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " .department of the KGB, known as depart-         rebels, frequent American violations of Carr.- Mr. Dulles himself discussed this episode on\n meat D, which is headed by Gen. Ivan Ivano-      bodla'a  sovereignty,  subversive  Activity  of a TV roundtable on.,' arch 2D, 1064:\n vich Agayant? they are reviewed and passed       Japan In' the region, etc.    The articles were \"Mr. HANsoN BA:,DWIN. Well, that bring.",
+          "line_start": 85,
+          "line_end": 87,
+          "start_char": 10043,
+          "end_char": 10457
+        }
+      ]
+    },
+    {
+      "id": "relationship:da9e8d436d85",
+      "source": "organization:department-of-disinformation:65f688750874",
+      "target": "organization:fbi:7a1e002fdf84",
+      "type": "discredits",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " DISINFORMATION,\" WHOSE ASSIGNMENT FROM THE POLITBURO IS TO DISCREDIT\n THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 17,
+          "line_end": 18,
+          "start_char": 881,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "relationship:dfca876312a5",
+      "source": "person:gen-ivan-ivanovich-agayants:a10d78db58f8",
+      "target": "person:georges-pasques:fc538ea6b509",
+      "type": "controlled",
+      "attributes": {
+        "location": [
+          "France"
+        ]
+      },
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " 7A.'.  Alms nanic  Ivan  Ivanovich Avalov.  At one time  peered In the Burmese press:'+\n in  France  he  controlled  the  French  spy 10. Although the KGB Is able to fabricate\n 'Georges Pasqucs who was sentenced to life , In A4\n oscow whatever material idd f",
+          "line_start": 29,
+          "line_end": 32,
+          "start_char": 3101,
+          "end_char": 3360
+        }
+      ]
+    },
+    {
+      "id": "relationship:e93a60169b4a",
+      "source": "work:memorandum-on-three-articles-submitted-for-approval-by-anato:752cf6eba614",
+      "target": "work:letter-to-editor-of-parade-magazine:3ffcee54edc8",
+      "type": "references",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "1. Letter to Editor of Parade Magazine ",
+          "line_start": 15,
+          "line_end": 15,
+          "start_char": 322,
+          "end_char": 361
+        }
+      ]
+    },
+    {
+      "id": "relationship:ebc45a4bae78",
+      "source": "person:john-f-pereira:8a4d21b33513",
+      "target": "work:memorandum-on-three-articles-submitted-for-approval-by-anato:752cf6eba614",
+      "type": "authored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "John F. Pereira \nChief, Information Management Staff \nThree Articles Submitted For Approval \nby Anatolyi Golitsyn ",
+          "line_start": 7,
+          "line_end": 10,
+          "start_char": 105,
+          "end_char": 219
+        }
+      ]
+    },
+    {
+      "id": "relationship:ebcbb8732786",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "work:letter-to-mr-joseph-douglass-jr-re-new-lies-for-old:3e345e65b3f1",
+      "type": "authored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Sincerely, \nA. Golits n \nAG/j1 ",
+          "line_start": 166,
+          "line_end": 168,
+          "start_char": 8273,
+          "end_char": 8304
+        }
+      ]
+    },
+    {
+      "id": "relationship:ec27116716b9",
+      "source": "organization:department-of-disinformation:65f688750874",
+      "target": "organization:cia:e9e55ea29acf",
+      "type": "discredits",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp67b00446r000500070013-6",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp67b00446r000500070013-6",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5a00212e11af889765ba1142c6a22a59c5f1ba5baffba1b5d9b1a818dbfddb3f",
+          "quote": " DISINFORMATION,\" WHOSE ASSIGNMENT FROM THE POLITBURO IS TO DISCREDIT\n THE CIA, J. EDGAR HOOVER AND  THE FBI, THE STATE DEPARTMENT, THE",
+          "line_start": 17,
+          "line_end": 18,
+          "start_char": 881,
+          "end_char": 1016
+        }
+      ]
+    },
+    {
+      "id": "relationship:ed173e76db72",
+      "source": "work:a-statement-by-a-golitsyn-to-the-participants-of-the-confere:5b4e14831814",
+      "target": "event:conference-on-disinformation-in-the-modern-world:725fae69b616",
+      "type": "prepared-for",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "A Statement By A. Golitsyn To The Participants Of The Conference \nOn \"Disinformation In The Modern World\". \nGentlemen: \nI am indeed grateful for the invitation to participate in the \nconference on \"Disinformation In The Modern World\". Unfortunately ",
+          "line_start": 200,
+          "line_end": 204,
+          "start_char": 9418,
+          "end_char": 9667
+        }
+      ]
+    },
+    {
+      "id": "relationship:ee6ac8ac2b98",
+      "source": "organization:novosti:5a5e69e4b705",
+      "target": "event:jonestown-massacre:73556a9a15e2",
+      "type": "published-book-about",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05798947",
+          "source_url": "https://www.cia.gov/readingroom/document/05798947",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "aa1aac2a478b5debb1bdd4e40ffdc25bc2c410779136c9c0af83104d92db9254",
+          "quote": "a book published by Novosti--claiming that the CIA \ninstigated the 1978 Jonestown massacre in order to prevent \n.cult members from emigrating to the Soviet Union. Since ",
+          "line_start": 122,
+          "line_end": 124,
+          "start_char": 4745,
+          "end_char": 4914
+        }
+      ]
+    },
+    {
+      "id": "relationship:f2560a25732c",
+      "source": "person:anatolyi-golitsyn:501c9a114c35",
+      "target": "work:letter-to-editor-of-parade-magazine:3ffcee54edc8",
+      "type": "authored",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "Approved for Release: 2020/03/09 C05259030 ",
+          "line_start": 110,
+          "line_end": 110,
+          "start_char": 5304,
+          "end_char": 5347
+        }
+      ]
+    },
+    {
+      "id": "relationship:f5c261a33a92",
+      "source": "work:letter-to-mr-joseph-douglass-jr-re-new-lies-for-old:3e345e65b3f1",
+      "target": "work:new-lies-for-old:e0d9dc052d18",
+      "type": "discusses",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "05259030",
+          "source_url": "https://www.cia.gov/readingroom/document/05259030",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "5c36ba0d0d28427ce6b54e84d9a8968bdafa9b1e36cc17a1d1d9fb986ce93dcb",
+          "quote": "I wish to take this opportunity to express my appreciation \nfor your review of my book, \"New Lies for Old\". Your review \nindeed shows a genuine concern for the subject of \"Strategic \nDisinformation \" and the failure of the West to deal witth it. ",
+          "line_start": 122,
+          "line_end": 125,
+          "start_char": 5565,
+          "end_char": 5811
+        }
+      ]
+    },
+    {
+      "id": "relationship:f9a379094bdf",
+      "source": "person:mr-price:cb06da6d4d62",
+      "target": "work:soviet-and-communist-bloc-defamation-campaign-paper:88e04f14be76",
+      "type": "submitted",
+      "attributes": {},
+      "evidence": [
+        {
+          "document_id": "cia-rdp70-00058r000300020010-5",
+          "source_url": "https://www.cia.gov/readingroom/document/cia-rdp70-00058r000300020010-5",
+          "corpus_path": "cia_documents/disinformation_complete_20250517_002848.json",
+          "body_sha256": "46fe0e23659472b174add18b65bdddfd72c03279f4bd10620ed21c17ad71c407",
+          "quote": " and Comnumist?I3ioc Defamation Caill-   headed by Gen, Ivan Ivnnovich A ;ayants, a I the Soviet press, And Soviet diplomatic rep-\n paign.\" which I Submit for printing in the                       senior, professional Intelligence ol;icer With  resentatives Abroad.  It Is their duty to see\n r",
+          "line_start": 19,
+          "line_end": 21,
+          "start_char": 2407,
+          "end_char": 2700
+        }
+      ]
+    }
+  ]
+}

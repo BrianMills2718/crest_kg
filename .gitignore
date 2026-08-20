@@ -1,0 +1,31 @@
+# Python and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Notebook and editor state
+.ipynb_checkpoints/
+.DS_Store
+
+# Downloaded CREST/UFO source archives and intermediate extraction snapshots
+cia_ufo_pdfs/
+cia_ufo_documents/
+cia_ufo_output/
+cia_documents/*
+!cia_documents/disinformation_complete_20250517_002848.json
+
+# Historical graph renders and intermediate graph JSON
+cia_kg_output/*
+!cia_kg_output/validated_5_documents.json
+cia_kg_document_*.json
+cia_kg_merged_5_documents.json
+cia_knowledge_graph*
+ufo_knowledge_graph_interactive.html
+initial_page.html
+page_after_wait.html
+search_results.html
+lib/
