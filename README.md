@@ -1,15 +1,38 @@
 # CREST Knowledge Graph
 
-This repository preserves experiments over CIA CREST and UFO Reading Room
-material. `crest_pipeline.py` is the canonical extraction path. The older
-numbered scripts are retained as historical code; their downloaded inputs,
-progress snapshots, and generated visualizations remain in the local archive
-but are excluded from Git because they are reproducible or redundant artifacts.
+CREST is an evidence-first research workbench for CIA Reading Room material.
+It lets a researcher search an available CREST corpus, inspect and select
+source documents, run a budget-bounded extraction, explore the resulting
+knowledge graph, and export the complete provenance-preserving artifact.
 
-The initial Git history intentionally tracks the canonical prompt and tests,
-the exact five-document source corpus, and the validated graph. This keeps the
-grounded result independently checkable without committing the full 108 MB
-working archive.
+`crest_app` owns the executable web/API surface and `crest_pipeline.py` remains
+the one canonical extraction path. The older numbered scripts are retained as
+historical experiments; their downloaded inputs, progress snapshots, and
+generated visualizations remain in the local archive but are excluded from Git
+because they are reproducible or redundant artifacts.
+
+The tracked source archive contains 40 CIA Reading Room documents, while the
+included five-document graph remains a labeled evaluation checkpoint. Live CIA
+search is currently unavailable because the Reading Room search and document
+routes redirect automated requests back to the landing page; the workbench
+shows that connector state explicitly and never presents bundled results as
+live search. The complete product contract and current boundaries are in
+[`docs/WORKBENCH_PRODUCT.md`](docs/WORKBENCH_PRODUCT.md).
+
+## Run the workbench
+
+Install the web dependencies, then start the single-process development server:
+
+```bash
+python -m pip install -r requirements.txt
+uvicorn crest_app.main:app --host 127.0.0.1 --port 8080
+```
+
+Search, document inspection, saved graphs, and export are read-only. Provider
+spend is disabled unless `CREST_BUILD_ENABLED=1`; builds also require a trusted
+Tailscale identity or `CREST_OPERATOR_TOKEN`, and cannot exceed
+`CREST_MAX_BUILD_BUDGET_USD` (default `$0.25`). The UI uses the same typed API
+documented at `/api/docs`.
 
 ## What the canonical path guarantees
 
@@ -75,17 +98,16 @@ python crest_pipeline.py validate \
   --graph cia_kg_output/validated_5_documents.json
 ```
 
-## Hosted evidence viewer
+## Hosted research workbench
 
-The audited relationship-binding v2 checkpoint has a read-only browser surface
-at <https://brian-mac-mini.tail9c321e.ts.net/crest/>. It defaults to the five
-entities connected by the three accepted relationships, exposes all 82
-extracted entities separately, and lets every accepted edge step down to its
-exact source quote and grounding spans.
+The browser workbench is hosted at
+<https://brian-mac-mini.tail9c321e.ts.net/crest/>. Its default graph is the
+audited relationship-binding v2 checkpoint, but the primary surface is the
+search, source-selection, build, exploration, and export workflow.
 
-The viewer deliberately retains the evaluation boundary: it is an exploratory
-five-document checkpoint with unknown corpus recall, not a complete CREST map.
-Its container and Mac mini promotion/rollback contract are documented in
+The workbench retains the evaluation boundary: neither its tracked archive nor
+its five-document example is a complete CREST map, and corpus recall remains
+unknown. Its container and Mac mini promotion/rollback contract are documented in
 [`docs/MAC_MINI_DEPLOYMENT.md`](docs/MAC_MINI_DEPLOYMENT.md).
 
 ## Verified vertical

@@ -1,171 +1,151 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Evidence-first explorer for the audited CREST relationship-binding v2 knowledge graph.">
-    <title>CREST Knowledge Graph</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23f6f1e7'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='%23183450' stroke-width='3'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Georgia,serif' font-size='34' font-weight='700' fill='%23183450'%3EC%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="./styles.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ede9df" />
+    <title>CREST research workbench</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%231d342f%22/><circle cx=%2221%22 cy=%2232%22 r=%226%22 fill=%22%23df734c%22/><circle cx=%2245%22 cy=%2218%22 r=%226%22 fill=%22%23e6bd63%22/><circle cx=%2247%22 cy=%2247%22 r=%226%22 fill=%22%2395b6a2%22/><path d=%22M26 29 40 21M26 35l15 9%22 stroke=%22white%22 stroke-width=%223%22/></svg>" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to the graph</a>
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="CREST Knowledge Graph home">
-        <span class="brand-mark" aria-hidden="true">C</span>
-        <span>
-          <strong>CREST Knowledge Graph</strong>
-          <small>Evidence-first archival prototype</small>
-        </span>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="CREST workbench home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><strong>CREST</strong><small>research workbench</small></span>
       </a>
-      <a class="source-link" href="https://github.com/BrianMills2718/crest_kg" rel="noreferrer">Source code</a>
+      <div class="topbar-actions">
+        <label class="graph-picker">
+          <span>Open graph</span>
+          <select data-graph-picker aria-label="Open a saved graph"></select>
+        </label>
+        <a class="button ghost" data-export-link href="./api/graphs/example-fixed-v2/export.json">Export JSON</a>
+        <button class="icon-button" type="button" data-help-button aria-label="About this workbench">?</button>
+      </div>
     </header>
 
-    <main id="main-content">
-      <section class="hero" aria-labelledby="page-title">
-        <div class="hero-copy">
-          <p class="eyebrow">CIA CREST · five-document checkpoint</p>
-          <h1 id="page-title">What relationships survived exact-source review?</h1>
-          <p class="lede">Explore the small set of relationships that passed strict endpoint, predicate, direction, and source-grounding checks. Select any edge to inspect the exact CIA Reading Room quote behind it.</p>
-        </div>
-        <aside class="checkpoint-note" aria-label="Checkpoint limitation">
-          <strong>Exploratory checkpoint</strong>
-          <p>This is a reproducible research prototype—not a complete map of CREST. Only two of five documents emitted accepted relationships, and corpus recall is unknown.</p>
-        </aside>
-        <dl class="metrics" aria-label="Graph summary">
-          <div><dt>Documents</dt><dd data-metric="documents">—</dd></div>
-          <div><dt>Entities</dt><dd data-metric="entities">—</dd></div>
-          <div><dt>Supported edges</dt><dd data-metric="relationships">—</dd></div>
-          <div><dt>Rejected candidates</dt><dd data-metric="rejections">—</dd></div>
-        </dl>
-      </section>
-
-      <section class="explorer" aria-labelledby="explorer-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Audited output</p>
-            <h2 id="explorer-title">Trace a claim back to its source</h2>
+    <main class="workbench">
+      <aside class="research-panel" aria-label="Search and select CREST documents">
+        <section class="panel-section source-section">
+          <div class="eyebrow">01 · Sources</div>
+          <div data-connectors class="connector-list" aria-live="polite">
+            <div class="skeleton line"></div>
+            <div class="skeleton line"></div>
           </div>
-          <nav class="view-tabs" aria-label="Explorer views">
-            <button type="button" class="view-tab is-active" data-view-button="relationships" aria-pressed="true">Relationships</button>
-            <button type="button" class="view-tab" data-view-button="entities" aria-pressed="false">All entities</button>
-            <button type="button" class="view-tab" data-view-button="documents" aria-pressed="false">Documents</button>
-            <button type="button" class="view-tab" data-view-button="method" aria-pressed="false">How to read this</button>
-          </nav>
-        </div>
+        </section>
 
-        <div id="load-error" class="error-state" role="alert" hidden>
-          <strong>The graph could not be loaded.</strong>
-          <p data-error-message></p>
-        </div>
-
-        <div class="explorer-grid">
-          <div class="view-stack">
-            <section class="view-panel" data-view-panel="relationships" aria-labelledby="relationship-view-title">
-              <div class="panel-intro">
-                <div>
-                  <h3 id="relationship-view-title">Connected evidence graph</h3>
-                  <p>The canvas shows only the five entities participating in accepted relationships. The other extracted entities remain available in <strong>All entities</strong>.</p>
-                </div>
-                <button type="button" class="secondary-button" id="fit-graph">Fit graph</button>
-              </div>
-              <div class="graph-frame">
-                <svg id="relationship-graph" role="img" aria-labelledby="graph-title graph-description" viewBox="0 0 760 460">
-                  <title id="graph-title">Accepted CREST relationships</title>
-                  <desc id="graph-description">A directed graph of the entities connected by the three relationships that survived source review.</desc>
-                  <defs>
-                    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-                      <path d="M0,0 L8,4 L0,8 Z" class="arrowhead"></path>
-                    </marker>
-                  </defs>
-                  <g data-graph-layer></g>
-                </svg>
-              </div>
-              <div class="relationship-list" aria-label="Accepted relationships" data-relationship-list></div>
-            </section>
-
-            <section class="view-panel" data-view-panel="entities" aria-labelledby="entity-view-title" hidden>
-              <div class="panel-intro">
-                <div>
-                  <h3 id="entity-view-title">All extracted entities</h3>
-                  <p>Search every typed entity, including those without an accepted relationship. Selecting an entity opens its exact source evidence.</p>
-                </div>
-              </div>
-              <form class="entity-controls" role="search" onsubmit="return false">
-                <label>
-                  <span>Search entities</span>
-                  <input id="entity-search" type="search" placeholder="Try CIA, Navrozov, disinformation…" autocomplete="off">
-                </label>
-                <label>
-                  <span>Entity type</span>
-                  <select id="entity-type-filter"><option value="">All types</option></select>
-                </label>
-              </form>
-              <p class="result-count" aria-live="polite" data-entity-result-count></p>
-              <div class="entity-list" data-entity-list></div>
-            </section>
-
-            <section class="view-panel" data-view-panel="documents" aria-labelledby="document-view-title" hidden>
-              <div class="panel-intro">
-                <div>
-                  <h3 id="document-view-title">Source documents</h3>
-                  <p>Each graph assertion is bound to a document digest, exact character offsets, and a bounded line range.</p>
-                </div>
-              </div>
-              <div class="document-list" data-document-list></div>
-            </section>
-
-            <section class="view-panel method-panel" data-view-panel="method" aria-labelledby="method-view-title" hidden>
-              <p class="eyebrow">Interpretation guide</p>
-              <h3 id="method-view-title">A precise graph, not an exhaustive one</h3>
-              <div class="method-grid">
-                <article>
-                  <span class="method-number">01</span>
-                  <h4>Entities came from five documents</h4>
-                  <p>The extractor identified people, organizations, places, events, concepts, and works in fixed source windows.</p>
-                </article>
-                <article>
-                  <span class="method-number">02</span>
-                  <h4>Edges faced stricter review</h4>
-                  <p>Endpoints and the predicate must appear faithfully in one exact quote. Invalid candidates remain visible in the rejection ledger.</p>
-                </article>
-                <article>
-                  <span class="method-number">03</span>
-                  <h4>Three edges survived</h4>
-                  <p>All three were source-replayed and adjudicated as supported, but the same output helped shape the guard. This is descriptive evidence, not a generalization test.</p>
-                </article>
-                <article>
-                  <span class="method-number">04</span>
-                  <h4>Absence is not evidence</h4>
-                  <p>An isolated entity may still participate in real relationships. It only means this checkpoint did not accept an edge for it.</p>
-                </article>
-              </div>
-              <a class="inline-link" href="https://github.com/BrianMills2718/crest_kg/blob/main/evaluation/eval_decision_signoff_v2.md" rel="noreferrer">Read the independent evaluation sign-off</a>
-            </section>
-          </div>
-
-          <aside class="detail-panel" aria-labelledby="detail-title" aria-live="polite">
-            <p class="eyebrow">Evidence inspector</p>
-            <h3 id="detail-title">Select a relationship</h3>
-            <div data-detail-content>
-              <p>Choose an edge or entity to inspect its source-bound evidence.</p>
+        <section class="panel-section search-section">
+          <div class="eyebrow">02 · Search</div>
+          <form data-search-form class="search-form">
+            <label for="query">Search the archive</label>
+            <div class="search-control">
+              <input id="query" name="query" type="search" value="disinformation" autocomplete="off" />
+              <button type="submit" aria-label="Search">↵</button>
             </div>
-          </aside>
+          </form>
+          <div class="search-meta" data-search-meta>Search tracked CREST text and metadata.</div>
+        </section>
+
+        <section class="results-section">
+          <div class="result-heading">
+            <span>Results</span>
+            <span data-result-count></span>
+          </div>
+          <div data-search-error class="inline-error" hidden></div>
+          <div data-results class="result-list" aria-live="polite">
+            <div class="empty-state compact">Run a search to choose source documents.</div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="graph-workspace" aria-label="Knowledge graph explorer">
+        <div class="graph-toolbar">
+          <div>
+            <div class="eyebrow">03 · Explore</div>
+            <h1 data-graph-title>Loading evidence graph…</h1>
+          </div>
+          <div class="graph-tools">
+            <label class="toggle"><input type="checkbox" data-connected-only checked /><span></span>Connected only</label>
+            <button class="button ghost small" type="button" data-fit-button>Fit graph</button>
+          </div>
+        </div>
+
+        <div class="metric-strip" data-metrics>
+          <div><strong data-metric="documents">—</strong><span>documents</span></div>
+          <div><strong data-metric="entities">—</strong><span>entities</span></div>
+          <div><strong data-metric="relationships">—</strong><span>relationships</span></div>
+          <div><strong data-metric="rejections">—</strong><span>rejected candidates</span></div>
+        </div>
+
+        <div class="graph-stage" data-graph-stage>
+          <svg id="knowledge-graph" role="img" aria-label="Interactive CREST knowledge graph" viewBox="0 0 900 620">
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="currentColor"></path>
+              </marker>
+            </defs>
+            <g data-edge-layer></g>
+            <g data-node-layer></g>
+          </svg>
+          <div data-graph-empty class="graph-message">Loading graph artifact…</div>
+          <div class="legend" data-legend></div>
+        </div>
+
+        <div class="graph-footer">
+          <span data-graph-provenance>Every accepted assertion links to exact source lines.</span>
+          <span data-graph-cost></span>
         </div>
       </section>
+
+      <aside class="inspector-panel" aria-label="Evidence inspector">
+        <div class="inspector-header">
+          <div class="eyebrow">04 · Evidence</div>
+          <h2>Inspector</h2>
+        </div>
+        <div data-inspector class="inspector-content" aria-live="polite">
+          <div class="empty-state">
+            <span class="empty-icon">⌁</span>
+            <strong>Select a node or relationship</strong>
+            <p>See its source document, exact quote, and extraction grounding here.</p>
+          </div>
+        </div>
+      </aside>
     </main>
 
-    <footer>
-      <div>
-        <strong>CREST relationship-binding v2</strong>
-        <span data-build-revision>Loading build revision…</span>
+    <section class="build-dock" data-build-dock aria-label="Graph builder">
+      <div class="selection-summary">
+        <div class="step-number">05</div>
+        <div>
+          <strong><span data-selected-count>0</span> documents selected</strong>
+          <span data-selected-labels>Choose up to three search results.</span>
+        </div>
       </div>
-      <div class="footer-links">
-        <a href="./data/graph.json">Graph JSON</a>
-        <a href="https://www.cia.gov/readingroom/" rel="noreferrer">CIA Reading Room</a>
+      <div class="build-settings">
+        <label>Budget ceiling <span>$</span><input data-budget type="number" min="0.01" max="0.25" step="0.01" value="0.10" /></label>
+        <label>Chars / document <input data-max-chars type="number" min="1000" max="20000" step="1000" value="12000" /></label>
+        <label class="token-field">Operator token <input data-token type="password" autocomplete="off" placeholder="only if needed" /></label>
       </div>
-    </footer>
+      <div class="build-action">
+        <button class="button primary" type="button" data-build-button disabled>Build knowledge graph</button>
+        <span data-build-status>Search and select a document to begin.</span>
+      </div>
+    </section>
 
+    <dialog data-document-dialog class="document-dialog">
+      <button class="dialog-close" type="button" data-dialog-close aria-label="Close">×</button>
+      <div data-document-content></div>
+    </dialog>
+
+    <dialog data-help-dialog class="help-dialog">
+      <button class="dialog-close" type="button" data-help-close aria-label="Close">×</button>
+      <div class="eyebrow">About CREST</div>
+      <h2>From a source search to an evidence graph</h2>
+      <p>This is an active research workbench. Search and inspect real tracked CIA Reading Room records, select documents, and run the repository's traced extraction pipeline.</p>
+      <p>The bundled archive is currently available. Live CIA search is shown separately and will remain unavailable until its redirect behavior is repaired. The five-document graph is a labeled example checkpoint, not a claim of corpus coverage.</p>
+      <p><a href="./api/docs">Open API documentation</a></p>
+    </dialog>
+
+    <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
     <script src="./app.js" defer></script>
   </body>
 </html>

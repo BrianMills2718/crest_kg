@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministic, provenance-preserving CREST knowledge-graph pipeline.
 
-This is the canonical extraction path for the archived CREST prototype.  It
+This is the canonical extraction path for the CREST research workbench.  It
 keeps corpus selection deterministic, validates model output with Pydantic,
 grounds every assertion in an exact source quote, and refuses to write graphs
 that violate referential integrity.
@@ -1208,6 +1208,45 @@ def load_corpus(corpus_path: Path, *, limit: int, max_chars: int) -> list[Loaded
     return loaded[:limit]
 
 
+def load_selected_documents(
+    corpus_path: Path,
+    *,
+    document_ids: list[str],
+    max_chars: int,
+) -> list[LoadedDocument]:
+    """Load an explicit document selection through the canonical source boundary."""
+
+    if not document_ids:
+        raise ValueError("at least one document ID is required")
+    if len(document_ids) != len(set(document_ids)):
+        raise ValueError("document IDs must be unique")
+    all_documents = load_corpus(
+        corpus_path,
+        limit=len(_raw_corpus_items(corpus_path)),
+        max_chars=max_chars,
+    )
+    documents_by_id = {
+        document.manifest.document_id: document for document in all_documents
+    }
+    missing = [document_id for document_id in document_ids if document_id not in documents_by_id]
+    if missing:
+        raise ValueError(f"unknown document IDs: {', '.join(missing)}")
+    return [documents_by_id[document_id] for document_id in document_ids]
+
+
+def _raw_corpus_items(corpus_path: Path) -> list[Any]:
+    """Return raw corpus items for selection without weakening load validation."""
+
+    if not corpus_path.is_file():
+        raise ValueError(f"corpus is not a file: {corpus_path}")
+    payload = json.loads(corpus_path.read_text(encoding="utf-8"))
+    if isinstance(payload, dict) and isinstance(payload.get("documents"), list):
+        return payload["documents"]
+    if isinstance(payload, list):
+        return payload
+    raise TypeError("corpus must be a list or an object with a documents list")
+
+
 def locate_evidence(document: LoadedDocument, evidence: EvidenceCandidate) -> Provenance:
     """Materialize a bounded model line citation as exact original source text."""
 
@@ -1721,6 +1760,7 @@ def run_extraction(
     refine_relationships: bool = False,
     relationship_max_output_tokens: int = 2_000,
     reasoning_effort: str | None = None,
+    structured_retries: int = 0,
 ) -> GraphArtifact:
     """Execute one fully traced structured extraction per selected document."""
 
@@ -1764,6 +1804,8 @@ def run_extraction(
         raise ValueError("max output tokens must be greater than zero")
     if relationship_max_output_tokens <= 0:
         raise ValueError("relationship max output tokens must be greater than zero")
+    if structured_retries < 0:
+        raise ValueError("structured retries must be nonnegative")
 
     resume_roots = list(dict.fromkeys(resume_trace_ids or []))
     if any(not root.strip() for root in resume_roots):
@@ -1882,7 +1924,7 @@ def run_extraction(
                 budget_scope_trace_id=trace_id,
                 max_budget=authorized_new_call_budget,
                 max_tokens=max_output_tokens,
-                num_retries=0,
+                num_retries=structured_retries,
                 reasoning_effort=reasoning_effort,
                 model_policy="enforce_allowlist",
                 model_justification=model_justification,
@@ -1941,7 +1983,7 @@ def run_extraction(
                 budget_scope_trace_id=trace_id,
                 max_budget=authorized_new_call_budget,
                 max_tokens=relationship_max_output_tokens,
-                num_retries=0,
+                num_retries=structured_retries,
                 reasoning_effort=reasoning_effort,
                 model_policy="enforce_allowlist",
                 model_justification=relationship_model_justification,

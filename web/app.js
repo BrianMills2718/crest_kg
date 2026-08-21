@@ -2,407 +2,377 @@
   "use strict";
 
   const TYPE_COLORS = {
-    person: "#b24b3b",
-    organization: "#244f72",
-    location: "#547a56",
-    concept: "#7b5b91",
-    event: "#a06a2b",
-    work: "#397675",
-    other: "#6f7479",
+    person: "#d96643", organization: "#476f86", location: "#5b8969",
+    concept: "#8b688c", event: "#d9a944", time: "#748f86",
+    work: "#397675", other: "#7d817e",
   };
-
   const state = {
-    graph: null,
-    entitiesById: new Map(),
-    selectedKind: null,
-    selectedId: null,
-    positions: new Map(),
+    capabilities: null, results: [], selectedDocuments: new Map(), graph: null,
+    graphId: "example-fixed-v2", entitiesById: new Map(), selectedItem: null,
+    polling: null,
   };
+  const $ = (selector) => document.querySelector(selector);
 
   function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
   }
-
   function humanize(value) {
-    return String(value || "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return String(value || "").replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
   }
-
   function truncate(value, length) {
     const text = String(value || "");
     return text.length > length ? `${text.slice(0, length - 1)}…` : text;
   }
+  function token() { return $("[data-token]").value.trim(); }
 
-  function requireGraph(payload) {
-    if (!payload || payload.schema_version !== "crest-kg-v2") {
-      throw new Error("Expected a crest-kg-v2 graph artifact.");
-    }
-    for (const key of ["documents", "entities", "relationships", "rejections"]) {
-      if (!Array.isArray(payload[key])) throw new Error(`Graph field ${key} is missing or invalid.`);
-    }
-    const ids = new Set(payload.entities.map((entity) => entity.id));
-    for (const relationship of payload.relationships) {
-      if (!ids.has(relationship.source) || !ids.has(relationship.target)) {
-        throw new Error(`Relationship ${relationship.id} has a missing endpoint.`);
-      }
-      if (!Array.isArray(relationship.groundings) || relationship.groundings.length === 0) {
-        throw new Error(`Relationship ${relationship.id} has no exact grounding.`);
-      }
+  async function api(path, options = {}) {
+    const headers = { Accept: "application/json", ...(options.headers || {}) };
+    if (options.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+    if (options.operator && token()) headers.Authorization = `Bearer ${token()}`;
+    const response = await fetch(`./api/${path}`, { ...options, headers });
+    const contentType = response.headers.get("content-type") || "";
+    const payload = contentType.includes("application/json") ? await response.json() : await response.text();
+    if (!response.ok) {
+      const detail = typeof payload === "object" ? payload.detail : payload;
+      throw new Error(detail || `Request failed with status ${response.status}`);
     }
     return payload;
   }
 
-  function setView(viewName) {
-    document.querySelectorAll("[data-view-panel]").forEach((panel) => {
-      panel.hidden = panel.dataset.viewPanel !== viewName;
-    });
-    document.querySelectorAll("[data-view-button]").forEach((button) => {
-      const active = button.dataset.viewButton === viewName;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", String(active));
-    });
+  function toast(message) {
+    const element = $("[data-toast]");
+    element.textContent = message;
+    element.hidden = false;
+    window.clearTimeout(toast.timer);
+    toast.timer = window.setTimeout(() => { element.hidden = true; }, 4200);
   }
 
-  function updateMetrics(graph) {
-    const values = {
-      documents: graph.documents.length,
-      entities: graph.entities.length,
-      relationships: graph.relationships.length,
-      rejections: graph.rejections.length,
-    };
-    Object.entries(values).forEach(([key, value]) => {
-      document.querySelector(`[data-metric="${key}"]`).textContent = value.toLocaleString();
-    });
-  }
-
-  function connectedComponents(relationships) {
-    const adjacency = new Map();
-    relationships.forEach((relationship) => {
-      if (!adjacency.has(relationship.source)) adjacency.set(relationship.source, new Set());
-      if (!adjacency.has(relationship.target)) adjacency.set(relationship.target, new Set());
-      adjacency.get(relationship.source).add(relationship.target);
-      adjacency.get(relationship.target).add(relationship.source);
-    });
-    const seen = new Set();
-    const components = [];
-    [...adjacency.keys()].sort().forEach((start) => {
-      if (seen.has(start)) return;
-      const component = [];
-      const queue = [start];
-      seen.add(start);
-      while (queue.length) {
-        const current = queue.shift();
-        component.push(current);
-        [...adjacency.get(current)].sort().forEach((neighbor) => {
-          if (!seen.has(neighbor)) {
-            seen.add(neighbor);
-            queue.push(neighbor);
-          }
-        });
-      }
-      components.push(component);
-    });
-    return components.sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]));
-  }
-
-  function computePositions(graph) {
-    const components = connectedComponents(graph.relationships);
-    const height = Math.max(430, components.length * 210 + 30);
-    const positions = new Map();
-    const indegree = new Map();
-    graph.relationships.forEach((relationship) => {
-      indegree.set(relationship.source, indegree.get(relationship.source) || 0);
-      indegree.set(relationship.target, (indegree.get(relationship.target) || 0) + 1);
-    });
-    components.forEach((component, componentIndex) => {
-      const bandTop = 20 + componentIndex * 210;
-      const sources = component.filter((id) => (indegree.get(id) || 0) === 0);
-      const targets = component.filter((id) => !sources.includes(id));
-      const left = sources.length ? sources : component.slice(0, 1);
-      const right = targets.length ? targets : component.slice(1);
-      left.forEach((id, index) => positions.set(id, { x: 150, y: bandTop + ((index + 1) * 170) / (left.length + 1) }));
-      right.forEach((id, index) => positions.set(id, { x: 610, y: bandTop + ((index + 1) * 170) / (right.length + 1) }));
-    });
-    return { positions, height };
-  }
-
-  function svgElement(name, attributes = {}) {
-    const element = document.createElementNS("http://www.w3.org/2000/svg", name);
-    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
-    return element;
-  }
-
-  function relationshipLabel(relationship) {
-    const source = state.entitiesById.get(relationship.source);
-    const target = state.entitiesById.get(relationship.target);
-    return `${source.name} · ${humanize(relationship.type)} · ${target.name}`;
-  }
-
-  function renderGraph() {
-    const graph = state.graph;
-    const layer = document.querySelector("[data-graph-layer]");
-    layer.replaceChildren();
-    const layout = computePositions(graph);
-    state.positions = layout.positions;
-    const svg = document.getElementById("relationship-graph");
-    svg.setAttribute("viewBox", `0 0 760 ${layout.height}`);
-
-    graph.relationships.forEach((relationship) => {
-      const source = layout.positions.get(relationship.source);
-      const target = layout.positions.get(relationship.target);
-      const dx = target.x - source.x;
-      const startX = source.x + Math.sign(dx) * 47;
-      const endX = target.x - Math.sign(dx) * 47;
-      const path = svgElement("path", {
-        d: `M ${startX} ${source.y} L ${endX} ${target.y}`,
-        class: "graph-edge",
-        "data-relationship-id": relationship.id,
-        "marker-end": "url(#arrowhead)",
-        tabindex: "0",
-        role: "button",
-        "aria-label": relationshipLabel(relationship),
-      });
-      path.addEventListener("click", () => selectRelationship(relationship.id));
-      path.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") selectRelationship(relationship.id);
-      });
-      layer.appendChild(path);
-      const label = svgElement("text", {
-        x: String((source.x + target.x) / 2),
-        y: String((source.y + target.y) / 2 - 8),
-        class: "graph-edge-label",
-        "text-anchor": "middle",
-        "data-relationship-id": relationship.id,
-      });
-      label.textContent = humanize(relationship.type);
-      label.addEventListener("click", () => selectRelationship(relationship.id));
-      layer.appendChild(label);
-    });
-
-    [...layout.positions.entries()].forEach(([entityId, position]) => {
-      const entity = state.entitiesById.get(entityId);
-      const group = svgElement("g", {
-        class: "graph-node",
-        transform: `translate(${position.x} ${position.y})`,
-        tabindex: "0",
-        role: "button",
-        "aria-label": `${entity.name}, ${entity.type}`,
-        "data-entity-id": entity.id,
-      });
-      group.appendChild(svgElement("circle", { r: "40", fill: TYPE_COLORS[entity.type] || TYPE_COLORS.other }));
-      const name = svgElement("text", { y: "58" });
-      name.textContent = truncate(entity.name, 28);
-      group.appendChild(name);
-      const type = svgElement("text", { y: "73", class: "graph-node-type" });
-      type.textContent = entity.type;
-      group.appendChild(type);
-      group.addEventListener("click", () => selectEntity(entity.id));
-      group.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") selectEntity(entity.id);
-      });
-      layer.appendChild(group);
-    });
-  }
-
-  function renderRelationshipList() {
-    const container = document.querySelector("[data-relationship-list]");
-    container.replaceChildren();
-    state.graph.relationships.forEach((relationship) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "relationship-button";
-      button.dataset.relationshipId = relationship.id;
-      button.innerHTML = `<span><strong>${escapeHtml(relationshipLabel(relationship))}</strong><span>Document ${escapeHtml(relationship.evidence[0].document_id)} · lines ${relationship.evidence[0].line_start}–${relationship.evidence[0].line_end}</span></span><span class="status-badge">Supported</span>`;
-      button.addEventListener("click", () => selectRelationship(relationship.id));
-      container.appendChild(button);
-    });
-  }
-
-  function sourceLink(evidence) {
-    return evidence.source_url ? `<a class="inline-link" href="${escapeHtml(evidence.source_url)}" rel="noreferrer">Open CIA source record</a>` : "";
-  }
-
-  function relationshipDetail(relationship) {
-    const source = state.entitiesById.get(relationship.source);
-    const target = state.entitiesById.get(relationship.target);
-    const evidence = relationship.evidence[0];
-    const grounding = relationship.groundings[0];
-    return `
-      <div class="detail-section">
-        <span class="status-badge">Supported in fixed artifact</span>
-      </div>
-      <div class="detail-section relationship-expression">
-        <strong>${escapeHtml(source.name)}</strong>
-        <span>${escapeHtml(humanize(relationship.type))} →</span>
-        <strong>${escapeHtml(target.name)}</strong>
-      </div>
-      <div class="detail-section">
-        <p class="detail-label">Exact source quote</p>
-        <blockquote>${escapeHtml(evidence.quote)}</blockquote>
-        <p class="detail-value">Document ${escapeHtml(evidence.document_id)}, lines ${evidence.line_start}–${evidence.line_end}</p>
-        ${sourceLink(evidence)}
-      </div>
-      <div class="detail-section">
-        <p class="detail-label">Grounded spans</p>
-        <div class="grounding-grid">
-          <div><span>Source mention</span><strong>${escapeHtml(grounding.source_mention)}</strong></div>
-          <div><span>Relationship phrase</span><strong>${escapeHtml(grounding.relation_phrase)}</strong></div>
-          <div><span>Target mention</span><strong>${escapeHtml(grounding.target_mention)}</strong></div>
-        </div>
-      </div>
-      <div class="detail-section">
-        <p class="detail-label">Extraction rationale</p>
-        <p class="detail-value">${escapeHtml(grounding.support_reasoning)}</p>
-      </div>`;
-  }
-
-  function entityDetail(entity) {
-    const evidence = entity.evidence[0];
-    const connected = state.graph.relationships.filter((relationship) => relationship.source === entity.id || relationship.target === entity.id);
-    return `
-      <div class="detail-section"><span class="type-badge">${escapeHtml(entity.type)}</span></div>
-      <div class="detail-section">
-        <p class="detail-label">Graph status</p>
-        <p class="detail-value">${connected.length ? `${connected.length} accepted relationship${connected.length === 1 ? "" : "s"}` : "No accepted relationships in this checkpoint"}</p>
-      </div>
-      <div class="detail-section">
-        <p class="detail-label">Exact source quote</p>
-        <blockquote>${escapeHtml(evidence.quote)}</blockquote>
-        <p class="detail-value">Document ${escapeHtml(evidence.document_id)}, lines ${evidence.line_start}–${evidence.line_end}</p>
-        ${sourceLink(evidence)}
-      </div>
-      <div class="detail-section">
-        <p class="detail-label">Canonical identifier</p>
-        <p class="detail-value">${escapeHtml(entity.id)}</p>
-      </div>`;
-  }
-
-  function updateSelectionClasses() {
-    document.querySelectorAll("[data-relationship-id]").forEach((element) => {
-      element.classList.toggle("is-selected", state.selectedKind === "relationship" && element.dataset.relationshipId === state.selectedId);
-    });
-    document.querySelectorAll("[data-entity-id]").forEach((element) => {
-      element.classList.toggle("is-selected", state.selectedKind === "entity" && element.dataset.entityId === state.selectedId);
-    });
-  }
-
-  function selectRelationship(relationshipId) {
-    const relationship = state.graph.relationships.find((item) => item.id === relationshipId);
-    if (!relationship) return;
-    state.selectedKind = "relationship";
-    state.selectedId = relationshipId;
-    document.getElementById("detail-title").textContent = humanize(relationship.type);
-    document.querySelector("[data-detail-content]").innerHTML = relationshipDetail(relationship);
-    updateSelectionClasses();
-  }
-
-  function selectEntity(entityId) {
-    const entity = state.entitiesById.get(entityId);
-    if (!entity) return;
-    state.selectedKind = "entity";
-    state.selectedId = entityId;
-    document.getElementById("detail-title").textContent = entity.name;
-    document.querySelector("[data-detail-content]").innerHTML = entityDetail(entity);
-    updateSelectionClasses();
-    if (window.innerWidth < 980) document.querySelector(".detail-panel").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function renderEntityFilters() {
-    const select = document.getElementById("entity-type-filter");
-    [...new Set(state.graph.entities.map((entity) => entity.type))].sort().forEach((type) => {
-      const option = document.createElement("option");
-      option.value = type;
-      option.textContent = humanize(type);
-      select.appendChild(option);
-    });
-  }
-
-  function renderEntities() {
-    const query = document.getElementById("entity-search").value.trim().toLowerCase();
-    const type = document.getElementById("entity-type-filter").value;
-    const connectedIds = new Set(state.graph.relationships.flatMap((relationship) => [relationship.source, relationship.target]));
-    const entities = state.graph.entities
-      .filter((entity) => (!query || `${entity.name} ${entity.id}`.toLowerCase().includes(query)) && (!type || entity.type === type))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    const container = document.querySelector("[data-entity-list]");
-    container.replaceChildren();
-    entities.forEach((entity) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "entity-button";
-      button.dataset.entityId = entity.id;
-      button.innerHTML = `<strong>${escapeHtml(entity.name)}</strong><span class="entity-meta"><span class="type-badge">${escapeHtml(entity.type)}</span><span class="connection-badge">${connectedIds.has(entity.id) ? "Connected" : "No accepted edge"}</span></span>`;
-      button.addEventListener("click", () => selectEntity(entity.id));
-      container.appendChild(button);
-    });
-    document.querySelector("[data-entity-result-count]").textContent = `${entities.length} of ${state.graph.entities.length} entities`;
-  }
-
-  function renderDocuments() {
-    const container = document.querySelector("[data-document-list]");
-    const entityCounts = new Map();
-    const relationshipCounts = new Map();
-    state.graph.entities.forEach((entity) => entity.evidence.forEach((evidence) => entityCounts.set(evidence.document_id, (entityCounts.get(evidence.document_id) || 0) + 1)));
-    state.graph.relationships.forEach((relationship) => relationship.evidence.forEach((evidence) => relationshipCounts.set(evidence.document_id, (relationshipCounts.get(evidence.document_id) || 0) + 1)));
-    container.replaceChildren();
-    state.graph.documents.forEach((sourceDocument) => {
-      const article = window.document.createElement("article");
-      article.className = "document-card";
-      article.innerHTML = `
-        <span class="type-badge">Document ${escapeHtml(sourceDocument.document_id)}</span>
-        <h4>${escapeHtml(sourceDocument.title)}</h4>
-        <dl>
-          <div><dt>Entities</dt><dd>${entityCounts.get(sourceDocument.document_id) || 0}</dd></div>
-          <div><dt>Accepted edges</dt><dd>${relationshipCounts.get(sourceDocument.document_id) || 0}</dd></div>
-          <div><dt>Analyzed lines</dt><dd>${sourceDocument.analyzed_lines}</dd></div>
-        </dl>
-        <a class="inline-link" href="${escapeHtml(sourceDocument.source_url)}" rel="noreferrer">Open CIA source record</a>`;
-      container.appendChild(article);
-    });
-  }
-
-  function fail(error) {
-    const panel = document.getElementById("load-error");
-    panel.hidden = false;
-    panel.querySelector("[data-error-message]").textContent = error instanceof Error ? error.message : String(error);
-    document.querySelector(".explorer-grid").hidden = true;
-  }
-
-  async function initialize() {
+  async function loadCapabilities() {
     try {
-      const [graphResponse, buildResponse] = await Promise.all([fetch("./data/graph.json"), fetch("./data/build.json")]);
-      if (!graphResponse.ok) throw new Error(`Graph request failed with HTTP ${graphResponse.status}.`);
-      state.graph = requireGraph(await graphResponse.json());
-      state.entitiesById = new Map(state.graph.entities.map((entity) => [entity.id, entity]));
-      updateMetrics(state.graph);
-      renderGraph();
-      renderRelationshipList();
-      renderEntityFilters();
-      renderEntities();
-      renderDocuments();
-      selectRelationship(state.graph.relationships[0].id);
-      if (buildResponse.ok) {
-        const build = await buildResponse.json();
-        document.querySelector("[data-build-revision]").textContent = `Deployed revision ${truncate(build.source_revision, 12)} · graph ${state.graph.schema_version}`;
-      } else {
-        document.querySelector("[data-build-revision]").textContent = `Graph ${state.graph.schema_version}`;
-      }
+      state.capabilities = await api("capabilities", { operator: true });
+      $("[data-connectors]").innerHTML = state.capabilities.connectors.map((connector) => `
+        <div class="connector ${connector.state}"><i class="connector-dot"></i><div>
+          <strong>${escapeHtml(connector.label)}${connector.document_count ? ` · ${connector.document_count}` : ""}</strong>
+          <span>${escapeHtml(connector.detail)}</span>
+        </div></div>`).join("");
+      $("[data-budget]").max = String(state.capabilities.max_build_budget_usd);
+      updateBuildControls();
     } catch (error) {
-      fail(error);
+      $("[data-connectors]").innerHTML = `<div class="inline-error">Capability request failed: ${escapeHtml(error.message)}</div>`;
     }
   }
 
-  document.querySelectorAll("[data-view-button]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.viewButton)));
-  document.getElementById("entity-search").addEventListener("input", renderEntities);
-  document.getElementById("entity-type-filter").addEventListener("change", renderEntities);
-  document.getElementById("fit-graph").addEventListener("click", () => {
-    const graph = document.getElementById("relationship-graph");
-    graph.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
+  async function runSearch(query) {
+    const results = $("[data-results]");
+    const errorBox = $("[data-search-error]");
+    errorBox.hidden = true;
+    results.innerHTML = '<div class="empty-state compact">Searching source text…</div>';
+    try {
+      const response = await api("search", {
+        method: "POST",
+        body: JSON.stringify({ query, connector_id: "bundled-crest", limit: 30 }),
+      });
+      state.results = response.results;
+      $("[data-result-count]").textContent = `${response.total_matches} matches`;
+      $("[data-search-meta]").textContent = `Results from the bundled tracked archive · query “${response.query}”.`;
+      renderResults();
+    } catch (error) {
+      results.replaceChildren();
+      errorBox.textContent = `Search failed: ${error.message}`;
+      errorBox.hidden = false;
+    }
+  }
 
-  initialize();
+  function renderResults() {
+    const container = $("[data-results]");
+    if (!state.results.length) {
+      container.innerHTML = '<div class="empty-state compact">No tracked documents matched this query.</div>';
+      return;
+    }
+    container.innerHTML = state.results.map((result) => {
+      const selected = state.selectedDocuments.has(result.document_id);
+      const metadata = [result.document_type, result.publication_date, result.page_count ? `${result.page_count} pp.` : null].filter(Boolean).join(" · ");
+      return `<article class="result-card ${selected ? "is-selected" : ""}" data-result-id="${escapeHtml(result.document_id)}">
+        <input type="checkbox" aria-label="Select ${escapeHtml(result.title)}" ${selected ? "checked" : ""} />
+        <div><h3>${escapeHtml(result.title)}</h3>
+          <div class="result-meta">${escapeHtml(result.document_id)}${metadata ? ` · ${escapeHtml(metadata)}` : ""}</div>
+          <p>${escapeHtml(truncate(result.snippet, 280))}</p>
+          <div class="result-actions"><button class="text-button" type="button" data-inspect-document>Inspect source</button></div>
+        </div></article>`;
+    }).join("");
+    container.querySelectorAll("[data-result-id]").forEach((card) => {
+      const id = card.dataset.resultId;
+      card.querySelector("input").addEventListener("change", (event) => toggleDocument(id, event.target.checked));
+      card.querySelector("[data-inspect-document]").addEventListener("click", () => inspectDocument(id));
+    });
+  }
+
+  function toggleDocument(documentId, shouldSelect) {
+    const result = state.results.find((item) => item.document_id === documentId);
+    if (shouldSelect && state.selectedDocuments.size >= 3) {
+      toast("A graph build is limited to three documents in this development vertical.");
+      renderResults();
+      return;
+    }
+    if (shouldSelect) state.selectedDocuments.set(documentId, result);
+    else state.selectedDocuments.delete(documentId);
+    renderResults();
+    updateBuildControls();
+  }
+
+  async function inspectDocument(documentId) {
+    const dialog = $("[data-document-dialog]");
+    const content = $("[data-document-content]");
+    content.innerHTML = '<div class="empty-state compact">Loading the tracked source…</div>';
+    dialog.showModal();
+    try {
+      const detail = await api(`documents/${encodeURIComponent(documentId)}`);
+      const metadata = Object.entries(detail.metadata).filter(([, value]) => value)
+        .map(([key, value]) => `<span>${escapeHtml(key)}: ${escapeHtml(value)}</span>`).join("");
+      content.innerHTML = `<div class="eyebrow">Tracked source document</div>
+        <h2>${escapeHtml(detail.title)}</h2>
+        <p class="evidence-meta">${escapeHtml(detail.document_id)} · ${detail.body_chars.toLocaleString()} source characters · SHA-256 ${escapeHtml(detail.body_sha256.slice(0, 12))}…</p>
+        <div class="document-meta">${metadata}</div>
+        ${detail.source_url ? `<p><a href="${escapeHtml(detail.source_url)}" rel="noreferrer">Open CIA source record ↗</a></p>` : ""}
+        <div class="source-preview">${escapeHtml(detail.body_preview)}</div>`;
+    } catch (error) {
+      content.innerHTML = `<div class="inline-error">Document request failed: ${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  function updateBuildControls() {
+    const count = state.selectedDocuments.size;
+    $("[data-selected-count]").textContent = count;
+    const labels = [...state.selectedDocuments.values()].map((item) => item.title);
+    $("[data-selected-labels]").textContent = labels.length ? labels.join(" · ") : "Choose up to three search results.";
+    const button = $("[data-build-button]");
+    const status = $("[data-build-status]");
+    const capabilities = state.capabilities;
+    button.disabled = !count || !capabilities || !capabilities.graph_build_enabled || !capabilities.graph_build_authorized;
+    if (!count) status.textContent = "Search and select a document to begin.";
+    else if (!capabilities?.graph_build_enabled) status.textContent = "Graph building is disabled on this server.";
+    else if (!capabilities.graph_build_authorized) status.textContent = "Open through the tailnet or enter the operator token.";
+    else status.textContent = "Authorized · one traced build will use the stated ceiling.";
+  }
+
+  async function startBuild() {
+    const button = $("[data-build-button]");
+    const status = $("[data-build-status]");
+    button.disabled = true;
+    status.textContent = "Submitting build…";
+    try {
+      const job = await api("graphs", {
+        method: "POST", operator: true,
+        body: JSON.stringify({
+          document_ids: [...state.selectedDocuments.keys()],
+          max_chars_per_document: Number($("[data-max-chars]").value),
+          max_budget_usd: Number($("[data-budget]").value),
+          refine_relationships: false,
+        }),
+      });
+      pollJob(job.id);
+    } catch (error) {
+      status.textContent = `Build rejected: ${error.message}`;
+      updateBuildControls();
+    }
+  }
+
+  async function pollJob(jobId) {
+    window.clearTimeout(state.polling);
+    try {
+      const job = await api(`jobs/${jobId}`);
+      $("[data-build-status]").textContent = `${humanize(job.state)} · ${job.progress_detail}`;
+      if (job.state === "completed") {
+        toast("Knowledge graph completed and opened.");
+        await loadGraphList(job.graph_id);
+        await loadGraph(job.graph_id);
+        updateBuildControls();
+      } else if (job.state === "failed") {
+        $("[data-build-status]").textContent = `Build failed: ${job.error}`;
+        updateBuildControls();
+      } else {
+        state.polling = window.setTimeout(() => pollJob(jobId), 1600);
+      }
+    } catch (error) {
+      $("[data-build-status]").textContent = `Job status failed: ${error.message}`;
+      updateBuildControls();
+    }
+  }
+
+  async function loadGraphList(preferredId) {
+    try {
+      const response = await api("graphs");
+      const picker = $("[data-graph-picker]");
+      picker.innerHTML = response.graphs.map((graph) => `<option value="${escapeHtml(graph.id)}">${escapeHtml(graph.label)} · ${graph.entities}E/${graph.relationships}R</option>`).join("");
+      picker.value = preferredId || state.graphId;
+    } catch (error) { toast(`Saved graphs request failed: ${error.message}`); }
+  }
+
+  function requireGraph(payload) {
+    if (!payload || payload.schema_version !== "crest-kg-v2") throw new Error("Expected a crest-kg-v2 graph artifact.");
+    for (const field of ["documents", "entities", "relationships", "rejections"]) {
+      if (!Array.isArray(payload[field])) throw new Error(`Graph field ${field} is missing or invalid.`);
+    }
+    const ids = new Set(payload.entities.map((entity) => entity.id));
+    for (const relationship of payload.relationships) {
+      if (!ids.has(relationship.source) || !ids.has(relationship.target)) throw new Error(`Relationship ${relationship.id} has a missing endpoint.`);
+      if (!Array.isArray(relationship.groundings) || !relationship.groundings.length) throw new Error(`Relationship ${relationship.id} has no exact grounding.`);
+    }
+    return payload;
+  }
+
+  async function loadGraph(graphId) {
+    $("[data-graph-empty]").hidden = false;
+    $("[data-graph-empty]").textContent = "Loading graph artifact…";
+    try {
+      state.graph = requireGraph(await api(`graphs/${encodeURIComponent(graphId)}`));
+      state.graphId = graphId;
+      state.entitiesById = new Map(state.graph.entities.map((entity) => [entity.id, entity]));
+      state.selectedItem = null;
+      $("[data-graph-picker]").value = graphId;
+      $("[data-export-link]").href = `./api/graphs/${encodeURIComponent(graphId)}/export.json`;
+      renderGraphHeader();
+      renderGraph();
+      renderInspector();
+    } catch (error) {
+      $("[data-graph-empty]").textContent = `Graph request failed: ${error.message}`;
+    }
+  }
+
+  function renderGraphHeader() {
+    const graph = state.graph;
+    const example = state.graphId === "example-fixed-v2";
+    $("[data-graph-title]").textContent = example ? "Five-document evidence checkpoint" : `${graph.documents.length}-document generated graph`;
+    for (const field of ["documents", "entities", "relationships", "rejections"]) {
+      $(`[data-metric="${field}"]`).textContent = graph[field].length.toLocaleString();
+    }
+    $("[data-graph-provenance]").textContent = example
+      ? "Labeled example · fixed artifact · corpus recall remains unknown."
+      : `Generated ${new Date(graph.generated_at).toLocaleString()} · trace ${graph.trace_id}`;
+    $("[data-graph-cost]").textContent = `Observed model cost $${Number(graph.observed_cost_usd).toFixed(4)}`;
+  }
+
+  function svg(name, attributes = {}) {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", name);
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
+    return element;
+  }
+  function graphSelection() {
+    const graph = state.graph;
+    if (!$("[data-connected-only]").checked || !graph.relationships.length) return { entities: graph.entities, relationships: graph.relationships };
+    const connectedIds = new Set(graph.relationships.flatMap((item) => [item.source, item.target]));
+    return { entities: graph.entities.filter((entity) => connectedIds.has(entity.id)), relationships: graph.relationships };
+  }
+  function positionsFor(entities) {
+    const positions = new Map();
+    const count = Math.max(entities.length, 1);
+    const rings = count > 24 ? 3 : count > 10 ? 2 : 1;
+    entities.forEach((entity, index) => {
+      const ring = index % rings;
+      const ringItems = Math.ceil((count - ring) / rings);
+      const angle = -Math.PI / 2 + (Math.floor(index / rings) / ringItems) * Math.PI * 2 + ring * 0.27;
+      const radius = 150 + ring * 95;
+      positions.set(entity.id, { x: 450 + Math.cos(angle) * radius, y: 295 + Math.sin(angle) * radius });
+    });
+    return positions;
+  }
+
+  function renderGraph() {
+    const nodeLayer = $("[data-node-layer]");
+    const edgeLayer = $("[data-edge-layer]");
+    nodeLayer.replaceChildren();
+    edgeLayer.replaceChildren();
+    const selection = graphSelection();
+    const visibleIds = new Set(selection.entities.map((entity) => entity.id));
+    const relationships = selection.relationships.filter((item) => visibleIds.has(item.source) && visibleIds.has(item.target));
+    const positions = positionsFor(selection.entities);
+    $("[data-graph-empty]").hidden = selection.entities.length > 0;
+    if (!selection.entities.length) $("[data-graph-empty]").textContent = "This graph contains no accepted entities.";
+    relationships.forEach((relationship) => {
+      const source = positions.get(relationship.source);
+      const target = positions.get(relationship.target);
+      const line = svg("line", { x1: source.x, y1: source.y, x2: target.x, y2: target.y, class: `graph-edge ${state.selectedItem?.id === relationship.id ? "selected" : ""}`, tabindex: 0 });
+      line.addEventListener("click", () => selectRelationship(relationship.id));
+      line.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) selectRelationship(relationship.id); });
+      edgeLayer.appendChild(line);
+      const label = svg("text", { x: (source.x + target.x) / 2, y: (source.y + target.y) / 2 - 6, class: "edge-label", "text-anchor": "middle" });
+      label.textContent = truncate(humanize(relationship.type), 28);
+      label.addEventListener("click", () => selectRelationship(relationship.id));
+      edgeLayer.appendChild(label);
+    });
+    selection.entities.forEach((entity) => {
+      const position = positions.get(entity.id);
+      const group = svg("g", { class: `graph-node ${state.selectedItem?.id === entity.id ? "selected" : ""}`, transform: `translate(${position.x} ${position.y})`, tabindex: 0, role: "button", "aria-label": `${entity.name}, ${entity.type}` });
+      group.appendChild(svg("circle", { r: 24, fill: TYPE_COLORS[entity.type] || TYPE_COLORS.other }));
+      const name = svg("text", { y: 39 }); name.textContent = truncate(entity.name, 30); group.appendChild(name);
+      const type = svg("text", { y: 52, class: "node-type" }); type.textContent = entity.type; group.appendChild(type);
+      group.addEventListener("click", () => selectEntity(entity.id));
+      group.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) selectEntity(entity.id); });
+      nodeLayer.appendChild(group);
+    });
+    const types = [...new Set(selection.entities.map((entity) => entity.type))].sort();
+    $("[data-legend]").innerHTML = types.map((type) => `<span><i style="background:${TYPE_COLORS[type] || TYPE_COLORS.other}"></i>${escapeHtml(type)}</span>`).join("");
+  }
+
+  function selectEntity(id) { state.selectedItem = { kind: "entity", id }; renderGraph(); renderInspector(); }
+  function selectRelationship(id) { state.selectedItem = { kind: "relationship", id }; renderGraph(); renderInspector(); }
+  function evidenceHtml(evidence, grounding) {
+    return `<div class="evidence-block"><p class="detail-label">Exact source quote</p>
+      <blockquote>${escapeHtml(evidence.quote)}</blockquote>
+      <p class="evidence-meta">Document ${escapeHtml(evidence.document_id)} · lines ${evidence.line_start}–${evidence.line_end}</p>
+      ${evidence.source_url ? `<a href="${escapeHtml(evidence.source_url)}" rel="noreferrer">Open CIA source record ↗</a>` : ""}</div>
+      ${grounding ? `<div class="evidence-block"><p class="detail-label">Grounded spans</p><div class="grounding">
+        <div><span>Source mention</span><strong>${escapeHtml(grounding.source_mention)}</strong></div>
+        <div><span>Relationship phrase</span><strong>${escapeHtml(grounding.relation_phrase)}</strong></div>
+        <div><span>Target mention</span><strong>${escapeHtml(grounding.target_mention)}</strong></div>
+      </div><p class="evidence-meta">${escapeHtml(grounding.support_reasoning)}</p></div>` : ""}`;
+  }
+
+  function renderInspector() {
+    const container = $("[data-inspector]");
+    if (!state.selectedItem) {
+      container.innerHTML = '<div class="empty-state"><span class="empty-icon">⌁</span><strong>Select a node or relationship</strong><p>See its source document, exact quote, and extraction grounding here.</p></div>';
+      return;
+    }
+    if (state.selectedItem.kind === "entity") {
+      const entity = state.entitiesById.get(state.selectedItem.id);
+      const attributes = Object.entries(entity.attributes || {}).map(([key, value]) => `<div><dt>${escapeHtml(humanize(key))}</dt><dd>${escapeHtml(Array.isArray(value) ? value.join(", ") : value)}</dd></div>`).join("");
+      container.innerHTML = `<div class="inspector-kind">Entity · ${escapeHtml(entity.type)}</div><h3>${escapeHtml(entity.name)}</h3>
+        <div class="inspector-subtitle">${entity.evidence.length} grounded source reference(s)</div>
+        ${attributes ? `<div class="evidence-block"><p class="detail-label">Attributes</p><dl class="attribute-list">${attributes}</dl></div>` : ""}
+        ${entity.evidence.map((item) => evidenceHtml(item)).join("")}`;
+      return;
+    }
+    const relationship = state.graph.relationships.find((item) => item.id === state.selectedItem.id);
+    const source = state.entitiesById.get(relationship.source);
+    const target = state.entitiesById.get(relationship.target);
+    container.innerHTML = `<div class="inspector-kind">Grounded relationship</div><h3>${escapeHtml(humanize(relationship.type))}</h3>
+      <div class="expression"><strong>${escapeHtml(source.name)}</strong><span>${escapeHtml(humanize(relationship.type))} →</span><strong>${escapeHtml(target.name)}</strong></div>
+      ${relationship.evidence.map((item, index) => evidenceHtml(item, relationship.groundings[index])).join("")}`;
+  }
+
+  function wireEvents() {
+    $("[data-search-form]").addEventListener("submit", (event) => { event.preventDefault(); runSearch(new FormData(event.currentTarget).get("query")); });
+    $("[data-build-button]").addEventListener("click", startBuild);
+    $("[data-token]").value = window.sessionStorage.getItem("crestOperatorToken") || "";
+    $("[data-token]").addEventListener("change", async (event) => {
+      if (event.target.value) window.sessionStorage.setItem("crestOperatorToken", event.target.value);
+      else window.sessionStorage.removeItem("crestOperatorToken");
+      await loadCapabilities();
+    });
+    $("[data-graph-picker]").addEventListener("change", (event) => loadGraph(event.target.value));
+    $("[data-connected-only]").addEventListener("change", renderGraph);
+    $("[data-fit-button]").addEventListener("click", () => { $("#knowledge-graph").setAttribute("viewBox", "0 0 900 620"); toast("Graph fitted to the available canvas."); });
+    $("[data-dialog-close]").addEventListener("click", () => $("[data-document-dialog]").close());
+    $("[data-help-button]").addEventListener("click", () => $("[data-help-dialog]").showModal());
+    $("[data-help-close]").addEventListener("click", () => $("[data-help-dialog]").close());
+  }
+
+  async function initialize() {
+    wireEvents();
+    await Promise.all([loadCapabilities(), loadGraphList(), runSearch("disinformation")]);
+    await loadGraph("example-fixed-v2");
+  }
+  initialize().catch((error) => { $("[data-graph-empty]").textContent = `Workbench initialization failed: ${error.message}`; });
 })();
