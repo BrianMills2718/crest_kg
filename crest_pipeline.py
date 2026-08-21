@@ -705,6 +705,10 @@ class GraphArtifact(StrictModel):
         default=None,
         description="Optional dedicated relationship-refinement prompt contract.",
     )
+    relationship_model: str | None = Field(
+        default=None,
+        description="Resolved model used by the optional relationship-refinement stage.",
+    )
     trace_id: str = Field(min_length=1, description="Root llm_client observability trace.")
     max_budget_usd: float = Field(gt=0, description="User-authorized run budget ceiling.")
     observed_cost_usd: float = Field(
@@ -1383,6 +1387,7 @@ def build_graph(
     model: str,
     prompt_ref: str = PROMPT_REF,
     relationship_prompt_ref: str | None = None,
+    relationship_model: str | None = None,
     trace_id: str,
     max_budget_usd: float,
     observed_cost_usd: float,
@@ -1461,6 +1466,7 @@ def build_graph(
         model=model,
         prompt_ref=prompt_ref,
         relationship_prompt_ref=relationship_prompt_ref,
+        relationship_model=relationship_model,
         trace_id=trace_id,
         max_budget_usd=max_budget_usd,
         observed_cost_usd=observed_cost_usd,
@@ -1569,6 +1575,8 @@ def run_extraction(
     *,
     model_override: str | None,
     model_justification_override: str | None,
+    relationship_model_override: str | None = None,
+    relationship_model_justification_override: str | None = None,
     trace_id: str,
     max_budget_usd: float,
     resume_trace_ids: list[str] | None = None,
@@ -1593,6 +1601,19 @@ def run_extraction(
             "Resolved through llm_client get_model('graph_building', "
             "use_performance=False) for structured CREST graph extraction."
         )
+    relationship_model = relationship_model_override or model
+    if relationship_model_override:
+        relationship_model_justification = (
+            relationship_model_justification_override or ""
+        ).strip()
+        if not relationship_model_justification:
+            raise ValueError(
+                "--relationship-model requires --relationship-model-justification"
+            )
+    else:
+        relationship_model_justification = model_justification
+    if relationship_model_override and not refine_relationships:
+        raise ValueError("--relationship-model requires --refine-relationships")
     if not math.isfinite(prior_observed_cost_usd) or prior_observed_cost_usd < 0:
         raise ValueError("prior observed cost must be a finite nonnegative value")
     if (
@@ -1722,7 +1743,7 @@ def run_extraction(
             numbered_body_text=render_numbered_source(document),
         )
         provider_relationships, relationship_result = call_llm_structured(
-            model,
+            relationship_model,
             relationship_messages,
             response_model=ProviderRelationshipExtraction,
             task="crest_kg.relationship_refinement",
@@ -1736,7 +1757,7 @@ def run_extraction(
             num_retries=0,
             reasoning_effort=reasoning_effort,
             model_policy="enforce_allowlist",
-            model_justification=model_justification,
+            model_justification=relationship_model_justification,
             prompt_ref=RELATIONSHIP_PROMPT_REF,
         )
         refined, refinement_schema_rejections = (
@@ -1761,6 +1782,7 @@ def run_extraction(
         relationship_prompt_ref=(
             RELATIONSHIP_PROMPT_REF if refine_relationships else None
         ),
+        relationship_model=relationship_model if refine_relationships else None,
         trace_id=trace_id,
         max_budget_usd=max_budget_usd,
         observed_cost_usd=observed_cost,
@@ -1856,6 +1878,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--model-justification",
         help="Required rationale when --model overrides the graph_building registry route.",
     )
+    extract_parser.add_argument(
+        "--relationship-model",
+        help="Optional model override for the dedicated relationship-only pass.",
+    )
+    extract_parser.add_argument(
+        "--relationship-model-justification",
+        help="Required rationale when --relationship-model is supplied.",
+    )
     extract_parser.add_argument("--trace-id", help="Optional root trace ID.")
     extract_parser.add_argument(
         "--resume-trace-id",
@@ -1929,6 +1959,10 @@ def main(argv: list[str] | None = None) -> int:
                 documents,
                 model_override=args.model,
                 model_justification_override=args.model_justification,
+                relationship_model_override=args.relationship_model,
+                relationship_model_justification_override=(
+                    args.relationship_model_justification
+                ),
                 trace_id=args.trace_id or _default_trace_id(),
                 max_budget_usd=args.max_budget_usd,
                 resume_trace_ids=args.resume_trace_id,
