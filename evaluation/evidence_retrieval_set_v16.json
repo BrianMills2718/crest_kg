@@ -1,0 +1,40 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v16",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T10:32:00Z",
+  "claim_scope": "Exact paired neither/nor false abstention from the independent v15 sign-off with either/or and both/and controls. Synthetic regression only; not human gold or real-world recall.",
+  "decision_rule": "All three paired-conjunction forms must retrieve the exact Bluejay context; no conjunction may become a structural subject; all offsets must be exact. A fresh independent verifier remains required.",
+  "documents": [
+    {
+      "document_id": "doc-bluejay",
+      "title": "Project Bluejay participant record",
+      "body_text": "Project Bluejay's participant record names Cedarbrook Committee and Foxglove Agency. Both organizations appeared in the archived logistics entry."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "neither-nor-auxiliary",
+      "split": "regression",
+      "query": "Did neither Cedarbrook Committee nor Foxglove Agency appear in Project Bluejay's record?",
+      "expected_document_ids": ["doc-bluejay"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "either-or-auxiliary",
+      "split": "regression",
+      "query": "Did either Cedarbrook Committee or Foxglove Agency appear in Project Bluejay's record?",
+      "expected_document_ids": ["doc-bluejay"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "both-and-auxiliary",
+      "split": "regression",
+      "query": "Did both Cedarbrook Committee and Foxglove Agency appear in Project Bluejay's record?",
+      "expected_document_ids": ["doc-bluejay"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    }
+  ]
+}
