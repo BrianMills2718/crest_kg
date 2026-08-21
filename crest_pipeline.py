@@ -35,7 +35,7 @@ from pydantic import (
 
 PIPELINE_VERSION: Literal["crest-kg-v2"] = "crest-kg-v2"
 PROMPT_PATH = Path(__file__).with_name("prompts") / "crest_extraction.yaml"
-PROMPT_REF = "crest_kg.crest_extraction@2.1"
+PROMPT_REF = "crest_kg.crest_extraction@3"
 RECOVERABLE_PROMPT_REFS = frozenset(
     {
         "crest_kg.crest_extraction@2",
