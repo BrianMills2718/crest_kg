@@ -1,0 +1,208 @@
+{
+  "schema_version": "crest-real-corpus-probe/v1",
+  "seed": 20260821,
+  "generator_model": "openrouter/deepseek/deepseek-v4-flash",
+  "document_count": 40,
+  "probes": [
+    {
+      "probe_id": "probe-000",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00552r000505100002-0",
+      "source_title": "SOVIET ACTIVE MEASURES AND DISINFORMATION",
+      "passage": "They generally involve elements of deception and often employ clandestine means to mask Moscow's hand in the operation. Overall, where active measures fit in the Soviet framework may be better understood by considering the whole spectrum of Soviet foreign policy endeavors through the optic of \"white,\" \"gray,\" and \"black\" operations. Normal diplomatic, trade, aid, and in- formational efforts can be considered ! VI! \\J, foreign communist parties, \"clandestine\" radio stations, or well-known media outlets for disinformation. While not officially acknowledged to be Soviet sponsored, semi- overt \"gray\" activities are widely known as under Soviet direction and control.",
+      "question": "The three categories were 'white,' 'gray,' and 'black' operations. The Soviet Union classified normal diplomatic, trade, aid, and informational efforts as 'white' operations. 'Gray' operations involved overt Soviet contacts with foreign communist parties, 'clandestine' radio stations, or well-known media outlets for disinformation, which were widely known to be under Soviet direction but not officially acknowledged. 'Black' operations generally involved elements of deception and often employed clandestine means to mask Moscow's hand.",
+      "expected_answer": "What three categories did the Soviet Union use to classify its foreign policy operations?"
+    },
+    {
+      "probe_id": "probe-001",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000403760003-2",
+      "source_title": "DEFECTORS",
+      "passage": "The people you meet act differently. The American culture is totally different from European culture. It is a very traumatic experience. It's like standing like a child and learning everything from scratch. You may say, \"Well, he was stationed here for four years or more. He knew Americans.\" Well, it's different to be here as an intelligence operative representing the superpower, or standing here as a defector, defenseless, trying to find his own place in the new society. It's a tremendously difficult period for every individual. LEHRER: Was it difficult for you? BITTMAN: It was very difficult. And I would say that I hit a bottom, not after three months.",
+      "question": "How does Ladislav Bittman describe the experience of adjusting to American culture as a defector, according to the interview with Jim Lehrer?",
+      "expected_answer": "Bittman describes the experience as traumatic, like learning everything from scratch, and notes that it was very difficult for him personally, hitting a bottom not after three months."
+    },
+    {
+      "probe_id": "probe-002",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00806r000200860001-4",
+      "source_title": "SOVIETS SPEND BILLIONS ON DISINFORMATION",
+      "passage": "Explain disinformation. A: \"Disinformation\" is one of two Soviet terms. Today they call it \"active measures,\" which is the use of overt and covert techniques to influence, deceive and mislead the target. The intention is to affect his behavior, to get him to act in a way that is detrimental to his own interest and, at the same time, to act in a way favorable to Soviet interests. Q: How does it differ from ordinary propaganda? A: \"Propaganda\" has many different meanings and people use it in different ways, but the essence of propaganda is to tell the truth as one sees it.",
+      "question": "What term did the Soviets use to describe the use of overt and covert techniques to influence, deceive and mislead a target, intending to make them act against their own interests?",
+      "expected_answer": "active measures"
+    },
+    {
+      "probe_id": "probe-003",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp85b00263r000200170006-8",
+      "source_title": "DCI BRIEFING FOR HPSCI ON SEPTEMBER 20, 1981",
+      "passage": "Fielding hits teams for assasination of moderate Arab Ambassador C. Sub-Saharan Africa 1. Soviet,objective: encourage/facilitate insurgency against South Africa and isolate Pretoria regime a. Military training for insurgents b. Disinformation/forgeries 2. Libyan-objective: undercut Western influence throughout continent a. Subvert Upper Volta, Chad, Niger, Somalia b. Supporting radical regimes in Ghana, Benin c. Supporting spread of Islamic religion as means of acquiring political power 3. Cuban objective: supporting radical regimes in 5 SECRET Approved For Release 2007/0510EZ DP85B00263R000200170006-8 Angola, Ethiopia, Mozambique a. Assist liberation movements b.",
+      "question": "Which three countries were identified as having objectives in Sub-Saharan Africa, according to the document?",
+      "expected_answer": "The Soviet Union, Libya, and Cuba."
+    },
+    {
+      "probe_id": "probe-004",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp84b00049r001102720030-1",
+      "source_title": "DISINFORMATION: OR, WHY THE CIA CANNOT VERIFY AN ARMS-CONTROL AGREEMENT",
+      "passage": "While the German Disinformation Service restricted its scope of activities to sending misleading radio transmissions to the enemy, the purview of disinformation gradually expanded after the war. Soviet intelligence very quickly adopted the idea of \"dezinformatsiya\" to its own purposes and rede- fined it, as a recent KGB manual discloses, in the following terms: \"Strategic disinformation assists in the execution of state tasks and is directed at mis- leading the enemy concerning questions of state policy.\" As the manual makes abundantly clear, strategic disinformation is in both peacetime and wartime an instrument of Soviet policy.",
+      "question": "What did a recent KGB manual reveal about how Soviet intelligence redefined 'dezinformatsiya'?",
+      "expected_answer": "The KGB manual defined strategic disinformation as assisting in the execution of state tasks and misleading the enemy concerning questions of state policy, and it clarified that such disinformation was an instrument of Soviet policy in both peacetime and wartime."
+    },
+    {
+      "probe_id": "probe-005",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000201170003-1",
+      "source_title": "IS PRESS AWAKENING TO REAGAN'S DECEPTIONS?",
+      "passage": "s.\" The next day he informed the Globe that he'd \"caught a little flak from the State Department\" for his indiscretion and then confided that \"The purpose was to make contact with some military officers who might one day be in a position of power in Iran.\" The ad- ministration may have been trying to buy back a hostage. It has certainly, in part- nership with Israel, been trying to buy into a future Iranian government, down the post-Khomeini road.",
+      "question": "Which U.S. administration and its ally were attempting to influence a future Iranian government after the death of Ayatollah Khomeini?",
+      "expected_answer": "The Reagan administration, in partnership with Israel, was trying to buy into a future Iranian government after the post-Khomeini era."
+    },
+    {
+      "probe_id": "probe-006",
+      "source_identity": "https://www.cia.gov/readingroom/document/05798947",
+      "source_title": "THE CONTINUING SOVIET DISINFORMATION BLITZ",
+      "passage": "charges--attempting to play upon regional sensitivity about military use of Diego Garcia--that the United States produced SDI components there. - Soviet radio charged in April that joint US-Zaire military maneuvers reflected a US interest in using the Kamina air force base (b)(3) thern Zaire to destabilize the region. In our view, several trends charcterize recent Soviet disinformation activity. o The Soviets are persistent. In pushing a given theme, Soviet disinformation specialists apparently believe that repetition of even the most unbelievable stories pays off in the long run.",
+      "question": "What specific charge did Soviet radio make in April regarding joint US-Zaire military maneuvers?",
+      "expected_answer": "The Soviet radio charged in April that joint US-Zaire military maneuvers reflected a US interest in using the Kamina air force base in Zaire to destabilize the region."
+    },
+    {
+      "probe_id": "probe-007",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp88-01070r000201350013-5",
+      "source_title": "U.S./USSR/DISINFORMATION",
+      "passage": "Coming back to one of the most successful, I would say, disinformation conveyed by the Soviet Union, I would like to mention the, you remember very well what kind of an image the Soviet proJecteu about late Soviet leader Yuri Andropov. You remember the man who is a closet liberal, who is progressive, who is a reformist and so on, and you see how easily it was bought in the United States, and it's still even now, even now a lot of the Continued 02 spoilers, a lot of the Soviet specialists in this country believe all that and all that was been planted by the KGB, by the orders uisinformation conveyed in the United States. HARTMAN: What should the United States do, Mr.",
+      "question": "Which Soviet organization ordered the disinformation portraying Yuri Andropov as a liberal reformist?",
+      "expected_answer": "The KGB planted the disinformation that Yuri Andropov was a closet liberal and reformist."
+    },
+    {
+      "probe_id": "probe-008",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00552r000505100043-5",
+      "source_title": "WHAT YOU DON'T KNOW CAN HURT YOU",
+      "passage": "The Soviets pump out de_informatsia as part of a 54 billion-a-year propaganda pro- gram. Their objective is to foist falsehoods, fabrications and forgeries on gullible jour- nalists. The American effort is less flagrant. U.S. officials try to manage the news, not manufacture it. Official obfuscation, yes: deliberate disinformation, no. First let's examine the U.S. operation. U. S. officials ralIv accept the premise that lies eventual wi expos e and the exposure will damage American credibility. ~ 1`IA DirectorStanss ield Turner re frs to this as the \" b owback tential. \" So, in the war of words, U.S. officials do not sink to the Communist level and trade outright lies.",
+      "question": "What term does CIA Director Stansfield Turner use to describe the potential damage to American credibility from lies?",
+      "expected_answer": "the 'blowback potential'"
+    },
+    {
+      "probe_id": "probe-009",
+      "source_identity": "https://www.cia.gov/readingroom/document/05259029",
+      "source_title": "LETTER TO EDITOR, NY TRIBUNE, FROM ANATOLYI GOLITSYN RE \"NEW LIES FOR OLD\"",
+      "passage": "Such KGB designs provide an oppor- tunity to analyze the dissident movement in the U.S.S.R. as a new \"Trust\". Mr. Navrozov tries to defend the dissident move- ment, completely ignoring past experiences and the new KGB design Approved for Release: 2018/04/10 C05259029 Approved for Release: 2018/04/10 C05259029 to manipulate the political opposition. I find this kind of attitude in a dissident as rather strange. Further, his boast- ful references in his articles concerning Soviet defectse spend- ing and his in the last My response denigration of my views on Soviet military efforts twenty years can only be characterized as ridiculous.",
+      "question": "What does Mr. Navrozov try to defend according to the KGB designs?",
+      "expected_answer": "the dissident movement"
+    },
+    {
+      "probe_id": "probe-010",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000100260015-0",
+      "source_title": "SOVIETS USE JOURNALISTS TO SPREAD THEIR LIES",
+      "passage": "USA TODAY: What sort of hard evidence do we have that disinformation Is a prob- lem? DeBORCHGRAVE: They will just tell you they are giving equal time to these people. That is one of the answers you get quite frequently when you spot it. I find it extraordinary that we should give equal time to people who have been trained in the basic Leninist precepts, which hold that to tell the truth is a dirty bourgeois habit. For a revolutionary to lie and to' lie convincingly is not only a sign of intelligence, but imperative when furthering a revolutionary cause.",
+      "question": "What did Arnaud de Borchgrave say about giving equal time to people trained in Leninist precepts?",
+      "expected_answer": "He said it is extraordinary that we should give equal time to people who have been trained in the basic Leninist precepts, which hold that to tell the truth is a dirty bourgeois habit."
+    },
+    {
+      "probe_id": "probe-011",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp88b00443r000301380014-5",
+      "source_title": "RESULTS OF 24 JANUARY CONSULTATION ON THE SEMANTICS OF DISINFORMATION",
+      "passage": "By the close of the meeting there was general agreement that.the proposed conference should span 25X1 CONFIDENTIAL CONFIDENTIAL SUBJECT: Results of 24 January Consultation on the Semantics of Disinformation both the rhetoric of political discourse and the techniques of disinformation. We also agreed that to be manageable and coherent, it should focus on the Soviet Union--the main source of the rhetoric and disinformation with which we are primarily 25X1 concerned. 4. lexpressed the view that if the conference is to have tangible impact it should result in policy guidelines for effective counter-efforts.",
+      "question": "Which country was identified as the primary focus for the conference on disinformation discussed at the 24 January consultation?",
+      "expected_answer": "The meeting in question concluded that the proposed conference should focus on the Soviet Union as the main source of political rhetoric and disinformation. The attendee 'Lex' expressed the view that the conference should produce policy guidelines for counter-efforts."
+    },
+    {
+      "probe_id": "probe-012",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000201460020-0",
+      "source_title": "SOVIETS USE JOURNALISTS TO SPREAD THEIR LIES",
+      "passage": "He was in charge of running de- moralization operations in cap- italist countries. When Yuri An- dropov took over the KGB in 1967, disinformation became a full directorate, known as Ser-. vice A. The general in charge told his staff: \"We must all con- vince Western journalists, ei- ther directly or through third parties, of exactly the opposite of our real intentions. If any- one writes about our real inten- tions, it must quickly be dis- missed and ridiculed as a man or woman of the right, as a fas- cist and McCarthyite.\" This is quite extraordinary because it has worked over and -over again.",
+      "question": "What was the name of the KGB directorate created in 1967 for disinformation operations, and who ordered its establishment?",
+      "expected_answer": "The directorate was known as Service A, and it was established under Yuri Andropov when he took over the KGB in 1967."
+    },
+    {
+      "probe_id": "probe-013",
+      "source_identity": "https://www.cia.gov/readingroom/document/05259030",
+      "source_title": "THREE ARTICLES SUBMITTED FOR APPROVAL BY ANATOLYI GOLITSYN",
+      "passage": "Mr. Allen Klots, Vice President Approved for Release: 2020/03/09 C05259030 Approved for Release: 2020/03/09 C05259030 16 October 1984 A Statement By A. Golitsyn To The Participants Of The Conference On \"Disinformation In The Modern World\". Gentlemen: I am indeed grateful for the invitation to participate in the conference on \"Disinformation In The Modern World\". Unfortunately I am unable to attend and personally participate. However, as a person greatly concerned about this subject, I would like to offer for your consideration several points on \"Disinformation\" which are particularly relevant to your organization and to the political opposition in general.",
+      "question": "Who was the Vice President that approved the release of A. Golitsyn's statement?",
+      "expected_answer": "Mr. Allen Klots, Vice President"
+    },
+    {
+      "probe_id": "probe-014",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp80b01676r000500010047-7",
+      "source_title": "LETTER TO HONORABLE CLARK CLIFFORD FROM W. F. RABORN",
+      "passage": "A basic requirement of Soviet policy and a major objective of the Soviet Intelligence Services is the destruction of effective security collaboration among the non-Communist countries in order to carry out Soviet long-term strategic plans for subversion, political upheavals, popular fronts and the eventual political isolation of the United States. 3. Defamation and forgery operations are conceived, directed and perpetrated by a single organization located outside the target areas which makes use of local Communist or pro- Communist propagandists and of cooperating Communist Bloc intelligence and security services.",
+      "question": "What was a major objective of the Soviet Intelligence Services according to this passage?",
+      "expected_answer": "The Soviet Intelligence Services sought to destroy effective security collaboration among non-Communist countries."
+    },
+    {
+      "probe_id": "probe-015",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000302330043-7",
+      "source_title": "SOVIETS SAID READYING DISINFORMATION BLITZ",
+      "passage": "Ladislav Bittman, a Czech intel- ligence specialist who defected immediately after the 1968 invasion of Czechoslovakia, believes the Sovi- ets are preparing to blame the United States if the Soviets do not get what they want at the meeting between President Reagan and Soviet leader Mikhail Gorbachev in Geneva. Mr. Bittman, who teaches commu~ nications at an East Coast university under an assumed name, was a spe- cialist in the use of \"disinformation\" which he described as Soviet covert action to influence and undermine Western societies or individuals.",
+      "question": "Who believed the Soviets would blame the United States if they did not achieve their goals at the 1985 Reagan-Gorbachev summit in Geneva, and what was his background?",
+      "expected_answer": "Ladislav Bittman, a Czech intelligence specialist who defected after the 1968 invasion of Czechoslovakia, believed the Soviets were preparing to blame the United States if they did not get what they wanted at the 1985 Geneva meeting between President Reagan and Soviet leader Mikhail Gorbachev."
+    },
+    {
+      "probe_id": "probe-016",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp89g01126r000100100009-9",
+      "source_title": "FOLLOW-UP TO DISINFORMATION CONFERENCE",
+      "passage": "on the causes of Western vulnerability to semantic manipulation. Despite this, the participants appeared to agree fully on the need for the government to neutralize and counter Soviet disinformation--primarily through greater efforts at consciousness-raising among the media and the public. Follow-up Steps 6. In organizing the conference, we made clear that some sort of publication would result, and without exception all the conference participants strongly supported this intention. We have considered publishing a simple compilation of the formal papers but decided that too much valuable information and analysis--especially that provided by the defectors--would be lost.",
+      "question": "What did conference participants agree the government needed to neutralize?",
+      "expected_answer": "Soviet disinformation"
+    },
+    {
+      "probe_id": "probe-017",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp91-00901r000600400018-2",
+      "source_title": "DISCUSSION OF U.S. GOVERNMENT CREDIBILITY",
+      "passage": "From all the information that I saw, that clearly was not the case. That information, wherever it came, did not come from intelligence sources. COLLINGS: Let me ask you about... DE BORCHGRAVE: The Admiral made a point about credibi- lity and said that it's very important that we not question our government, that we believe our government. I hope that in this profession, Admiral, we never stop questioning our government. That's part of the democratic process. Always question your government. That's what makes it a healthy society. COLLINGS: But the government has to take into consideratin the fact that it's being questioned by the press.",
+      "question": "Which individual stated that it is important to never stop questioning the government as part of the democratic process?",
+      "expected_answer": "The statement that 'we never stop questioning our government' is part of the democratic process was made by an individual named De Borchgrave."
+    },
+    {
+      "probe_id": "probe-018",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000605760007-4",
+      "source_title": "WHITE HOUSE DECEPTION?",
+      "passage": "25 the Wall Street Journal, quoting admin- istration sources, reported that Qaddafi was planning new terrorist attacks and that the US and Libya were on a collision course. Bombarded by questions from journal- ists, White House press spokesman August termed the news report authlo b \" Other published reports followed. \" But the Pbst in it, Poindexter memo as sa - all had concluded omciais a iprrnnct .",
+      "question": "According to the Wall Street Journal, what was Qaddafi reportedly planning and what did it predict for US-Libya relations?",
+      "expected_answer": "Qaddafi was planning new terrorist attacks and that the US and Libya were on a collision course."
+    },
+    {
+      "probe_id": "probe-019",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000605150007-1",
+      "source_title": "THERE'S A TROJAN HORSE BUILT EVERY MINUTE, PARADING LIES AS TRUTH",
+      "passage": "_ . s- estwakesu -He noted there have been only two ranking Soviet-bloc defectors who dealt directly with disinformation in -their former secret-service jobs: Stanislav Levchenko of the.KGB's Tokyo \"residency\" before he fled to the United States in 1979, .and Ladislav Bittman, deputy chief of the Czechoslovak Disinformation Department- before his defection- in the fall of 1968..- Bittman's information is old; -Levchenko was;: involved in disinformation only \"on the.penph=.. e y\" the official observed. Nonetheless, enough is known by now to: venture at least . an initial .assessment of: disinformation.in the industrialized world.",
+      "question": "Who was a KGB officer in the Tokyo residency who defected to the United States in 1979?",
+      "expected_answer": "Stanislav Levchenko of the KGB's Tokyo 'residency' defected to the United States in 1979."
+    },
+    {
+      "probe_id": "probe-020",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000200930005-6",
+      "source_title": "DISINFORMATION, PLEASE",
+      "passage": "Larry Speakes \"You people have been putting out an awful lot of false stories about Libya. Aren't you afraid that people won't be able to distinguish between the truth and the garbage?\" \"All we're doing is telling it like it is and hoping it plays in Tripoli. If you're not buying Libya, can we give you an exclusive briefing on South Africa? We have some great lies on all the Republican senators who overrode the president's veto last week.\" \"That's not the kind of erroneous story I deal in.\" \"All right. What if I told you the president was about to convince the Botha government to give up apartheid, when the U.S.",
+      "question": "Which group did Larry Speakes claim to have 'great lies' about, in the context of overriding a presidential veto?",
+      "expected_answer": "Larry Speakes, a White House spokesman, stated on an unspecified date that he had 'great lies' regarding Republican senators who overrode the president’s veto the previous week."
+    },
+    {
+      "probe_id": "probe-021",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000200990021-2",
+      "source_title": "UN-AMERICAN ACTIVITIES",
+      "passage": "a Voice of America employee. Lisa Jameson. ar- ticulated just this suspicion in an October talk at Stanford University. Citing as her source two Soviet defectors who had posed as journalists while working for the KGB, Jame- son said the KGB may have hundreds of recruited agents among foreign journalists, including some in the United States, who are ''ready at any time to place prepared stories in their national media.\" Editor & Publisher was so per- turbed by this possibility that in a November 2 editorial it suggested it might be time \"we went back to attaching labels to stories that might be suspect as to their origins and facts.",
+      "question": "Which person cited two Soviet defectors as a source for the claim that the KGB may have hundreds of recruited agents among foreign journalists?",
+      "expected_answer": "Lisa Jameson"
+    },
+    {
+      "probe_id": "probe-022",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000302320015-9",
+      "source_title": "U.S. BEGINS NEW OFFENSIVE ON SOVIET DISINFORMATION",
+      "passage": "For example, the report charges that the Soviets, through a forged FBI document and a campaign by the Communist Party U.S.A., at- tempted to derail President Rea- gan's 1984 re-election bid. Release of the report last week coincided with a series of published media reports revealing that the Reagan administration authorized a \"disinformation program\" of its own to destablize the regime of Libyan leader Muammar Qaddafi. The study also was made public just days before the U.S.-Soviet sum- mit meeting in Iceland that was prompted by. a superpower confron- tation over Soviet spying at the United Nations and the seizure by the KGB of U.S. journalist Nicholas Daniloff in Moscow.",
+      "question": "What actions did the Soviets allegedly take to derail President Reagan's 1984 re-election bid? The report states they did so through a forged FBI document and a campaign by the Communist Party U.S.A.",
+      "expected_answer": "What actions did the Soviets allegedly take to derail President Reagan's 1984 re-election bid?"
+    },
+    {
+      "probe_id": "probe-023",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000403220034-7",
+      "source_title": "THE FACTS ARE WEAPONS IN DISINFORMATION WAR",
+      "passage": "school, but also through accuracy in the media;\" according to Jean-Marie Benoist, founder of the Paris-based European Center for International Relations and Strategy. \"The riposte of democracies against such a danger cannot be cen- sorship or seclusion. This tempta- tion would be a trap.\" Mr. Benoist, author, democratic theorist and senior research fellow at the College of France in Paris, said Soviet disinformation \"is not only the transmission of lies and false news through the usual chan- nels of communication.",
+      "question": "Who is the founder of the European Center for International Relations and Strategy?",
+      "expected_answer": "Jean-Marie Benoist is the founder of the European Center for International Relations and Strategy."
+    },
+    {
+      "probe_id": "probe-024",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp89g01126r000100110022-3",
+      "source_title": "SOME HIGHLIGHTS FROM THE(SANITIZED)DISCUSSION ON DISINFORMATION",
+      "passage": "An example of this might be a campaign to convince the Indians that the CIA was trying to overthrow their government. The campaign might be successful in India, although a similar ploy could not succeed in, say, Canada, because the -3- CONFIDENTIAL CONFIDENTIAL SUBJECT: Some Highlights From the Airlie House Discussion on Disinformation historical experience of Canadians would tell them, \"Nonsense, the Americans would not do this.\" 11. Most propagandistic disinformation is an act of opportunity intended to promote the long-term interests of the Soviet Union.",
+      "question": "In which country did the CIA attempt to convince the population that the CIA was trying to overthrow their government?",
+      "expected_answer": "India"
+    }
+  ]
+}
