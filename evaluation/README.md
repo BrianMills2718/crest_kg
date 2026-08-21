@@ -36,6 +36,10 @@ for that different claim.
 - `relationship_quality_set_v1.json` — frozen judgments, rationales, graph
   digest, assertion fingerprints, and the precommitted decision rule.
 - `relationship_quality_report_v1.json` — deterministic aggregate readout.
+- `relationship_quality_set_v2.json` and `relationship_quality_report_v2.json`
+  — exploratory v2 emitted-population census and readout.
+- `eval_decision_signoff_v2.md` — independent execution-based decision review;
+  it rejects treating the descriptive v2 census as a semantic gate pass.
 - `../crest_relationship_eval.py` — strict loader, binding checks, scorer, and
   negative controls.
 
@@ -80,6 +84,32 @@ This does not invalidate the artifact's already-verified structural properties:
 the graph remains schema-valid, referentially closed, source-hash-bound, and
 exactly quoted. It shows that structural grounding is necessary but not enough
 for semantic edge correctness.
+
+## V2 exploratory readout
+
+`../cia_kg_output/validated_5_documents_relationship_binding_v2.json` is the
+precision-first development checkpoint. Its complete agent-authored census is
+`relationship_quality_set_v2.json`, with deterministic output in
+`relationship_quality_report_v2.json`.
+
+The deterministic scorer mechanically satisfies its emitted-population rule:
+3 of 3 relationships are labeled fully supported and faithful, zero are
+unsupported, and all four corruption controls fire. This is only a descriptive
+fixed-artifact census. Independent sign-off in
+`eval_decision_signoff_v2.md` rejects the semantic gate-pass claim because
+predicate guards were revised after inspecting failures on this same
+five-document population, only two documents emit any relationship, there is
+no held-out same-class test, no yield safeguard, and no source-first recall
+denominator.
+
+Reproduce it with:
+
+```bash
+python ../crest_relationship_eval.py \
+  --graph ../cia_kg_output/validated_5_documents_relationship_binding_v2.json \
+  --quality-set relationship_quality_set_v2.json \
+  --fail-on-threshold
+```
 
 ## Cross-project reuse
 

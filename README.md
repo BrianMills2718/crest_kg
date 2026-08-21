@@ -19,6 +19,11 @@ working archive.
   `llm_client` structured-output boundary.
 - Every entity and relationship must cite a bounded numbered source-line range;
   the pipeline materializes the exact original quote and character offsets.
+- V2 relationships retain exact source, predicate, and target spans;
+  whole-token endpoint binding and lexical predicate checks reject pronouns,
+  clipped endpoints, punctuation predicates, and unsupported direction words.
+- Provider responses use a compact portable schema, then pass item-level strict
+  conversion with every dropped candidate recorded in a rejection ledger.
 - Entity identity includes semantic type, so a location and organization with
   the same name cannot be silently collapsed.
 - A graph cannot be written with duplicate IDs, dangling relationships, unknown
@@ -56,6 +61,12 @@ python crest_pipeline.py extract \
 The command keeps all five calls under one root budget scope and writes only
 after every document has passed structured and evidence validation. The default
 15,000-character source window is recorded in the output rather than hidden.
+Use `--refine-relationships` for the precision-first relationship-only stage.
+Interrupted successful calls can be reused with `--resume-trace-id` and
+`--resume-relationship-trace-id`; their selected-attempt receipts and costs are
+embedded in the graph. `--prior-observed-cost-usd` and
+`--unattributed-cost-reserve-usd` keep earlier failed or interrupted work inside
+one aggregate authorization rather than resetting the budget on resume.
 
 Validate an artifact independently:
 
@@ -99,6 +110,43 @@ See [`evaluation/README.md`](evaluation/README.md) for the decision rule,
 case-set provenance, exact readout, limitations, and the cross-project reuse
 boundary. This is transparently agent-adjudicated and output-conditioned; it
 does not claim human review or corpus relationship recall.
+
+## Relationship-binding v2 development checkpoint
+
+The v2 path was authentically exercised and then rebuilt provider-free from
+strict selected-attempt receipts:
+
+- artifact: `cia_kg_output/validated_5_documents_relationship_binding_v2.json`
+- primary trace: `crest_kg/extraction/20260820-relationship-binding-v2i`
+- relationship trace: `crest_kg/extraction/20260820-relationship-binding-v2k`
+- primary model: `gemini/gemini-2.5-flash-lite`
+- relationship model: `gemini/gemini-2.5-flash`
+- result: 5 documents, 82 entities, 3 relationships, and 72 explicit candidate
+  rejections
+- known observed spend across the full interrupted effort: `$0.05298666`
+- conservative interrupted-call reserve: `$0.01307078`
+- accounted total under the `$0.10` authorization: `$0.06605744`
+
+The candidate-visible, agent-authored census in
+`evaluation/relationship_quality_set_v2.json` labels all three emitted edges as
+fully supported and faithful. Its deterministic scorer mechanically satisfies
+the frozen 90%/zero-unsupported threshold and all four corruption controls.
+Independent decision sign-off nevertheless rejected calling this a semantic
+gate pass: the guard was iterated on these same five documents, only two
+documents emitted any edge, there is no held-out same-class set or yield
+safeguard, and corpus recall remains unmeasured. The permitted claim is only
+that the fixed artifact's three edges were independently source-replayed and
+then adjudicated 3/3 supported. See
+`evaluation/eval_decision_signoff_v2.md` for the full verdict.
+
+Reproduce the exact v2 readout:
+
+```bash
+python crest_relationship_eval.py \
+  --graph cia_kg_output/validated_5_documents_relationship_binding_v2.json \
+  --quality-set evaluation/relationship_quality_set_v2.json \
+  --fail-on-threshold
+```
 
 ## Focused verification
 

@@ -20,6 +20,15 @@ from crest_relationship_eval import (
     sha256_file,
 )
 
+V2_GRAPH_PATH = (
+    Path(__file__).parents[1]
+    / "cia_kg_output"
+    / "validated_5_documents_relationship_binding_v2.json"
+)
+V2_QUALITY_SET_PATH = (
+    Path(__file__).parents[1] / "evaluation" / "relationship_quality_set_v2.json"
+)
+
 
 def test_frozen_quality_set_is_complete_and_honest() -> None:
     graph = load_graph(GRAPH_PATH)
@@ -42,6 +51,23 @@ def test_frozen_quality_report_runs_controls_and_exposes_failed_gate() -> None:
     assert report.corruption_controls and all(report.corruption_controls.values())
     assert report.passed is False
     assert any("does not measure corpus relationship recall" in item for item in report.non_claims)
+
+
+def test_v2_agent_census_mechanically_meets_fixed_artifact_threshold() -> None:
+    graph = load_graph(V2_GRAPH_PATH)
+    quality_set = load_quality_set(V2_QUALITY_SET_PATH)
+    report = evaluate_paths(V2_GRAPH_PATH, V2_QUALITY_SET_PATH)
+
+    assert len(graph.relationships) == len(quality_set.cases) == 3
+    assert report.fully_supported_count == 3
+    assert report.fully_supported_rate == 1.0
+    assert report.unsupported_relationship_ids == ()
+    assert report.corruption_controls and all(report.corruption_controls.values())
+    assert report.passed is True
+    assert any(
+        "does not measure corpus relationship recall" in item
+        for item in report.non_claims
+    )
 
 
 def test_relationship_mutation_is_rejected_even_with_original_file_digest() -> None:

@@ -1,0 +1,58 @@
+{
+  "schema_version": "grounded-relationship-audit-report-v1",
+  "quality_set_id": "crest-relationship-binding-v2-agent-census-20260821",
+  "graph_sha256": "1abae3739b7a32f01d83814ac9b68a755403b7cba2e00355084f5f15f4fe5837",
+  "relationship_count": 3,
+  "support_counts": {
+    "supported": 3
+  },
+  "fully_supported_count": 3,
+  "fully_supported_rate": 1.0,
+  "dimension_pass_rates": {
+    "endpoint_fidelity": 1.0,
+    "predicate_fidelity": 1.0,
+    "direction_fidelity": 1.0,
+    "type_fidelity": 1.0
+  },
+  "unsupported_relationship_ids": [],
+  "partially_supported_relationship_ids": [],
+  "indeterminate_relationship_ids": [],
+  "by_document": {
+    "05259029": {
+      "relationship_count": 1,
+      "supported_count": 1,
+      "partially_supported_count": 0,
+      "unsupported_count": 0,
+      "indeterminate_count": 0,
+      "fully_supported_count": 1,
+      "fully_supported_rate": 1.0
+    },
+    "cia-rdp67b00446r000500070013-6": {
+      "relationship_count": 2,
+      "supported_count": 2,
+      "partially_supported_count": 0,
+      "unsupported_count": 0,
+      "indeterminate_count": 0,
+      "fully_supported_count": 2,
+      "fully_supported_rate": 1.0
+    }
+  },
+  "corruption_controls": {
+    "missing_relationship": true,
+    "predicate_mutation": true,
+    "unknown_relationship": true,
+    "duplicate_adjudication": true
+  },
+  "decision_rule": {
+    "min_fully_supported_rate": 0.9,
+    "max_unsupported_relationships": 0,
+    "require_all_corruption_controls": true
+  },
+  "passed": true,
+  "licensed_claim": "Semantic precision and fidelity of the 3 relationships emitted in the frozen CREST artifact, as adjudicated from their exact quotes.",
+  "non_claims": [
+    "This output-conditioned census does not measure corpus relationship recall.",
+    "Agent adjudication is not human or independent expert review.",
+    "The five selected documents do not establish quality on the wider CREST corpus."
+  ]
+}

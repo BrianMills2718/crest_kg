@@ -1,0 +1,53 @@
+{
+  "schema_version": "grounded-relationship-audit-v1",
+  "quality_set_id": "crest-relationship-binding-v2-agent-census-20260821",
+  "artifact_path": "cia_kg_output/validated_5_documents_relationship_binding_v2.json",
+  "artifact_sha256": "1abae3739b7a32f01d83814ac9b68a755403b7cba2e00355084f5f15f4fe5837",
+  "selection_mode": "census_of_emitted_relationships",
+  "adjudication_method": "agent_review_of_exact_evidence_quote",
+  "adjudicator": "codex-agent",
+  "adjudicated_at": "2026-08-21T01:22:10Z",
+  "candidate_visible_to_adjudicator": true,
+  "output_conditioned": true,
+  "corpus_recall_claimed": false,
+  "decision_rule": {
+    "min_fully_supported_rate": 0.9,
+    "max_unsupported_relationships": 0,
+    "require_all_corruption_controls": true
+  },
+  "cases": [
+    {
+      "relationship_id": "relationship:701c23d8a61b",
+      "assertion_sha256": "4e32a75cc45d5bbb2dccc33d5b19281f5c2458a83bfe6961ee15e5800d45123b",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote identifies Lev Navrozov's articles as published in dated issues of the New York Tribune; the person-to-publication direction and organization typing are plausible.",
+      "suggested_relation": null
+    },
+    {
+      "relationship_id": "relationship:9b5d028a8a8a",
+      "assertion_sha256": "ee495bc7d8d694155a33652eca640a7889cf1f808638fd999f25539024ec25af",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote states that the Department of Disinformation's assignment from the Politburo is to discredit the FBI, preserving both endpoints and direction.",
+      "suggested_relation": null
+    },
+    {
+      "relationship_id": "relationship:de9d049fcb65",
+      "assertion_sha256": "29e3cb9dc6727de95858af626ba59554b6e521a03fc4070faf6cb727971af24a",
+      "support": "supported",
+      "endpoint_fidelity": "pass",
+      "predicate_fidelity": "pass",
+      "direction_fidelity": "pass",
+      "type_fidelity": "pass",
+      "rationale": "The quote states that the Department of Disinformation's assignment from the Politburo is to discredit the CIA, preserving both endpoints and direction.",
+      "suggested_relation": null
+    }
+  ]
+}

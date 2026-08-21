@@ -21,6 +21,7 @@ cia_documents/*
 # Historical graph renders and intermediate graph JSON
 cia_kg_output/*
 !cia_kg_output/validated_5_documents.json
+!cia_kg_output/validated_5_documents_relationship_binding_v2.json
 cia_kg_document_*.json
 cia_kg_merged_5_documents.json
 cia_knowledge_graph*
