@@ -1,8 +1,8 @@
 # CREST seven-day evidence-synthesis increment
 
-Status: active implementation plan
+Status: completed and deployed 2026-08-21
 Owner: Brian Mills (product) / repository automation (implementation)
-Window: 2026-08-20 through 2026-08-27
+Planned window: 2026-08-20 through 2026-08-27; completed early
 Stage: private single-operator internal product
 Canonical surface: <https://brian-mac-mini.tail9c321e.ts.net/crest/>
 
@@ -36,6 +36,32 @@ Passing proves this exact question-to-evidence-to-graph workflow at the named
 revision and deployment. It does not prove semantic recall across arbitrary
 corpora, factual correctness beyond supplied sources, citation entailment,
 production orchestration, or public multi-user readiness.
+
+## Completion readout
+
+All five slices below are complete on runtime revision
+`d884f493a73bc289bcbbc72399294aa77cdd4ce4`, independently signed off by
+artifact commit `677a441e13ccc4c4be0a6c5305a55b9ce23e4bd8`, and deployed at the canonical
+surface.
+
+- Retrieval: deterministic exact-offset passage chunks, stable scoring details,
+  collection isolation, and operator-only preview.
+- Inquiry: atomic persistent lifecycle, ranked evidence snapshots,
+  citation-validation failure, shared serial provider execution, trace/cost
+  receipts, and restart recovery.
+- Brief: support, contradiction, uncertainty, unresolved questions, exact
+  citations, and an explicit insufficient-evidence path.
+- Handoff: at most three cited collection members may enter the existing graph
+  builder, with inquiry provenance retained on the graph request.
+- Browser: Ask collection, evidence preview, bounded brief authorization,
+  passage/source inspection, Recent activity, cited-source handoff, graph
+  exploration, and refresh/restart recovery.
+- Operations: isolated candidate, authentic provider traces, external-anonymous
+  privacy denials, exact image promotion, unchanged Funnel route, stopped
+  rollback container, and canonical restart/reopen proof.
+
+The authoritative runtime receipt is
+[`deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md`](deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md).
 
 ## Current-to-target delta
 
@@ -93,11 +119,15 @@ inquiry always reads the current collection membership and source bodies.
 All API models reject unknown fields. Inquiry IDs and evidence IDs are assigned
 by the service, not accepted from model output.
 
-## Retrieval evaluation pre-registration
+## Retrieval evaluation lineage and decision
 
 The agent-authored fixture at
-`evaluation/evidence_retrieval_set_v1.json` is a deterministic regression set,
-not a human gold set and not evidence of real-world representativeness.
+`evaluation/evidence_retrieval_set_v1.json` was the initial deterministic
+pre-registration. It is not a human gold set and is not evidence of real-world
+representativeness. Independent fresh execution rejected the first four
+decision attempts: those runs exposed contextual absent-subject admissions and
+showed that retrieval had been incorrectly asked to decide whether a requested
+detail was answered.
 
 Claim: the implemented ranker can retrieve the decisive Project Meridian
 passages despite light paraphrase, keep a same-project/location distractor below
@@ -120,10 +150,19 @@ Case taxonomy and split:
 Primary gate: every expected decisive document appears in the configured top
 four for each answerable case. Secondary gates: the named distractor is absent
 from the top two where specified; chunk text equals its document character
-slice; the absent-subject case returns zero chunks. Results are reported per
-case because the set is small. No aggregate percentage is used to imply corpus
-quality. Fixture cases are frozen before ranker implementation; any post-result
-change is a new version.
+slice; a genuinely absent structural subject returns zero chunks. Exact-subject
+context remains retrievable even when extra requested details are absent;
+answerability belongs to the brief. Results are reported per case because the
+set is small. No aggregate percentage is used to imply corpus quality.
+
+Every fresh failure was frozen before its repair. Fixtures v5-v16 now contain
+12 cumulative repair sets and 99 cases. The independent v17 verifier added 8
+fresh retrieval and 4 fresh chunk-boundary cases, then ran both frozen and fresh
+suites twice. All cases passed with byte-identical output, exact offsets, 51
+repository tests, valid JavaScript syntax, and a consistent Python environment.
+The signed scope is deterministic passage retrieval over small synthetic
+collections only; see
+[`../evaluation/evidence_retrieval_decision_signoff_v17.md`](../evaluation/evidence_retrieval_decision_signoff_v17.md).
 
 ## External-call budget
 
@@ -199,4 +238,3 @@ non-visible increment, return to that journey unless a newly observed direct
 blocker prevents it. Reversible implementation and fixture-authoring choices are
 delegated. Stop only for materially different product scope, new external or
 publication authority, or provider spend beyond the bounded canonical canary.
-

@@ -109,8 +109,9 @@ budget; source-grounding validation is never relaxed to rescue a bad response.
 
 ## Product stage and explicit non-goals
 
-This is a private single-operator internal product, not a finished corpus-scale platform.
-It does not claim live CIA coverage, layout-preserving OCR, handwriting
+This is a finished private single-operator product for the workflow documented
+here, not a finished corpus-scale platform. It does not claim live CIA
+coverage, layout-preserving OCR, handwriting
 recognition, non-English OCR packs, corpus recall, multi-user collaboration, or
 production-scale job orchestration. The
 fixed five-document relationship-binding graph remains an explicitly labeled
@@ -138,8 +139,10 @@ example checkpoint.
 - Selection and build controls are functional and have matching public API
   actions.
 - Project Meridian's regression paraphrases rank the Vienna coordination and
-  observer passages ahead of the Lisbon distractor, while contextual
-  absent-subject controls return no evidence.
+  observer passages ahead of the Lisbon distractor. Genuinely unrelated or
+  external-subject controls return no evidence; an exact-subject query may
+  still retrieve subject context when a requested detail is absent because the
+  brief, not retrieval, owns answerability classification.
 - An authorized operator can preview passages without model spend, persist a
   citation-valid brief that preserves the 14/16 May contradiction and role
   ambiguity, reopen it after refresh, and hand only cited documents to a graph.
@@ -150,3 +153,8 @@ example checkpoint.
   JSON.
 - The Mac mini deployment preserves every non-CREST Funnel route and exposes
   the exact pushed source revision.
+
+The Project Meridian evidence vertical was observed through the canonical
+browser surface, traced, restarted, and recovered on 2026-08-21. Exact source,
+image, cost, privacy, trace, screenshot, and rollback evidence is recorded in
+[`deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md`](deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md).

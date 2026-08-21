@@ -143,7 +143,37 @@ its five-document example is a complete CREST map, and corpus recall remains
 unknown. Its container and Mac mini promotion/rollback contract are documented in
 [`docs/MAC_MINI_DEPLOYMENT.md`](docs/MAC_MINI_DEPLOYMENT.md).
 
-## Verified vertical
+## Verified evidence-synthesis vertical
+
+The Project Meridian question-to-evidence-to-graph workflow was exercised in an
+isolated candidate and again through the canonical public browser surface on
+2026-08-21. The deployed runtime is
+`d884f493a73bc289bcbbc72399294aa77cdd4ce4`:
+
+- the brief identified Harbor Institute and preserved the 14/16 May 1987 date
+  contradiction and Harbor/Eastbridge role uncertainty;
+- every finding cited retained exact passages and only the two cited documents
+  entered the focused graph;
+- canonical brief cost was `$0.00097308` and canonical two-document graph cost
+  was `$0.00171583`, each with durable `llm_client` traces and zero LLM errors;
+- refresh, Recent activity, container restart, inquiry reopen, and graph reopen
+  passed with zero browser API, console, or runtime failures;
+- true external-anonymous preview, inquiry, private-graph, and upload requests
+  returned 403, while a trusted tailnet identity remained authorized;
+- the previous `8263c1e` container is retained stopped for rollback and the
+  shared Funnel router was not changed.
+
+See
+[`docs/deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md`](docs/deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md)
+for image/archive hashes, exact trace IDs, evaluation scope, screenshot hashes,
+privacy probes, restart evidence, and rollback details.
+
+The retrieval gate is intentionally agent-authored and synthetic. Independent
+v17 sign-off passed 99 frozen repair cases plus 12 fresh cases twice with exact
+offsets and deterministic output. That supports this bounded workflow, not a
+claim about arbitrary-corpus recall or answer correctness.
+
+## Verified five-document extraction vertical
 
 The canonical path was exercised against the explicit five-document selection
 on 2026-08-20:

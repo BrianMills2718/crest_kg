@@ -1,10 +1,59 @@
-# CREST Relationship Quality Evaluation
+# CREST evaluation evidence
 
-This directory contains the first semantic quality census for the canonical
-five-document CREST graph. It is intentionally agent-adjudicated. It is not
-described as human-labeled or independent expert review.
+This directory contains two deliberately bounded evaluation lines: the
+deterministic passage-retrieval regression/sign-off used by the evidence
+workbench, and the semantic quality census for the canonical five-document
+CREST graph. Both use agent-authored evidence and state that limitation; neither
+is described as human-labeled or independent expert review.
 
-## Decision and claim
+## Deterministic evidence-retrieval gate
+
+`evidence_retrieval_set_v1.json` was the original three-case preregistered
+Project Meridian fixture. It was useful for plumbing but too small to support a
+ship decision. Independent execution repeatedly rejected revisions v1-v4 when
+fresh cases exposed contextual absent-subject false positives and the design
+incorrectly made retrieval decide whether every requested detail was answered.
+
+The resulting contract separates the concerns:
+
+- retrieval admits exact subject context and ranks exact source slices;
+- a genuinely different or absent structural subject must not borrow shared
+  predicate/detail words;
+- answerability, contradiction, and uncertainty belong to the downstream
+  citation-valid brief rather than the lexical ranker.
+
+Every independently observed retrieval or chunk-boundary failure was frozen
+before its repair. Fixtures v5-v16 therefore form a cumulative, agent-authored
+repair regression set rather than a blind or human gold set. Their sign-off
+artifacts are retained, including rejected candidates, so later readers can see
+why each contract was added rather than treating the final green run as the only
+history.
+
+The decision-bearing record is
+`evidence_retrieval_decision_signoff_v17.md`. A fresh verifier froze 8 new
+retrieval cases and 4 new chunking/source-byte cases before inspecting the
+candidate. On exact runtime revision
+`d884f493a73bc289bcbbc72399294aa77cdd4ce4`:
+
+- all 12 frozen fixtures v5-v16, totaling 99 cases, passed twice with valid
+  exact offsets and byte-identical aggregate output;
+- all 12 fresh verifier cases passed twice with byte-identical output;
+- the complete repository suite passed 51 tests;
+- JavaScript syntax and Python dependency checks passed.
+
+The v17 verdict is **PASS — SIGNED-OFF** only for deterministic passage
+admission, ranking, chunking, and exact offsets in small synthetic collections.
+It does not establish arbitrary question parsing, real-corpus recall,
+answer-status correctness, semantic entailment, or production-scale behavior.
+
+Run one frozen fixture deterministically:
+
+```bash
+python evaluation/run_evidence_retrieval_eval.py \
+  --fixture evaluation/evidence_retrieval_set_v16.json
+```
+
+## Relationship-quality decision and claim
 
 The bounded decision is whether the current extraction can be scaled unchanged
 to more CREST documents.
@@ -31,7 +80,7 @@ precision and fidelity of the frozen emitted population but cannot establish
 corpus recall. A source-first expected-relationship inventory would be required
 for that different claim.
 
-## Artifacts
+## Relationship-quality artifacts
 
 - `relationship_quality_set_v1.json` — frozen judgments, rationales, graph
   digest, assertion fingerprints, and the precommitted decision rule.
@@ -115,8 +164,12 @@ python ../crest_relationship_eval.py \
 
 The reusable architecture already has clear owners:
 
-1. Consumer repositories own their source corpus, adapter, frozen labels, and
-   decision readout. This CREST directory is the first concrete consumer.
+1. Consumer repositories own their source corpus, adapter, frozen labels or
+   retrieval fixtures, and decision readout. CREST keeps its subject parsing,
+   ranking, and Project Meridian cases local. The reusable pattern is to freeze
+   exact failures before repair, retain rejected sign-offs, and require fresh
+   decision cases; it should become shared code only when a second maintained
+   consumer needs the same typed contract.
 2. `onto_canon6` owns domain-neutral knowledge-graph assertion and extraction
    quality semantics. Its existing benchmark models already separate source
    support, structural validity, canonical fidelity, and accepted alternatives.

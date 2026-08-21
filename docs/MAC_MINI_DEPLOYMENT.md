@@ -32,6 +32,17 @@ The default graph intentionally remains a fixed development checkpoint. Hosting
 does not promote its three supported edges into a corpus-recall or
 generalization claim.
 
+## Current promotion
+
+As of 2026-08-21, `crest-kg:d884f49` is the healthy canonical container on the
+existing `crest-kg-data` volume. Its full source revision is
+`d884f493a73bc289bcbbc72399294aa77cdd4ce4`; the stopped rollback container is
+`crest-kg-rollback-8263c1e-20260821`. The isolated candidate and candidate
+volume are retained stopped. Exact build hashes, authentic Project Meridian
+traces and costs, external privacy probes, restart recovery, screenshot hashes,
+and route evidence are in
+[`deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md`](deployments/2026-08-21-mac-mini-crest-evidence-synthesis.md).
+
 The image depends on Brian's shared `llm_client`. BuildKit receives its exact
 checkout as a named, read-only build context; it is built into a wheel without
 copying Git credentials:
