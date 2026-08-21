@@ -1,0 +1,71 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v14",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T09:42:00Z",
+  "claim_scope": "Exact fuzzy-lookalike false admission and exact-subject absent-detail miss from the independent v13 sign-off, with benign-transposition and absent-under safety controls. Synthetic regression only; not human gold or real-world recall.",
+  "decision_rule": "The exact Halyard subject must retrieve its context even when requested badge details are absent; the anchored transposition must retrieve Lattice; the absent same-length substitution must return [] with or without an exact project anchor; the absent under-subject control must return []; all offsets must be exact. A fresh independent verifier remains required.",
+  "documents": [
+    {
+      "document_id": "doc-halyard",
+      "title": "Project Halyard relay record",
+      "body_text": "The Saffron Gull Office staged Project Halyard at Prague. The relay began on 16 June 1991. It carried cobalt flags."
+    },
+    {
+      "document_id": "doc-lattice",
+      "title": "Project Lattice logistics note",
+      "body_text": "Winterharborn filed the logistics note for Project Lattice at Tallinn. The note records an amber storage cabinet."
+    },
+    {
+      "document_id": "doc-ember",
+      "title": "Project Ember gathering brief",
+      "body_text": "The Northstar Committee arranged Project Ember in Oslo. The gathering opened on 3 March 1992. A cedar observer attended."
+    },
+    {
+      "document_id": "doc-azimuth",
+      "title": "Project Azimuth field dispatch",
+      "body_text": "The Copper Finch Institute convened Project Azimuth at Vienna. Its opening occurred on 14 February 1988. Copper Finch furnished quartz instruments for the field trial."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "exact-subject-absent-detail",
+      "split": "regression",
+      "query": "Which ultraviolet badge pattern was assigned under Halyard?",
+      "expected_document_ids": ["doc-halyard"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "anchored-benign-transposition",
+      "split": "regression",
+      "query": "What did Winterhabrorn file for Project Lattice?",
+      "expected_document_ids": ["doc-lattice"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "anchored-absent-substitution",
+      "split": "negative",
+      "query": "What did Winterharborm file for Project Lattice?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "unanchored-absent-substitution",
+      "split": "negative",
+      "query": "What did Winterharborm file?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "absent-under-subject",
+      "split": "negative",
+      "query": "Which office staged the Prague relay under Mainsail?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    }
+  ]
+}
