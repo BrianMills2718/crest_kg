@@ -1324,6 +1324,7 @@ def run_extraction(
     prior_observed_cost_usd: float = 0.0,
     unattributed_cost_reserve_usd: float = 0.0,
     max_output_tokens: int = 3_500,
+    reasoning_effort: str | None = None,
 ) -> GraphArtifact:
     """Execute one fully traced structured extraction per selected document."""
 
@@ -1418,6 +1419,7 @@ def run_extraction(
                 max_budget=authorized_new_call_budget,
                 max_tokens=max_output_tokens,
                 num_retries=0,
+                reasoning_effort=reasoning_effort,
                 model_policy="enforce_allowlist",
                 model_justification=model_justification,
                 prompt_ref=PROMPT_REF,
@@ -1558,6 +1560,10 @@ def build_parser() -> argparse.ArgumentParser:
         default=3_500,
         help="Per-document structured response token ceiling.",
     )
+    extract_parser.add_argument(
+        "--reasoning-effort",
+        help="Explicit llm_client reasoning setting when the selected model requires one.",
+    )
     extract_parser.add_argument("--force", action="store_true")
 
     validate_parser = subparsers.add_parser(
@@ -1597,6 +1603,7 @@ def main(argv: list[str] | None = None) -> int:
                 prior_observed_cost_usd=args.prior_observed_cost_usd,
                 unattributed_cost_reserve_usd=args.unattributed_cost_reserve_usd,
                 max_output_tokens=args.max_output_tokens,
+                reasoning_effort=args.reasoning_effort,
             )
             write_graph(graph, args.output, force=args.force)
             print(
