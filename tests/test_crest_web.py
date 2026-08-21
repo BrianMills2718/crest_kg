@@ -49,6 +49,7 @@ def test_workbench_is_self_contained_and_declares_dynamic_service() -> None:
 
     assert "cdnjs" not in html + javascript + css
     assert "uvicorn" in dockerfile
+    assert '[hidden] { display: none !important; }' in css
     assert "crest_app.main:app" in dockerfile
     assert "LLM_CLIENT_DATA_ROOT=/data/llm-client" in dockerfile
     assert "COPY --from=llm_client" in dockerfile

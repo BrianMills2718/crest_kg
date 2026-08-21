@@ -17,6 +17,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; min-height: 100%; }
 body { background: radial-gradient(circle at 68% 26%, rgba(217, 169, 68, 0.08), transparent 28%), var(--paper); }
 button, input, select { font: inherit; }
@@ -96,7 +97,7 @@ a { color: var(--forest-2); }
 .result-card { width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; padding: 14px 18px; display: grid; grid-template-columns: 22px 1fr; gap: 9px; text-align: left; color: var(--ink); }
 .result-card:hover { background: rgba(141,174,152,.10); }
 .result-card.is-selected { background: rgba(217,169,68,.11); }
-.result-card input { margin-top: 3px; accent-color: var(--coral); }
+.result-card input { margin-top: 3px; accent-color: var(--coral); align-self: start; }
 .result-card h3 { margin: 0; font: 700 13px/1.35 Georgia, serif; }
 .result-meta { color: var(--muted); font-size: 10px; margin: 4px 0 7px; }
 .result-card p { margin: 0; color: #4e5b56; font-size: 11px; line-height: 1.42; }
