@@ -13,15 +13,18 @@ from crest_app.retrieval import (
 ROOT = Path(__file__).parents[1]
 
 
-def test_frozen_evidence_retrieval_fixture_passes() -> None:
-    result = evaluate_retrieval_fixture(
-        ROOT / "evaluation" / "evidence_retrieval_set_v6.json"
-    )
-    assert result["passed"], result
-    assert {item["split"] for item in result["cases"]} == {
-        "regression",
-        "negative",
+def test_frozen_evidence_retrieval_fixtures_pass() -> None:
+    expected_splits = {
+        "v5": {"regression", "negative"},
+        "v6": {"regression", "negative"},
+        "v7": {"negative"},
     }
+    for version, splits in expected_splits.items():
+        result = evaluate_retrieval_fixture(
+            ROOT / "evaluation" / f"evidence_retrieval_set_{version}.json"
+        )
+        assert result["passed"], result
+        assert {item["split"] for item in result["cases"]} == splits
 
 
 def test_evidence_chunks_preserve_exact_offsets_and_stable_ids() -> None:

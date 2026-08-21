@@ -374,7 +374,11 @@ def rank_evidence(
         match_count = exact_matches + fuzzy_match_count
         minimum_matches = 1 if len(concepts) <= 2 else 2
         coverage = match_count / len(concepts)
-        if match_count < minimum_matches:
+        # Fuzzy similarity can improve the rank of context that is already
+        # anchored in the passage, but it must not admit a passage by itself.
+        # This prevents unrelated single-word collisions (for example,
+        # "preview" matching "review") from becoming evidence.
+        if exact_matches == 0 or match_count < minimum_matches:
             continue
         # Shared project or location names are useful context, but cannot alone
         # answer an absent-subject question. Require one non-common concept when
