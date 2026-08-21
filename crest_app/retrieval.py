@@ -716,6 +716,31 @@ def _best_fuzzy(term: str, candidate_terms: tuple[str, ...]) -> float:
     return max(scores, default=0.0)
 
 
+def _benign_named_variant(term: str, candidate: str) -> bool:
+    """Allow bounded reordering or one insertion/deletion, never substitution.
+
+    String similarity alone cannot distinguish a misspelling from a different
+    proper name. For structural subjects we therefore accept only inspectable
+    edit shapes: a local-looking permutation of the same characters, or one
+    inserted/deleted character. A separate exact named anchor is still required
+    by the caller.
+    """
+
+    if term == candidate or min(len(term), len(candidate)) < 5:
+        return False
+    if _best_fuzzy(term, (candidate,)) < FUZZY_MATCH_THRESHOLD:
+        return False
+    if len(term) == len(candidate):
+        return sorted(term) == sorted(candidate)
+    if abs(len(term) - len(candidate)) != 1:
+        return False
+    shorter, longer = sorted((term, candidate), key=len)
+    return any(
+        longer[:index] + longer[index + 1 :] == shorter
+        for index in range(len(longer))
+    )
+
+
 def rank_evidence(
     question: str,
     documents: list[RetrievalDocument],
@@ -809,7 +834,24 @@ def rank_evidence(
             if FUZZY_MATCH_THRESHOLD <= value < 1.0
         )
         match_count = exact_matches + fuzzy_match_count
-        minimum_matches = 1 if len(concepts) <= 2 else 2
+        candidate_named_stems = frozenset(
+            _stem(term) for term in candidate.named_terms
+        )
+        exact_subject_indexes: set[int] = set()
+        for surface, index in subject_concepts:
+            _, alternatives = concepts[index]
+            surface_exact = surface in candidate.surface_terms
+            declared_anchor_exact = (
+                alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
+                and _stem(surface) in alternatives
+                and bool(alternatives & set(candidate.terms))
+            )
+            if surface_exact or declared_anchor_exact:
+                exact_subject_indexes.add(index)
+        # An exact structural subject is sufficient to return its context even
+        # when every requested detail is absent. The brief, not retrieval,
+        # decides whether that context answers the question.
+        minimum_matches = 1 if len(concepts) <= 2 or exact_subject_indexes else 2
         coverage = match_count / len(concepts)
         # Fuzzy similarity can improve the rank of context that is already
         # anchored in the passage, but it must not admit a passage by itself.
@@ -821,9 +863,6 @@ def rank_evidence(
         # This keeps arbitrary discourse/modifier vocabulary from suppressing
         # evidence while still rejecting an absent external subject even when
         # the question also names a real collection location.
-        candidate_named_stems = frozenset(
-            _stem(term) for term in candidate.named_terms
-        )
         exact_named_anchor_indexes: set[int] = set()
         for index, (query_term, alternatives) in enumerate(concepts):
             query_surfaces = {
@@ -854,12 +893,12 @@ def rank_evidence(
             )
             if surface_exact or declared_anchor_exact:
                 continue
-            fuzzy_named = _best_fuzzy(
-                _stem(surface),
-                tuple(sorted(candidate_named_stems)),
+            benign_named_variant = any(
+                _benign_named_variant(_stem(surface), candidate_term)
+                for candidate_term in candidate_named_stems
             )
             if (
-                fuzzy_named < FUZZY_MATCH_THRESHOLD
+                not benign_named_variant
                 or not (exact_named_anchor_indexes - {index})
             ):
                 subject_failed = True
