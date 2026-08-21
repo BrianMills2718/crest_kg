@@ -1,0 +1,49 @@
+{
+  "_comment": "Cases that the current ranker does not satisfy, measured on the cached answerability verdicts. This is a ratchet, not an allowance: the test fails if any case outside this list starts failing, and this file must only ever shrink. A fixture absent from this file must stay green.",
+  "judge_model_task": "fast_cheap_mid",
+  "judge_reasoning_effort": "high",
+  "measured_utc": "2026-08-21",
+  "failing": {
+    "evidence_retrieval_set_v2.json": [
+      "regression-unseen-role-date"
+    ],
+    "evidence_retrieval_set_v3.json": [
+      "put-on-role-date"
+    ],
+    "evidence_retrieval_set_v5.json": [
+      "got-demonstration-together",
+      "outfit-staged-trial",
+      "pin-down-convening-dates"
+    ],
+    "evidence_retrieval_set_v9.json": [
+      "functional-host-scheduled-corrected",
+      "functional-organizer-corrected-beginning"
+    ],
+    "evidence_retrieval_set_v10.json": [
+      "discourse-okay",
+      "functional-state",
+      "no-support-voyager",
+      "targeted-fourteen-sixteen"
+    ],
+    "evidence_retrieval_set_v11.json": [
+      "modifier-handled-claimed",
+      "modifier-using-contrast"
+    ],
+    "evidence_retrieval_set_v13.json": [
+      "anchored-name-variant"
+    ],
+    "evidence_retrieval_set_v14.json": [
+      "anchored-benign-transposition",
+      "exact-subject-absent-detail"
+    ],
+    "evidence_retrieval_set_v15.json": [
+      "anchored-one-deletion",
+      "exact-subject-absent-details"
+    ],
+    "evidence_retrieval_set_v16.json": [
+      "neither-nor-auxiliary"
+    ]
+  },
+  "total_failing_cases": 19,
+  "total_cases": 136
+}

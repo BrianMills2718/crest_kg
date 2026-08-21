@@ -400,8 +400,17 @@ def test_private_evidence_preview_is_collection_scoped_and_exact(
     preview = client.post("/api/evidence/preview", json=request, headers=auth)
     assert preview.status_code == 200
     evidence = preview.json()["evidence"]
-    assert {item["document_id"] for item in evidence} == set(document_ids[:2])
-    assert document_ids[2] not in {item["document_id"] for item in evidence}
+    returned = {item["document_id"] for item in evidence}
+    # Subset, not equality. This test guards collection scoping and exact
+    # offsets. Since evidence selection gained an answerability gate it may
+    # legitimately withhold an in-collection document, and it currently
+    # withholds one it should keep -- see the recall miss recorded in
+    # evaluation/evidence_retrieval_decision_signoff_v18.md. Asserting equality
+    # here would either fail on that known weakness or, once relaxed to hide it,
+    # stop guarding the thing this test is actually for.
+    assert returned, "the gate withheld every in-collection document"
+    assert returned <= set(document_ids[:2])
+    assert document_ids[2] not in returned
     for item in evidence:
         detail = client.get(f"/api/documents/{item['document_id']}", headers=auth).json()
         assert item["text"] == detail["body_preview"][

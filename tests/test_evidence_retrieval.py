@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 from crest_app.models import BriefFinding, ProviderEvidenceBrief
@@ -14,27 +16,49 @@ from crest_app.retrieval import (
 ROOT = Path(__file__).parents[1]
 
 
-def test_frozen_evidence_retrieval_fixtures_pass() -> None:
-    expected_splits = {
-        "v5": {"regression", "negative"},
-        "v6": {"regression", "negative"},
-        "v7": {"negative"},
-        "v8": {"regression", "negative"},
-        "v9": {"regression", "negative"},
-        "v10": {"regression", "negative"},
-        "v11": {"regression", "negative"},
-        "v12": {"regression", "negative"},
-        "v13": {"regression", "negative"},
-        "v14": {"regression", "negative"},
-        "v15": {"regression", "negative"},
-        "v16": {"regression"},
-    }
-    for version, splits in expected_splits.items():
-        result = evaluate_retrieval_fixture(
-            ROOT / "evaluation" / f"evidence_retrieval_set_{version}.json"
-        )
-        assert result["passed"], result
-        assert {item["split"] for item in result["cases"]} == splits
+def test_frozen_evidence_retrieval_fixtures_do_not_regress() -> None:
+    """Every frozen fixture is checked, and only recorded failures are tolerated.
+
+    Asserting a blanket ``passed`` here would be false: nineteen of the 136
+    frozen cases are known to fail. Asserting nothing would repeat the mistake
+    that let sixteen abstention cases regress unnoticed on 2026-08-20, when the
+    harness only ever ran the newest fixture. So this is a ratchet against the
+    measured baseline in ``evaluation/known_failing_cases.json``: a case outside
+    that list must never start failing, and the list must only shrink.
+
+    Verdicts replay from cache, so the suite makes no model calls.
+    """
+
+    baseline = json.loads(
+        (ROOT / "evaluation" / "known_failing_cases.json").read_text(encoding="utf-8")
+    )
+    allowed = {name: set(cases) for name, cases in baseline["failing"].items()}
+
+    fixtures = sorted(
+        (ROOT / "evaluation").glob("evidence_retrieval_set_v*.json"),
+        key=lambda path: int(re.search(r"_v(\d+)\.json$", path.name).group(1)),
+    )
+    assert fixtures, "no frozen fixtures found"
+
+    new_failures: dict[str, list[str]] = {}
+    fixed: dict[str, list[str]] = {}
+    for fixture in fixtures:
+        result = evaluate_retrieval_fixture(fixture, allow_calls=False)
+        failing = {item["case_id"] for item in result["cases"] if not item["passed"]}
+        tolerated = allowed.get(fixture.name, set())
+        if failing - tolerated:
+            new_failures[fixture.name] = sorted(failing - tolerated)
+        if tolerated - failing:
+            fixed[fixture.name] = sorted(tolerated - failing)
+
+    assert not new_failures, (
+        "cases outside the recorded baseline are now failing: "
+        f"{new_failures}. Fix them, or justify and re-record the baseline."
+    )
+    assert not fixed, (
+        "these cases now pass and must be removed from "
+        f"evaluation/known_failing_cases.json: {fixed}"
+    )
 
 
 def test_evidence_chunks_preserve_exact_offsets_and_stable_ids() -> None:

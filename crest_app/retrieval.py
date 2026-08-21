@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import re
 from dataclasses import dataclass
-from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Literal
 
+from .answerability import judge_supporting
 from .models import EvidenceChunk, EvidenceScore
+from .semantic_index import lexical_overlap, rank_texts
 
 
 ConnectorId = Literal[
@@ -35,604 +35,30 @@ class _ChunkCandidate:
     start_char: int
     end_char: int
     text: str
-    terms: tuple[str, ...]
-    title_terms: tuple[str, ...]
-    named_terms: frozenset[str]
-    surface_terms: frozenset[str]
 
 
-STOP_WORDS = frozenset(
-    {
-        "a",
-        "all",
-        "an",
-        "and",
-        "any",
-        "are",
-        "as",
-        "at",
-        "also",
-        "accord",
-        "actually",
-        "appear",
-        "be",
-        "befor",
-        "between",
-        "both",
-        "by",
-        "can",
-        "could",
-        "compar",
-        "did",
-        "do",
-        "does",
-        "during",
-        "each",
-        "either",
-        "every",
-        "for",
-        "from",
-        "give",
-        "extract",
-        "had",
-        "how",
-        "i",
-        "m",
-        "in",
-        "is",
-        "it",
-        "its",
-        "identify",
-        "along",
-        "behind",
-        "me",
-        "material",
-        "many",
-        "naming",
-        "name",
-        "neither",
-        "no",
-        "nor",
-        "of",
-        "on",
-        "one",
-        "okay",
-        "or",
-        "pair",
-        "pin",
-        "put",
-        "report",
-        "return",
-        "responsibl",
-        "respectiv",
-        "serv",
-        "several",
-        "some",
-        "sourc",
-        "summariz",
-        "tell",
-        "that",
-        "the",
-        "their",
-        "then",
-        "there",
-        "these",
-        "they",
-        "this",
-        "thing",
-        "to",
-        "under",
-        "together",
-        "two",
-        "try",
-        "trying",
-        "versu",
-        "was",
-        "were",
-        "what",
-        "when",
-        "where",
-        "which",
-        "who",
-        "whether",
-        "while",
-        "why",
-        "with",
-        "you",
-        "way",
-        "quick",
-        "check",
-        "up",
-        "down",
-        "charg",
-        "so",
-        "more",
-        "exist",
-        "pleas",
-        "s",
-    }
-)
 
 
-# Small, domain-neutral lexical concept families support common question/document
-# paraphrases without a model call. Values are stemmed by ``_stem`` at import.
-_RAW_ANCHOR_CONCEPT_GROUPS = (
-    ("austria", "austrian", "vienna"),
-)
 
 
-_RAW_FUNCTION_CONCEPT_GROUPS = (
-    (
-        "group",
-        "organization",
-        "body",
-        "institute",
-        "institution",
-        "laboratory",
-        "labratory",
-        "committee",
-        "agency",
-        "team",
-        "entity",
-        "organizer",
-        "role",
-        "host",
-        "observer",
-        "observor",
-        "convener",
-        "outfit",
-    ),
-    (
-        "organize",
-        "organizer",
-        "organzier",
-        "coordinate",
-        "coordination",
-        "convene",
-        "convener",
-        "arrange",
-        "stage",
-        "staged",
-        "set",
-        "bring",
-        "brought",
-        "get",
-        "got",
-    ),
-    (
-        "lead",
-        "led",
-        "direct",
-        "operate",
-        "operation",
-        "operations",
-        "manage",
-        "supervise",
-    ),
-    (
-        "demonstration",
-        "demonstrtion",
-        "pilot",
-        "exercise",
-        "trial",
-        "test",
-        "undertaking",
-        "event",
-        "field",
-        "site",
-        "gathering",
-        "project",
-        "program",
-        "mission",
-    ),
-    (
-        "date",
-        "day",
-        "days",
-        "schedule",
-        "schedulled",
-        "begin",
-        "beginning",
-        "beginnings",
-        "began",
-        "begun",
-        "start",
-        "commence",
-        "launch",
-        "kickoff",
-        "open",
-        "opened",
-        "opening",
-        "calendar",
-        "observe",
-        "observed",
-        "supposed",
-        "timetable",
-        "timing",
-        "debut",
-        "first",
-        "preliminary",
-        "mark",
-        "entry",
-        "planned",
-        "appear",
-    ),
-    (
-        "disagreement",
-        "conflict",
-        "contradict",
-        "correction",
-        "dispute",
-        "differ",
-        "diverge",
-        "disagree",
-        "reconcile",
-        "competing",
-        "correct",
-        "corrected",
-    ),
-    ("supply", "provide", "furnish"),
-    ("instrument", "equipment"),
-    ("cost", "budget", "funding", "expense", "price"),
-    (
-        "account",
-        "archive",
-        "brief",
-        "document",
-        "file",
-        "material",
-        "memo",
-        "note",
-        "paperwork",
-        "record",
-        "report",
-        "source",
-        "write",
-        "writeup",
-        "ups",
-    ),
-    (
-        "assign",
-        "attend",
-        "carry",
-        "cover",
-        "house",
-        "list",
-        "mention",
-        "place",
-        "receive",
-        "review",
-        "serve",
-        "state",
-        "wear",
-    ),
-    ("14", "fourteen"),
-    ("16", "sixteen"),
-    ("january",),
-    ("february",),
-    ("march",),
-    ("april",),
-    ("may",),
-    ("june",),
-    ("july",),
-    ("august",),
-    ("september",),
-    ("october",),
-    ("november",),
-    ("december",),
-)
 
 
-_RAW_CONCEPT_GROUPS = _RAW_ANCHOR_CONCEPT_GROUPS + _RAW_FUNCTION_CONCEPT_GROUPS
 
 
-_RAW_SUBJECT_HEAD_TERMS = (
-    "agency",
-    "archive",
-    "authority",
-    "body",
-    "brief",
-    "cabinet",
-    "calendar",
-    "campaign",
-    "ceremony",
-    "committee",
-    "communications",
-    "conference",
-    "correction",
-    "document",
-    "demonstration",
-    "equipment",
-    "event",
-    "exercise",
-    "expo",
-    "festival",
-    "field",
-    "file",
-    "form",
-    "forum",
-    "gathering",
-    "games",
-    "institute",
-    "instrument",
-    "laboratory",
-    "meeting",
-    "mission",
-    "note",
-    "observer",
-    "office",
-    "opening",
-    "operation",
-    "organization",
-    "pilot",
-    "program",
-    "rally",
-    "rehearsal",
-    "record",
-    "relay",
-    "schedule",
-    "site",
-    "staff",
-    "storage",
-    "summit",
-    "team",
-    "test",
-    "travel",
-    "trial",
-)
 
 
-def _stem(token: str) -> str:
-    value = re.sub(r"[^a-z0-9]", "", token.casefold())
-    while value:
-        previous = value
-        if len(value) > 5 and value.endswith("ies"):
-            value = value[:-3] + "y"
-        else:
-            for suffix in (
-                "ingly",
-                "edly",
-                "ation",
-                "ment",
-                "ing",
-                "ed",
-                "es",
-                "s",
-            ):
-                if len(value) - len(suffix) >= 4 and value.endswith(suffix):
-                    value = value[: -len(suffix)]
-                    break
-            else:
-                if len(value) > 5 and value.endswith("e"):
-                    value = value[:-1]
-        if value == previous:
-            return value
-    return value
 
 
-CONCEPT_GROUPS = tuple(
-    frozenset(_stem(token) for token in group) for group in _RAW_CONCEPT_GROUPS
-)
-FUNCTION_CONCEPT_GROUPS = frozenset(
-    CONCEPT_GROUPS[len(_RAW_ANCHOR_CONCEPT_GROUPS) :]
-)
-CONCEPT_BY_TERM = {
-    term: group for group in CONCEPT_GROUPS for term in group
-}
-SUBJECT_HEAD_TERMS = frozenset(_stem(term) for term in _RAW_SUBJECT_HEAD_TERMS)
-# Fuzzy matches never admit a passage alone, and a fuzzy structural name also
-# requires a separate exact named anchor. The 0.85 boundary retains common
-# seven-character name permutations without weakening those two safeguards.
-FUZZY_MATCH_THRESHOLD = 0.85
 
 
-def _tokens(value: str) -> tuple[str, ...]:
-    return tuple(
-        stemmed
-        for token in re.findall(r"[A-Za-z0-9]+", value.casefold())
-        if (stemmed := _stem(token)) and stemmed not in STOP_WORDS
-    )
 
 
-def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
-    concepts: list[tuple[str, frozenset[str]]] = []
-    seen: set[frozenset[str]] = set()
-    query_terms = list(_tokens(question))
-    normalized = " ".join(question.casefold().split())
-    # Question grammar can express a requested concept without using a document
-    # synonym. These domain-neutral cues stay deterministic and inspectable.
-    if re.search(r"\bwhen\b", normalized):
-        query_terms.append(_stem("date"))
-    if re.search(r"\bput\s+on\b", normalized):
-        query_terms.append(_stem("organize"))
-    if re.search(r"\bput\b.+\btogether\b", normalized):
-        query_terms.append(_stem("organize"))
-    for term in query_terms:
-        alternatives = CONCEPT_BY_TERM.get(term, frozenset({term}))
-        if alternatives in seen:
-            continue
-        seen.add(alternatives)
-        concepts.append((term, alternatives))
-    return tuple(concepts)
 
 
-def _source_named_terms(value: str) -> frozenset[str]:
-    """Return exact source-name cues without treating sentence leads as names."""
-
-    return frozenset(
-        token.casefold()
-        for token in re.findall(r"[A-Za-z][A-Za-z0-9]*", value)
-        if token[0].isupper()
-        if (stemmed := _stem(token)) and stemmed not in STOP_WORDS
-        if CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
-        not in FUNCTION_CONCEPT_GROUPS
-        if stemmed not in SUBJECT_HEAD_TERMS
-    )
 
 
-def _surface_tokens(value: str) -> tuple[str, ...]:
-    return tuple(token.casefold() for token in re.findall(r"[A-Za-z0-9]+", value))
 
 
-def _structural_subject_surfaces(question: str) -> frozenset[str]:
-    """Extract subject phrases without treating arbitrary OOV words as identity.
-
-    The grammar is intentionally inspectable: possessives, names adjacent to
-    ``Project``, short noun phrases ending in a source/event head, ``for X`` or
-    ``under X``, and the first subject after an auxiliary/``who`` question.
-    Direct requested details such as an insurance policy or badge color are not
-    subjects.
-    """
-
-    raw_tokens = re.findall(r"[A-Za-z0-9]+(?:['’][sS])?", question)
-    surfaces = [re.sub(r"['’][sS]$", "", token.casefold()) for token in raw_tokens]
-    stems = [_stem(token) for token in surfaces]
-    possessive = [bool(re.search(r"['’][sS]$", token)) for token in raw_tokens]
-    boundary_terms = {
-        "a",
-        "an",
-        "and",
-        "are",
-        "as",
-        "at",
-        "did",
-        "do",
-        "does",
-        "for",
-        "from",
-        "in",
-        "is",
-        "on",
-        "or",
-        "nor",
-        "the",
-        "to",
-        "under",
-        "was",
-        "were",
-        "what",
-        "when",
-        "where",
-        "which",
-        "while",
-        "who",
-        "with",
-    }
-
-    def meaningful(index: int) -> bool:
-        stemmed = stems[index]
-        if not stemmed or stemmed.isdigit() or stemmed in STOP_WORDS:
-            return False
-        return (
-            CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
-            not in FUNCTION_CONCEPT_GROUPS
-        )
-
-    subject_indexes: set[int] = {
-        index
-        for index, is_possessive in enumerate(possessive)
-        if is_possessive and meaningful(index)
-    }
-
-    for index, surface in enumerate(surfaces):
-        if surface != "project":
-            continue
-        following = index + 1
-        preceding = index - 1
-        if following < len(surfaces) and meaningful(following):
-            subject_indexes.add(following)
-        elif preceding >= 0 and meaningful(preceding):
-            subject_indexes.add(preceding)
-
-    for index, stemmed in enumerate(stems):
-        if stemmed not in SUBJECT_HEAD_TERMS:
-            continue
-        phrase_candidates: list[int] = []
-        for candidate_index in range(index - 1, max(-1, index - 4), -1):
-            if surfaces[candidate_index] in boundary_terms:
-                break
-            if meaningful(candidate_index) and surfaces[candidate_index].endswith(
-                ("ed", "ly")
-            ):
-                break
-            if meaningful(candidate_index) and not surfaces[candidate_index].endswith(
-                "ing"
-            ):
-                phrase_candidates.append(candidate_index)
-        if phrase_candidates:
-            subject_indexes.add(min(phrase_candidates))
-
-    for index, surface in enumerate(surfaces):
-        identity_relation = (
-            surface == "with"
-            and index > 0
-            and surfaces[index - 1]
-            in {"affiliated", "associated", "connected", "linked"}
-        )
-        if surface not in {"for", "under"} and not identity_relation:
-            continue
-        candidate_index: int | None = None
-        for candidate_index in range(index + 1, min(len(surfaces), index + 5)):
-            if meaningful(candidate_index):
-                break
-        else:
-            candidate_index = None
-        if candidate_index is None:
-            continue
-        later_meaningful = [
-            later
-            for later in range(candidate_index + 1, len(surfaces))
-            if meaningful(later)
-        ]
-        followed_by_head = any(
-            stems[later] in SUBJECT_HEAD_TERMS
-            for later in range(
-                candidate_index + 1,
-                min(len(surfaces), candidate_index + 4),
-            )
-        )
-        if not later_meaningful or followed_by_head:
-            subject_indexes.add(candidate_index)
-
-    for index, surface in enumerate(surfaces):
-        is_leading_copula = index == 0 and surface in {"are", "is", "was", "were"}
-        if surface not in {"did", "does", "who"} and not is_leading_copula:
-            continue
-        if surface != "who":
-            for candidate_index in range(index + 1, min(len(surfaces), index + 8)):
-                if (
-                    surfaces[candidate_index] in boundary_terms
-                    or stems[candidate_index] in STOP_WORDS
-                ):
-                    continue
-                if meaningful(candidate_index):
-                    subject_indexes.add(candidate_index)
-                break
-            break
-        who_predicate_seen = surface != "who"
-        for candidate_index in range(index + 1, min(len(surfaces), index + 8)):
-            alternatives = CONCEPT_BY_TERM.get(
-                stems[candidate_index],
-                frozenset({stems[candidate_index]}),
-            )
-            if (
-                surface == "who"
-                and stems[candidate_index] not in STOP_WORDS
-                and alternatives in FUNCTION_CONCEPT_GROUPS
-            ):
-                who_predicate_seen = True
-                continue
-            if meaningful(candidate_index):
-                if surfaces[candidate_index].endswith(("ed", "ing", "ly")):
-                    continue
-                if surface == "who" and not who_predicate_seen:
-                    who_predicate_seen = True
-                    continue
-                subject_indexes.add(candidate_index)
-                break
-        break
-
-    return frozenset(surfaces[index] for index in subject_indexes)
 
 
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
@@ -686,12 +112,6 @@ def chunk_document(
                     start_char=exact_start,
                     end_char=exact_end,
                     text=text,
-                    terms=_tokens(text),
-                    title_terms=_tokens(document.title),
-                    named_terms=_source_named_terms(f"{document.title}\n{text}"),
-                    surface_terms=frozenset(
-                        _surface_tokens(f"{document.title}\n{text}")
-                    ),
                 )
             )
         if end >= len(body):
@@ -703,60 +123,10 @@ def chunk_document(
     return chunks
 
 
-def _concept_frequency(terms: tuple[str, ...], alternatives: frozenset[str]) -> int:
-    return sum(1 for term in terms if term in alternatives)
 
 
-def _best_fuzzy(term: str, candidate_terms: tuple[str, ...]) -> float:
-    if len(term) < 5:
-        return 0.0
-    scores: list[float] = []
-    for candidate in candidate_terms:
-        if len(candidate) < 5 or abs(len(term) - len(candidate)) > 1:
-            continue
-        if len(term) == len(candidate):
-            differences = [
-                index
-                for index, (left, right) in enumerate(zip(term, candidate, strict=True))
-                if left != right
-            ]
-            if (
-                len(differences) == 2
-                and differences[1] == differences[0] + 1
-                and term[differences[0]] == candidate[differences[1]]
-                and term[differences[1]] == candidate[differences[0]]
-            ):
-                scores.append(0.9)
-                continue
-        scores.append(SequenceMatcher(None, term, candidate).ratio())
-    return max(scores, default=0.0)
 
 
-def _benign_named_variant(term: str, candidate: str) -> bool:
-    """Allow bounded reordering or one insertion/deletion, never substitution.
-
-    String similarity alone cannot distinguish a misspelling from a different
-    proper name. For structural subjects we therefore accept only inspectable
-    edit shapes: a local-looking permutation of the same characters, or one
-    inserted/deleted character. A separate exact named anchor is still required
-    by the caller.
-    """
-
-    term = re.sub(r"[^a-z0-9]", "", term.casefold())
-    candidate = re.sub(r"[^a-z0-9]", "", candidate.casefold())
-    if term == candidate or min(len(term), len(candidate)) < 5:
-        return False
-    if _best_fuzzy(term, (candidate,)) < FUZZY_MATCH_THRESHOLD:
-        return False
-    if len(term) == len(candidate):
-        return sorted(term) == sorted(candidate)
-    if abs(len(term) - len(candidate)) != 1:
-        return False
-    shorter, longer = sorted((term, candidate), key=len)
-    return any(
-        longer[:index] + longer[index + 1 :] == shorter
-        for index in range(len(longer))
-    )
 
 
 def rank_evidence(
@@ -768,11 +138,14 @@ def rank_evidence(
     max_chunk_chars: int = 900,
     overlap_chars: int = 120,
 ) -> list[EvidenceChunk]:
-    """Rank exact source chunks using BM25, concept coverage, and fuzzy evidence."""
+    """Rank exact source chunks by semantic similarity to the question.
 
-    normalized_question = " ".join(question.casefold().split())
-    concepts = _query_concepts(question)
-    if not concepts or limit <= 0:
+    Ranking only. This never abstains beyond returning nothing when there is
+    nothing to rank -- deciding that a well-ranked passage still fails to answer
+    the question is a separate judgment, made in ``select_evidence``.
+    """
+
+    if limit <= 0 or not question.strip():
         return []
     candidates = [
         chunk
@@ -790,193 +163,41 @@ def rank_evidence(
     ]
     if not candidates:
         return []
-    query_surfaces_by_stem: dict[str, set[str]] = {}
-    for token in re.findall(r"[A-Za-z0-9]+", question):
-        query_surfaces_by_stem.setdefault(_stem(token), set()).add(token.casefold())
-    subject_concepts: list[tuple[str, int]] = []
-    for surface in sorted(_structural_subject_surfaces(question)):
-        stemmed = _stem(surface)
-        concept_index = next(
-            (
-                index
-                for index, (query_term, alternatives) in enumerate(concepts)
-                if query_term == stemmed or stemmed in alternatives
-            ),
-            None,
-        )
-        if concept_index is not None:
-            subject_concepts.append((surface, concept_index))
 
-    document_frequencies = [
-        sum(
-            1
-            for candidate in candidates
-            if _concept_frequency(candidate.terms, alternatives) > 0
-        )
-        for _, alternatives in concepts
+    texts = [
+        f"{candidate.document.title}. {candidate.text}" for candidate in candidates
     ]
-    average_length = sum(len(candidate.terms) for candidate in candidates) / len(candidates)
-    scored: list[tuple[float, _ChunkCandidate, EvidenceScore, list[str]]] = []
-    for candidate in candidates:
-        bm25 = 0.0
-        exact_matches = 0
-        fuzzy_values: list[float] = []
-        matched_terms: list[str] = []
-        matched_indexes: set[int] = set()
-        exact_matched_indexes: set[int] = set()
-        for index, (query_term, alternatives) in enumerate(concepts):
-            frequency = _concept_frequency(candidate.terms, alternatives)
-            if frequency:
-                exact_matches += 1
-                matched_indexes.add(index)
-                exact_matched_indexes.add(index)
-                matched_terms.append(query_term)
-                idf = math.log(
-                    1 + (len(candidates) - document_frequencies[index] + 0.5)
-                    / (document_frequencies[index] + 0.5)
-                )
-                denominator = frequency + 1.2 * (
-                    0.25 + 0.75 * len(candidate.terms) / max(average_length, 1)
-                )
-                bm25 += idf * frequency * 2.2 / denominator
-                fuzzy_values.append(1.0)
-                continue
-            fuzzy = _best_fuzzy(query_term, candidate.terms)
-            fuzzy_values.append(fuzzy)
-            if fuzzy >= FUZZY_MATCH_THRESHOLD:
-                matched_indexes.add(index)
-                matched_terms.append(query_term)
-        fuzzy_match_count = sum(
-            1
-            for value in fuzzy_values
-            if FUZZY_MATCH_THRESHOLD <= value < 1.0
-        )
-        match_count = exact_matches + fuzzy_match_count
-        candidate_named_stems = frozenset(
-            _stem(term) for term in candidate.named_terms
-        )
-        exact_subject_indexes: set[int] = set()
-        for surface, index in subject_concepts:
-            _, alternatives = concepts[index]
-            surface_exact = surface in candidate.surface_terms
-            declared_anchor_exact = (
-                alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
-                and _stem(surface) in alternatives
-                and bool(alternatives & set(candidate.terms))
-            )
-            if surface_exact or declared_anchor_exact:
-                exact_subject_indexes.add(index)
-        # An exact structural subject is sufficient to return its context even
-        # when every requested detail is absent. The brief, not retrieval,
-        # decides whether that context answers the question.
-        minimum_matches = 1 if len(concepts) <= 2 or exact_subject_indexes else 2
-        coverage = match_count / len(concepts)
-        # Fuzzy similarity can improve the rank of context that is already
-        # anchored in the passage, but it must not admit a passage by itself.
-        # This prevents unrelated single-word collisions (for example,
-        # "preview" matching "review") from becoming evidence.
-        if exact_matches == 0 or match_count < minimum_matches:
-            continue
-        # Admission follows structural subject phrases, not every unknown word.
-        # This keeps arbitrary discourse/modifier vocabulary from suppressing
-        # evidence while still rejecting an absent external subject even when
-        # the question also names a real collection location.
-        exact_named_anchor_indexes: set[int] = set()
-        for index, (query_term, alternatives) in enumerate(concepts):
-            query_surfaces = {
-                surface
-                for stemmed in alternatives
-                for surface in query_surfaces_by_stem.get(stemmed, set())
-            }
-            surface_exact = bool(query_surfaces & candidate.named_terms)
-            declared_anchor_exact = (
-                alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
-                and bool(alternatives & candidate_named_stems)
-            )
-            if index in exact_matched_indexes and (
-                surface_exact or declared_anchor_exact
-            ):
-                exact_named_anchor_indexes.add(index)
-        subject_failed = False
-        for surface, index in subject_concepts:
-            if index not in matched_indexes:
-                subject_failed = True
-                break
-            _, alternatives = concepts[index]
-            surface_exact = surface in candidate.surface_terms
-            declared_anchor_exact = (
-                alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
-                and _stem(surface) in alternatives
-                and bool(alternatives & set(candidate.terms))
-            )
-            if surface_exact or declared_anchor_exact:
-                continue
-            benign_named_variant = any(
-                _benign_named_variant(surface, candidate_term)
-                for candidate_term in candidate.named_terms
-            )
-            if (
-                not benign_named_variant
-                or not (exact_named_anchor_indexes - {index})
-            ):
-                subject_failed = True
-                break
-        if subject_failed:
-            continue
-        phrase = 3.0 if normalized_question in " ".join(candidate.text.casefold().split()) else 0.0
-        title_matches = sum(
-            1
-            for _, alternatives in concepts
-            if _concept_frequency(candidate.title_terms, alternatives)
-        )
-        title_score = min(2.0, title_matches * 0.5)
-        fuzzy_score = sum(
-            value
-            for value in fuzzy_values
-            if FUZZY_MATCH_THRESHOLD <= value < 1.0
-        ) / len(concepts)
-        components = EvidenceScore(
-            bm25=bm25,
-            coverage=coverage,
-            fuzzy=fuzzy_score,
-            phrase=phrase,
-            title=title_score,
-        )
-        total = bm25 + coverage * 4.0 + fuzzy_score * 2.0 + phrase + title_score
-        scored.append((total, candidate, components, matched_terms))
-
-    scored.sort(
+    scores = rank_texts(question, texts)
+    scored = sorted(
+        zip(scores, range(len(candidates))),
         key=lambda item: (
             -item[0],
-            item[1].document.document_id,
-            item[1].start_char,
-        )
+            candidates[item[1]].document.document_id,
+            candidates[item[1]].start_char,
+        ),
     )
-    # Give each relevant source one opportunity before a long document can
-    # consume the complete evidence budget.
-    selected: list[tuple[float, _ChunkCandidate, EvidenceScore, list[str]]] = []
+
+    # Give each source one opportunity before a long document can consume the
+    # whole evidence budget.
+    selected: list[tuple[float, int]] = []
     seen_documents: set[str] = set()
-    for item in scored:
-        document_id = item[1].document.document_id
+    for score, index in scored:
+        document_id = candidates[index].document.document_id
         if document_id in seen_documents:
             continue
-        selected.append(item)
+        selected.append((score, index))
         seen_documents.add(document_id)
         if len(selected) >= limit:
             break
     if len(selected) < limit:
-        selected_keys = {
-            (item[1].document.document_id, item[1].start_char) for item in selected
-        }
-        selected.extend(
-            item
-            for item in scored
-            if (item[1].document.document_id, item[1].start_char) not in selected_keys
-        )
+        chosen = {index for _score, index in selected}
+        selected.extend(item for item in scored if item[1] not in chosen)
     selected = selected[:limit]
 
+    query_tokens = {token.casefold() for token in re.findall(r"[A-Za-z0-9]+", question)}
     evidence: list[EvidenceChunk] = []
-    for rank, (score, candidate, components, matched_terms) in enumerate(selected, 1):
+    for rank, (score, index) in enumerate(selected, 1):
+        candidate = candidates[index]
         identity = "\0".join(
             (
                 candidate.document.document_id,
@@ -984,6 +205,10 @@ def rank_evidence(
                 str(candidate.end_char),
                 candidate.text,
             )
+        )
+        matched = sorted(
+            query_tokens
+            & {token.casefold() for token in re.findall(r"[A-Za-z0-9]+", candidate.text)}
         )
         evidence.append(
             EvidenceChunk(
@@ -995,15 +220,55 @@ def rank_evidence(
                 end_char=candidate.end_char,
                 text=candidate.text,
                 rank=rank,
-                score=round(score, 8),
-                score_components=components,
-                matched_terms=matched_terms,
+                # Fused cosine lives in [-1, 1] but EvidenceChunk.score must be
+                # positive. Shift to (0, 1] -- monotonic, so ranking is unchanged.
+                score=round((float(score) + 1.0) / 2.0, 8),
+                score_components=EvidenceScore(
+                    bm25=0.0,
+                    coverage=lexical_overlap(question, candidate.text),
+                    fuzzy=0.0,
+                    phrase=0.0,
+                    title=0.0,
+                ),
+                matched_terms=matched,
             )
         )
     return evidence
 
 
-def evaluate_retrieval_fixture(path: Path) -> dict[str, object]:
+def select_evidence(
+    question: str,
+    documents: list[RetrievalDocument],
+    *,
+    limit: int = 6,
+    allow_calls: bool = True,
+    trace_id: str = "crest_kg.answerability",
+    **rank_kwargs: object,
+) -> list[EvidenceChunk]:
+    """Rank, then withhold everything when no passage states the requested fact.
+
+    This is the product-facing entry point. ``rank_evidence`` alone will always
+    return its best guesses, which is correct for ranking and wrong for a
+    workbench that must be able to say the corpus does not answer a question.
+    """
+
+    ranked = rank_evidence(question, documents, limit=limit, **rank_kwargs)  # type: ignore[arg-type]
+    if not ranked:
+        return []
+    verdict = judge_supporting(
+        question,
+        [(item.id, item.text) for item in ranked],
+        trace_id=trace_id,
+        allow_calls=allow_calls,
+    )
+    supporting = set(verdict.supporting_ids)
+    kept = [item for item in ranked if item.id in supporting]
+    return [item.model_copy(update={"rank": rank}) for rank, item in enumerate(kept, 1)]
+
+
+def evaluate_retrieval_fixture(
+    path: Path, *, allow_calls: bool = True
+) -> dict[str, object]:
     """Execute the frozen retrieval regression fixture with per-case evidence."""
 
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -1019,10 +284,12 @@ def evaluate_retrieval_fixture(path: Path) -> dict[str, object]:
     source_by_id = {item.document_id: item for item in documents}
     case_results: list[dict[str, object]] = []
     for case in payload["cases"]:
-        evidence = rank_evidence(
+        evidence = select_evidence(
             case["query"],
             documents,
             limit=case["top_k"],
+            allow_calls=allow_calls,
+            trace_id=f"crest_kg.fixture/{path.stem}/{case['case_id']}",
         )
         ranked_ids = [item.document_id for item in evidence]
         missing = sorted(set(case["expected_document_ids"]) - set(ranked_ids))

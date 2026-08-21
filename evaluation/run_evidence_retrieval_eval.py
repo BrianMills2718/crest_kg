@@ -49,6 +49,11 @@ def main() -> int:
         help="Run only this fixture. Repeatable. Defaults to every frozen fixture.",
     )
     parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Replay cached answerability verdicts only; fail on a cache miss instead of calling a model.",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Emit the full per-fixture result objects instead of the summary table.",
@@ -56,7 +61,10 @@ def main() -> int:
     args = parser.parse_args()
 
     fixtures = args.fixture if args.fixture else all_fixtures()
-    results = {path.name: evaluate_retrieval_fixture(path) for path in fixtures}
+    results = {
+        path.name: evaluate_retrieval_fixture(path, allow_calls=not args.offline)
+        for path in fixtures
+    }
 
     if args.json:
         print(json.dumps(results, indent=2))

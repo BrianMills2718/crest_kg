@@ -30,3 +30,5 @@ initial_page.html
 page_after_wait.html
 search_results.html
 lib/
+
+# Answerability verdicts are cached artifacts; regenerate with the eval harness.

@@ -1,0 +1,4 @@
+{
+  "supporting_ids": [],
+  "reason": "The passage names 'Winterharborn', not 'Winterhabrorn' as in the question. Per the instructions, a different proper name is treated as a different entity, not a typo. Thus no passage supports the requested fact."
+}
