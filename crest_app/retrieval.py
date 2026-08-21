@@ -38,6 +38,7 @@ class _ChunkCandidate:
     terms: tuple[str, ...]
     title_terms: tuple[str, ...]
     named_terms: frozenset[str]
+    surface_terms: frozenset[str]
 
 
 STOP_WORDS = frozenset(
@@ -111,6 +112,7 @@ STOP_WORDS = frozenset(
         "this",
         "thing",
         "to",
+        "under",
         "together",
         "two",
         "try",
@@ -268,6 +270,7 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "archive",
         "brief",
         "document",
+        "file",
         "material",
         "memo",
         "note",
@@ -314,15 +317,87 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
 _RAW_CONCEPT_GROUPS = _RAW_ANCHOR_CONCEPT_GROUPS + _RAW_FUNCTION_CONCEPT_GROUPS
 
 
+_RAW_SUBJECT_HEAD_TERMS = (
+    "agency",
+    "archive",
+    "authority",
+    "body",
+    "brief",
+    "cabinet",
+    "calendar",
+    "campaign",
+    "ceremony",
+    "committee",
+    "communications",
+    "conference",
+    "correction",
+    "document",
+    "demonstration",
+    "equipment",
+    "event",
+    "exercise",
+    "expo",
+    "festival",
+    "field",
+    "file",
+    "form",
+    "forum",
+    "gathering",
+    "games",
+    "institute",
+    "instrument",
+    "laboratory",
+    "meeting",
+    "mission",
+    "note",
+    "observer",
+    "office",
+    "opening",
+    "operation",
+    "organization",
+    "pilot",
+    "program",
+    "rally",
+    "rehearsal",
+    "record",
+    "relay",
+    "schedule",
+    "site",
+    "staff",
+    "storage",
+    "summit",
+    "team",
+    "test",
+    "travel",
+    "trial",
+)
+
+
 def _stem(token: str) -> str:
     value = re.sub(r"[^a-z0-9]", "", token.casefold())
-    if len(value) > 5 and value.endswith("ies"):
-        return value[:-3] + "y"
-    for suffix in ("ingly", "edly", "ation", "ment", "ing", "ed", "es", "s"):
-        if len(value) - len(suffix) >= 4 and value.endswith(suffix):
-            return value[: -len(suffix)]
-    if len(value) > 5 and value.endswith("e"):
-        return value[:-1]
+    while value:
+        previous = value
+        if len(value) > 5 and value.endswith("ies"):
+            value = value[:-3] + "y"
+        else:
+            for suffix in (
+                "ingly",
+                "edly",
+                "ation",
+                "ment",
+                "ing",
+                "ed",
+                "es",
+                "s",
+            ):
+                if len(value) - len(suffix) >= 4 and value.endswith(suffix):
+                    value = value[: -len(suffix)]
+                    break
+            else:
+                if len(value) > 5 and value.endswith("e"):
+                    value = value[:-1]
+        if value == previous:
+            return value
     return value
 
 
@@ -335,6 +410,7 @@ FUNCTION_CONCEPT_GROUPS = frozenset(
 CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
 }
+SUBJECT_HEAD_TERMS = frozenset(_stem(term) for term in _RAW_SUBJECT_HEAD_TERMS)
 
 
 def _tokens(value: str) -> tuple[str, ...]:
@@ -380,48 +456,166 @@ def _source_named_terms(value: str) -> frozenset[str]:
     )
 
 
-def _requested_detail_terms(
-    question: str,
-    source_named_terms: frozenset[str],
-) -> frozenset[str]:
-    """Identify a direct requested detail before a known source-name anchor.
+def _surface_tokens(value: str) -> tuple[str, ...]:
+    return tuple(token.casefold() for token in re.findall(r"[A-Za-z0-9]+", value))
 
-    This deliberately small grammar covers ``which …``, ``what …``, and
-    ``how many …`` noun phrases. It does not decide whether the detail is
-    answered; it only permits relevant collection context to reach the brief.
+
+def _structural_subject_surfaces(question: str) -> frozenset[str]:
+    """Extract subject phrases without treating arbitrary OOV words as identity.
+
+    The grammar is intentionally inspectable: possessives, names adjacent to
+    ``Project``, short noun phrases ending in a source/event head, ``for X``,
+    and the first subject after an auxiliary/``who`` question. Direct requested
+    details such as an insurance policy or badge color are not subjects.
     """
 
-    raw_tokens = re.findall(r"[A-Za-z0-9]+", question)
-    lowered = [token.casefold() for token in raw_tokens]
-    lead_index: int | None = None
-    for index, token in enumerate(lowered[:8]):
-        if token in {"which", "what"}:
-            lead_index = index + 1
-            break
-        if (
-            token == "how"
-            and index + 1 < len(lowered)
-            and lowered[index + 1] == "many"
-        ):
-            lead_index = index + 2
-            break
-    if lead_index is None:
-        return frozenset()
+    raw_tokens = re.findall(r"[A-Za-z0-9]+(?:['’][sS])?", question)
+    surfaces = [re.sub(r"['’][sS]$", "", token.casefold()) for token in raw_tokens]
+    stems = [_stem(token) for token in surfaces]
+    possessive = [bool(re.search(r"['’][sS]$", token)) for token in raw_tokens]
+    boundary_terms = {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "did",
+        "do",
+        "does",
+        "for",
+        "from",
+        "in",
+        "is",
+        "on",
+        "or",
+        "the",
+        "to",
+        "was",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "while",
+        "who",
+        "with",
+    }
 
-    requested: list[str] = []
-    for raw_token in raw_tokens[lead_index:]:
-        stemmed = _stem(raw_token)
-        if not stemmed or stemmed in STOP_WORDS:
+    def meaningful(index: int) -> bool:
+        stemmed = stems[index]
+        if not stemmed or stemmed.isdigit() or stemmed in STOP_WORDS:
+            return False
+        return (
+            CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
+            not in FUNCTION_CONCEPT_GROUPS
+        )
+
+    subject_indexes: set[int] = {
+        index
+        for index, is_possessive in enumerate(possessive)
+        if is_possessive and meaningful(index)
+    }
+
+    for index, surface in enumerate(surfaces):
+        if surface != "project":
             continue
-        alternatives = CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
-        if alternatives in FUNCTION_CONCEPT_GROUPS:
+        following = index + 1
+        preceding = index - 1
+        if following < len(surfaces) and meaningful(following):
+            subject_indexes.add(following)
+        elif preceding >= 0 and meaningful(preceding):
+            subject_indexes.add(preceding)
+
+    for index, stemmed in enumerate(stems):
+        if stemmed not in SUBJECT_HEAD_TERMS:
             continue
-        if alternatives & source_named_terms:
+        phrase_candidates: list[int] = []
+        for candidate_index in range(index - 1, max(-1, index - 4), -1):
+            if surfaces[candidate_index] in boundary_terms:
+                break
+            if meaningful(candidate_index) and surfaces[candidate_index].endswith(
+                ("ed", "ly")
+            ):
+                break
+            if meaningful(candidate_index) and not surfaces[candidate_index].endswith(
+                "ing"
+            ):
+                phrase_candidates.append(candidate_index)
+        if phrase_candidates:
+            subject_indexes.add(min(phrase_candidates))
+
+    for index, surface in enumerate(surfaces):
+        identity_relation = (
+            surface == "with"
+            and index > 0
+            and surfaces[index - 1]
+            in {"affiliated", "associated", "connected", "linked"}
+        )
+        if surface != "for" and not identity_relation:
+            continue
+        candidate_index: int | None = None
+        for candidate_index in range(index + 1, min(len(surfaces), index + 5)):
+            if meaningful(candidate_index):
+                break
+        else:
+            candidate_index = None
+        if candidate_index is None:
+            continue
+        later_meaningful = [
+            later
+            for later in range(candidate_index + 1, len(surfaces))
+            if meaningful(later)
+        ]
+        followed_by_head = any(
+            stems[later] in SUBJECT_HEAD_TERMS
+            for later in range(
+                candidate_index + 1,
+                min(len(surfaces), candidate_index + 4),
+            )
+        )
+        if not later_meaningful or followed_by_head:
+            subject_indexes.add(candidate_index)
+
+    for index, surface in enumerate(surfaces):
+        is_leading_copula = index == 0 and surface in {"are", "is", "was", "were"}
+        if surface not in {"did", "does", "who"} and not is_leading_copula:
+            continue
+        if surface != "who":
+            for candidate_index in range(index + 1, min(len(surfaces), index + 8)):
+                if (
+                    surfaces[candidate_index] in boundary_terms
+                    or stems[candidate_index] in STOP_WORDS
+                ):
+                    continue
+                if meaningful(candidate_index):
+                    subject_indexes.add(candidate_index)
+                break
             break
-        requested.append(stemmed)
-        if len(requested) >= 3:
-            break
-    return frozenset(requested)
+        who_predicate_seen = surface != "who"
+        for candidate_index in range(index + 1, min(len(surfaces), index + 8)):
+            alternatives = CONCEPT_BY_TERM.get(
+                stems[candidate_index],
+                frozenset({stems[candidate_index]}),
+            )
+            if (
+                surface == "who"
+                and stems[candidate_index] not in STOP_WORDS
+                and alternatives in FUNCTION_CONCEPT_GROUPS
+            ):
+                who_predicate_seen = True
+                continue
+            if meaningful(candidate_index):
+                if surfaces[candidate_index].endswith(("ed", "ing", "ly")):
+                    continue
+                if surface == "who" and not who_predicate_seen:
+                    who_predicate_seen = True
+                    continue
+                subject_indexes.add(candidate_index)
+                break
+        break
+
+    return frozenset(surfaces[index] for index in subject_indexes)
 
 
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
@@ -473,6 +667,9 @@ def chunk_document(
                     terms=_tokens(text),
                     title_terms=_tokens(document.title),
                     named_terms=_source_named_terms(f"{document.title}\n{text}"),
+                    surface_terms=frozenset(
+                        _surface_tokens(f"{document.title}\n{text}")
+                    ),
                 )
             )
         if end >= len(body):
@@ -544,13 +741,22 @@ def rank_evidence(
     ]
     if not candidates:
         return []
-    source_named_stems = frozenset(
-        _stem(term) for candidate in candidates for term in candidate.named_terms
-    )
-    requested_detail_terms = _requested_detail_terms(question, source_named_stems)
     query_surfaces_by_stem: dict[str, set[str]] = {}
     for token in re.findall(r"[A-Za-z0-9]+", question):
         query_surfaces_by_stem.setdefault(_stem(token), set()).add(token.casefold())
+    subject_concepts: list[tuple[str, int]] = []
+    for surface in sorted(_structural_subject_surfaces(question)):
+        stemmed = _stem(surface)
+        concept_index = next(
+            (
+                index
+                for index, (query_term, alternatives) in enumerate(concepts)
+                if query_term == stemmed or stemmed in alternatives
+            ),
+            None,
+        )
+        if concept_index is not None:
+            subject_concepts.append((surface, concept_index))
 
     document_frequencies = [
         sum(
@@ -601,30 +807,21 @@ def rank_evidence(
         # "preview" matching "review") from becoming evidence.
         if exact_matches == 0 or match_count < minimum_matches:
             continue
-        # Role, action, event, date, and source families explain what the
-        # question asks for, but cannot redirect a collection toward an absent
-        # external subject. Every remaining subject concept must match the
-        # passage. A direct requested detail may be absent only when another
-        # exact, source-derived name anchors this passage; the brief then owns
-        # the answered/partial/insufficient decision.
-        target_indexes = {
-            index
-            for index, (_, alternatives) in enumerate(concepts)
-            if alternatives not in FUNCTION_CONCEPT_GROUPS
-        }
-        requested_indexes = {
-            index
-            for index in target_indexes
-            if concepts[index][0] in requested_detail_terms
-        }
-        candidate_named_stems = frozenset(_stem(term) for term in candidate.named_terms)
+        # Admission follows structural subject phrases, not every unknown word.
+        # This keeps arbitrary discourse/modifier vocabulary from suppressing
+        # evidence while still rejecting an absent external subject even when
+        # the question also names a real collection location.
+        candidate_named_stems = frozenset(
+            _stem(term) for term in candidate.named_terms
+        )
         exact_named_anchor_indexes: set[int] = set()
-        named_stem_collision_indexes: set[int] = set()
-        for index in target_indexes - requested_indexes:
-            query_term, alternatives = concepts[index]
-            surface_exact = bool(
-                query_surfaces_by_stem.get(query_term, set()) & candidate.named_terms
-            )
+        for index, (query_term, alternatives) in enumerate(concepts):
+            query_surfaces = {
+                surface
+                for stemmed in alternatives
+                for surface in query_surfaces_by_stem.get(stemmed, set())
+            }
+            surface_exact = bool(query_surfaces & candidate.named_terms)
             declared_anchor_exact = (
                 alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
                 and bool(alternatives & candidate_named_stems)
@@ -633,21 +830,28 @@ def rank_evidence(
                 surface_exact or declared_anchor_exact
             ):
                 exact_named_anchor_indexes.add(index)
-            if alternatives & candidate_named_stems and not (
-                surface_exact or declared_anchor_exact
-            ):
-                named_stem_collision_indexes.add(index)
-        required_target_indexes = set(target_indexes)
-        if exact_named_anchor_indexes:
-            required_target_indexes -= requested_indexes
-        if not required_target_indexes.issubset(matched_indexes):
-            continue
-        admission_exact_indexes = exact_matched_indexes - named_stem_collision_indexes
-        if (
-            required_target_indexes
-            and not exact_named_anchor_indexes
-            and not required_target_indexes.issubset(admission_exact_indexes)
-        ):
+        subject_failed = False
+        for surface, index in subject_concepts:
+            if index not in matched_indexes:
+                subject_failed = True
+                break
+            _, alternatives = concepts[index]
+            surface_exact = surface in candidate.surface_terms
+            declared_anchor_exact = (
+                alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
+                and _stem(surface) in alternatives
+                and bool(alternatives & set(candidate.terms))
+            )
+            if surface_exact or declared_anchor_exact:
+                continue
+            fuzzy_named = _best_fuzzy(
+                _stem(surface),
+                tuple(sorted(candidate_named_stems)),
+            )
+            if fuzzy_named < 0.86 or not (exact_named_anchor_indexes - {index}):
+                subject_failed = True
+                break
+        if subject_failed:
             continue
         phrase = 3.0 if normalized_question in " ".join(candidate.text.casefold().split()) else 0.0
         title_matches = sum(
