@@ -28,6 +28,13 @@
   function activeCollection() {
     return state.collections.find((item) => item.id === state.collectionId) || null;
   }
+  function rememberedCollectionId() {
+    return window.localStorage.getItem("crestActiveCollection") || null;
+  }
+  function rememberCollection(collectionId) {
+    if (collectionId) window.localStorage.setItem("crestActiveCollection", collectionId);
+    else window.localStorage.removeItem("crestActiveCollection");
+  }
 
   async function api(path, options = {}) {
     const headers = { Accept: "application/json", ...(options.headers || {}) };
@@ -96,7 +103,7 @@
     }
   }
 
-  async function loadCollections(preferredId = state.collectionId) {
+  async function loadCollections(preferredId = state.collectionId || rememberedCollectionId()) {
     if (!state.capabilities?.graph_build_authorized) {
       state.collections = [];
       state.collectionId = null;
@@ -107,6 +114,7 @@
       const response = await api("collections", { operator: true });
       state.collections = response.collections;
       state.collectionId = state.collections.some((item) => item.id === preferredId) ? preferredId : null;
+      rememberCollection(state.collectionId);
       renderCollectionControls();
     } catch (error) {
       state.collections = [];
@@ -131,6 +139,7 @@
         }),
       });
       await loadCollections(collection.id);
+      rememberCollection(collection.id);
       state.selectedDocuments.clear();
       $("[data-collection-scope]").checked = true;
       $("[data-collection-dialog]").close();
@@ -179,6 +188,7 @@
     try {
       await api(`collections/${encodeURIComponent(active.id)}`, { method: "DELETE", operator: true });
       state.collectionId = null;
+      rememberCollection(null);
       state.selectedDocuments.clear();
       await loadCollections();
       await runSearch($("#query").value);
@@ -622,6 +632,7 @@
     $("[data-search-connector]").addEventListener("change", () => runSearch($("#query").value));
     $("[data-collection-picker]").addEventListener("change", async (event) => {
       state.collectionId = event.target.value || null;
+      rememberCollection(state.collectionId);
       state.selectedDocuments.clear();
       $("[data-collection-scope]").checked = Boolean(state.collectionId);
       renderCollectionControls();

@@ -46,6 +46,8 @@ def test_workbench_actions_have_api_counterparts_and_fail_visible() -> None:
     assert "Build failed:" in javascript
     assert "Graph request failed:" in javascript
     assert "Upload failed:" in javascript
+    assert 'localStorage.setItem("crestActiveCollection"' in javascript
+    assert 'localStorage.getItem("crestActiveCollection"' in javascript
     assert "relationship.groundings" in javascript
     assert "source_mention" in javascript
     assert "relation_phrase" in javascript
