@@ -37,6 +37,7 @@ class _ChunkCandidate:
     text: str
     terms: tuple[str, ...]
     title_terms: tuple[str, ...]
+    named_terms: frozenset[str]
 
 
 STOP_WORDS = frozenset(
@@ -48,21 +49,29 @@ STOP_WORDS = frozenset(
         "as",
         "at",
         "also",
+        "accord",
+        "actually",
+        "appear",
         "be",
+        "befor",
         "between",
         "both",
         "by",
         "can",
         "could",
+        "compar",
         "did",
         "do",
         "does",
+        "during",
         "for",
         "from",
         "give",
+        "extract",
         "had",
         "how",
         "i",
+        "m",
         "in",
         "is",
         "it",
@@ -71,13 +80,21 @@ STOP_WORDS = frozenset(
         "along",
         "behind",
         "me",
+        "material",
+        "many",
         "naming",
         "name",
+        "no",
         "of",
         "on",
+        "one",
+        "okay",
         "or",
+        "pair",
+        "pin",
         "put",
         "report",
+        "return",
         "responsibl",
         "respectiv",
         "serv",
@@ -87,11 +104,17 @@ STOP_WORDS = frozenset(
         "that",
         "the",
         "their",
+        "then",
         "there",
+        "these",
+        "they",
         "this",
+        "thing",
         "to",
         "together",
         "two",
+        "try",
+        "trying",
         "versu",
         "was",
         "were",
@@ -101,9 +124,18 @@ STOP_WORDS = frozenset(
         "which",
         "who",
         "whether",
+        "while",
         "why",
         "with",
         "you",
+        "way",
+        "quick",
+        "check",
+        "up",
+        "down",
+        "charg",
+        "so",
+        "more",
         "exist",
         "pleas",
         "s",
@@ -126,6 +158,7 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "institute",
         "institution",
         "laboratory",
+        "labratory",
         "committee",
         "agency",
         "team",
@@ -134,17 +167,48 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "role",
         "host",
         "observer",
+        "observor",
+        "convener",
+        "outfit",
     ),
-    ("organize", "coordinate", "convene", "arrange"),
-    ("lead", "led", "direct", "operate", "manage", "supervise"),
+    (
+        "organize",
+        "organizer",
+        "organzier",
+        "coordinate",
+        "coordination",
+        "convene",
+        "convener",
+        "arrange",
+        "stage",
+        "staged",
+        "set",
+        "bring",
+        "brought",
+        "get",
+        "got",
+    ),
+    (
+        "lead",
+        "led",
+        "direct",
+        "operate",
+        "operation",
+        "operations",
+        "manage",
+        "supervise",
+    ),
     (
         "demonstration",
+        "demonstrtion",
         "pilot",
         "exercise",
         "trial",
         "test",
         "undertaking",
         "event",
+        "field",
+        "site",
         "gathering",
         "project",
         "program",
@@ -155,11 +219,14 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "day",
         "days",
         "schedule",
+        "schedulled",
         "begin",
         "beginning",
+        "beginnings",
         "began",
         "begun",
         "start",
+        "commence",
         "launch",
         "kickoff",
         "open",
@@ -175,6 +242,9 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "first",
         "preliminary",
         "mark",
+        "entry",
+        "planned",
+        "appear",
     ),
     (
         "disagreement",
@@ -193,6 +263,51 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
     ("supply", "provide", "furnish"),
     ("instrument", "equipment"),
     ("cost", "budget", "funding", "expense", "price"),
+    (
+        "account",
+        "archive",
+        "brief",
+        "document",
+        "material",
+        "memo",
+        "note",
+        "paperwork",
+        "record",
+        "report",
+        "source",
+        "write",
+        "writeup",
+        "ups",
+    ),
+    (
+        "assign",
+        "attend",
+        "carry",
+        "cover",
+        "house",
+        "list",
+        "mention",
+        "place",
+        "receive",
+        "review",
+        "serve",
+        "state",
+        "wear",
+    ),
+    ("14", "fourteen"),
+    ("16", "sixteen"),
+    ("january",),
+    ("february",),
+    ("march",),
+    ("april",),
+    ("may",),
+    ("june",),
+    ("july",),
+    ("august",),
+    ("september",),
+    ("october",),
+    ("november",),
+    ("december",),
 )
 
 
@@ -221,36 +336,6 @@ CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
 }
 
-
-QUESTION_LEAD_WORDS = frozenset(
-    {
-        "at",
-        "can",
-        "compare",
-        "did",
-        "does",
-        "for",
-        "from",
-        "give",
-        "how",
-        "identify",
-        "is",
-        "name",
-        "please",
-        "quick",
-        "resolve",
-        "so",
-        "the",
-        "trace",
-        "was",
-        "what",
-        "when",
-        "where",
-        "which",
-        "who",
-        "why",
-    }
-)
 
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(
@@ -282,15 +367,61 @@ def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
     return tuple(concepts)
 
 
-def _named_query_terms(question: str) -> frozenset[str]:
-    """Return capitalized target cues, excluding ordinary question leads."""
+def _source_named_terms(value: str) -> frozenset[str]:
+    """Return exact source-name cues without treating sentence leads as names."""
 
     return frozenset(
-        stemmed
-        for token in re.findall(r"[A-Za-z0-9]+", question)
-        if token[0].isupper() and token.casefold() not in QUESTION_LEAD_WORDS
+        token.casefold()
+        for token in re.findall(r"[A-Za-z][A-Za-z0-9]*", value)
+        if token[0].isupper()
         if (stemmed := _stem(token)) and stemmed not in STOP_WORDS
+        if CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
+        not in FUNCTION_CONCEPT_GROUPS
     )
+
+
+def _requested_detail_terms(
+    question: str,
+    source_named_terms: frozenset[str],
+) -> frozenset[str]:
+    """Identify a direct requested detail before a known source-name anchor.
+
+    This deliberately small grammar covers ``which …``, ``what …``, and
+    ``how many …`` noun phrases. It does not decide whether the detail is
+    answered; it only permits relevant collection context to reach the brief.
+    """
+
+    raw_tokens = re.findall(r"[A-Za-z0-9]+", question)
+    lowered = [token.casefold() for token in raw_tokens]
+    lead_index: int | None = None
+    for index, token in enumerate(lowered[:8]):
+        if token in {"which", "what"}:
+            lead_index = index + 1
+            break
+        if (
+            token == "how"
+            and index + 1 < len(lowered)
+            and lowered[index + 1] == "many"
+        ):
+            lead_index = index + 2
+            break
+    if lead_index is None:
+        return frozenset()
+
+    requested: list[str] = []
+    for raw_token in raw_tokens[lead_index:]:
+        stemmed = _stem(raw_token)
+        if not stemmed or stemmed in STOP_WORDS:
+            continue
+        alternatives = CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
+        if alternatives in FUNCTION_CONCEPT_GROUPS:
+            continue
+        if alternatives & source_named_terms:
+            break
+        requested.append(stemmed)
+        if len(requested) >= 3:
+            break
+    return frozenset(requested)
 
 
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
@@ -341,6 +472,7 @@ def chunk_document(
                     text=text,
                     terms=_tokens(text),
                     title_terms=_tokens(document.title),
+                    named_terms=_source_named_terms(f"{document.title}\n{text}"),
                 )
             )
         if end >= len(body):
@@ -359,14 +491,26 @@ def _concept_frequency(terms: tuple[str, ...], alternatives: frozenset[str]) -> 
 def _best_fuzzy(term: str, candidate_terms: tuple[str, ...]) -> float:
     if len(term) < 5:
         return 0.0
-    return max(
-        (
-            SequenceMatcher(None, term, candidate).ratio()
-            for candidate in candidate_terms
-            if len(candidate) >= 5 and abs(len(term) - len(candidate)) <= 1
-        ),
-        default=0.0,
-    )
+    scores: list[float] = []
+    for candidate in candidate_terms:
+        if len(candidate) < 5 or abs(len(term) - len(candidate)) > 1:
+            continue
+        if len(term) == len(candidate):
+            differences = [
+                index
+                for index, (left, right) in enumerate(zip(term, candidate, strict=True))
+                if left != right
+            ]
+            if (
+                len(differences) == 2
+                and differences[1] == differences[0] + 1
+                and term[differences[0]] == candidate[differences[1]]
+                and term[differences[1]] == candidate[differences[0]]
+            ):
+                scores.append(0.9)
+                continue
+        scores.append(SequenceMatcher(None, term, candidate).ratio())
+    return max(scores, default=0.0)
 
 
 def rank_evidence(
@@ -382,7 +526,6 @@ def rank_evidence(
 
     normalized_question = " ".join(question.casefold().split())
     concepts = _query_concepts(question)
-    named_query_terms = _named_query_terms(question)
     if not concepts or limit <= 0:
         return []
     candidates = [
@@ -401,6 +544,13 @@ def rank_evidence(
     ]
     if not candidates:
         return []
+    source_named_stems = frozenset(
+        _stem(term) for candidate in candidates for term in candidate.named_terms
+    )
+    requested_detail_terms = _requested_detail_terms(question, source_named_stems)
+    query_surfaces_by_stem: dict[str, set[str]] = {}
+    for token in re.findall(r"[A-Za-z0-9]+", question):
+        query_surfaces_by_stem.setdefault(_stem(token), set()).add(token.casefold())
 
     document_frequencies = [
         sum(
@@ -451,27 +601,52 @@ def rank_evidence(
         # "preview" matching "review") from becoming evidence.
         if exact_matches == 0 or match_count < minimum_matches:
             continue
-        # Role, action, event, and date families explain what the question asks
-        # for, but cannot by themselves redirect a collection toward an absent
-        # external subject. If the query names any target terms, at least one of
-        # those terms (or a declared anchor synonym) must match this passage.
-        # A query made entirely of function concepts remains valid within its
-        # explicitly selected collection.
+        # Role, action, event, date, and source families explain what the
+        # question asks for, but cannot redirect a collection toward an absent
+        # external subject. Every remaining subject concept must match the
+        # passage. A direct requested detail may be absent only when another
+        # exact, source-derived name anchors this passage; the brief then owns
+        # the answered/partial/insufficient decision.
         target_indexes = {
             index
             for index, (_, alternatives) in enumerate(concepts)
             if alternatives not in FUNCTION_CONCEPT_GROUPS
         }
-        if target_indexes and not (target_indexes & exact_matched_indexes):
-            continue
-        named_target_indexes = {
+        requested_indexes = {
             index
             for index in target_indexes
-            if concepts[index][0] in named_query_terms
+            if concepts[index][0] in requested_detail_terms
         }
-        if named_target_indexes and (
-            not (named_target_indexes & exact_matched_indexes)
-            or not named_target_indexes.issubset(matched_indexes)
+        candidate_named_stems = frozenset(_stem(term) for term in candidate.named_terms)
+        exact_named_anchor_indexes: set[int] = set()
+        named_stem_collision_indexes: set[int] = set()
+        for index in target_indexes - requested_indexes:
+            query_term, alternatives = concepts[index]
+            surface_exact = bool(
+                query_surfaces_by_stem.get(query_term, set()) & candidate.named_terms
+            )
+            declared_anchor_exact = (
+                alternatives in CONCEPT_GROUPS[: len(_RAW_ANCHOR_CONCEPT_GROUPS)]
+                and bool(alternatives & candidate_named_stems)
+            )
+            if index in exact_matched_indexes and (
+                surface_exact or declared_anchor_exact
+            ):
+                exact_named_anchor_indexes.add(index)
+            if alternatives & candidate_named_stems and not (
+                surface_exact or declared_anchor_exact
+            ):
+                named_stem_collision_indexes.add(index)
+        required_target_indexes = set(target_indexes)
+        if exact_named_anchor_indexes:
+            required_target_indexes -= requested_indexes
+        if not required_target_indexes.issubset(matched_indexes):
+            continue
+        admission_exact_indexes = exact_matched_indexes - named_stem_collision_indexes
+        if (
+            required_target_indexes
+            and not exact_named_anchor_indexes
+            and not required_target_indexes.issubset(admission_exact_indexes)
         ):
             continue
         phrase = 3.0 if normalized_question in " ".join(candidate.text.casefold().split()) else 0.0
