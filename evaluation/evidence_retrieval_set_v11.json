@@ -1,0 +1,135 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v11",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T08:04:00Z",
+  "claim_scope": "Exact structural-subject, requested-slot, discourse, modifier, and morphology failures from the independent v10 sign-off. Synthetic regression only; not human gold or real-world recall.",
+  "decision_rule": "All 10 answerable cases must retrieve coordination and observation in the top four with no Lisbon top-two distractor; all 3 external-subject controls must return []; all offsets must be exact. A fresh independent verifier remains required.",
+  "documents": [
+    {
+      "document_id": "meridian-coordination",
+      "title": "Project Meridian Vienna coordination note",
+      "body_text": "Project Meridian field note. The Harbor Institute acted as the organizing body for the Vienna pilot. Its conveners scheduled the first field exercise for 14 May 1987. Eastbridge Laboratory supplied instruments but did not direct the organizing committee."
+    },
+    {
+      "document_id": "meridian-observation",
+      "title": "Vienna demonstration observer correction",
+      "body_text": "Observer correction for Project Meridian. The Vienna demonstration began on 16 May 1987, not 14 May as stated in the preliminary scheduling note. Harbor Institute provided convening support, while Eastbridge Laboratory led operations at the field site."
+    },
+    {
+      "document_id": "meridian-lisbon-distractor",
+      "title": "Project Meridian Lisbon communications brief",
+      "body_text": "Project Meridian communications staff met in Lisbon during June 1987. The Harbor Institute reviewed press clippings for the Portuguese media campaign. This brief does not concern the Vienna field demonstration."
+    },
+    {
+      "document_id": "meridian-administration",
+      "title": "Regional archive administration",
+      "body_text": "The archive office renewed storage cabinets and travel forms for regional programs. No project costs, funding totals, or procurement budgets were recorded in this note."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "modifier-within-ran",
+      "split": "regression",
+      "query": "Within Project Meridian's Austrian files, which body ran the Vienna exercise, and do the opening records say 14 or 16 May 1987?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "modifier-using-contrast",
+      "split": "regression",
+      "query": "Using the Austrian Project Meridian accounts, name the organizer and contrast the planned opening with the observer correction.",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "modifier-handled-claimed",
+      "split": "regression",
+      "query": "Did Harbor Institute convene the Meridian field test while Eastbridge handled operations, and were 14 and 16 May 1987 both claimed as opening dates?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "modifier-explain-discrepancy",
+      "split": "regression",
+      "query": "From the Vienna records on Project Meridian, identify the convening body and explain the two-day discrepancy in its start.",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "function-contain",
+      "split": "regression",
+      "query": "Which body put the exercise together, and what preliminary and corrected start days do the notes contain?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "discourse-incidentally",
+      "split": "regression",
+      "query": "Incidentally, for Meridian at Vienna, who hosted the pilot and which opening dates conflict?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "discourse-follow-up",
+      "split": "regression",
+      "query": "As a follow-up, who convened Project Meridian in Vienna and what days are disputed?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "discourse-circle-back",
+      "split": "regression",
+      "query": "To circle back, identify the Meridian Vienna organizer and its two reported May opening dates.",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "discourse-separately",
+      "split": "regression",
+      "query": "Separately, which institution hosted the Austrian pilot, and what opening dates differ?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "mixed-case-documented",
+      "split": "regression",
+      "query": "pRoJeCt mErIdIaN in vIeNnA: who arranged the trial and what two May start days are documented?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "no-support-borealis-vienna",
+      "split": "negative",
+      "query": "which institute convened the borealis vienna pilot and when did it open?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "no-support-triton-austrian",
+      "split": "negative",
+      "query": "which organization hosted triton's austrian trial?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "no-support-project-horizon-vienna",
+      "split": "negative",
+      "query": "Which institute organized Project Horizon's Vienna exercise?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    }
+  ]
+}
