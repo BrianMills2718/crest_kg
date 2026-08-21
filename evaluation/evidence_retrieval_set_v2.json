@@ -1,0 +1,80 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v2",
+  "frozen_before_repair": true,
+  "authored_by": "codex from independent sign-off failures",
+  "created_at": "2026-08-21T05:33:58Z",
+  "claim_scope": "Deterministic regression fixture for Project Meridian chunk retrieval after v1 sign-off rejection; not a human gold set, a blind holdout, or a real-world corpus-recall claim.",
+  "decision_rule": "All cases and exact-offset checks must pass. A fresh independent verifier must also generate unseen same-class answerable and contextual absent-subject probes before deployment.",
+  "documents": [
+    {
+      "document_id": "meridian-coordination",
+      "title": "Project Meridian Vienna coordination note",
+      "body_text": "Project Meridian field note. The Harbor Institute acted as the organizing body for the Vienna pilot. Its conveners scheduled the first field exercise for 14 May 1987. Eastbridge Laboratory supplied instruments but did not direct the organizing committee."
+    },
+    {
+      "document_id": "meridian-observation",
+      "title": "Vienna demonstration observer correction",
+      "body_text": "Observer correction for Project Meridian. The Vienna demonstration began on 16 May 1987, not 14 May as stated in the preliminary scheduling note. Harbor Institute provided convening support, while Eastbridge Laboratory led operations at the field site."
+    },
+    {
+      "document_id": "meridian-lisbon-distractor",
+      "title": "Project Meridian Lisbon communications brief",
+      "body_text": "Project Meridian communications staff met in Lisbon during June 1987. The Harbor Institute reviewed press clippings for the Portuguese media campaign. This brief does not concern the Vienna field demonstration."
+    },
+    {
+      "document_id": "meridian-administration",
+      "title": "Regional archive administration",
+      "body_text": "The archive office renewed storage cabinets and travel forms for regional programs. No project costs, funding totals, or procurement budgets were recorded in this note."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "calibration-exact-vienna",
+      "split": "calibration",
+      "query": "Project Meridian Vienna organizing body launch date",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "regression-known-role-date",
+      "split": "regression",
+      "query": "Which group organized the Austrian field demonstration and what date disagreement exists?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "regression-unseen-role-date",
+      "split": "regression",
+      "query": "What entity put on the Austria trial, and when do the records diverge?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "negative-absent-no-context",
+      "split": "negative",
+      "query": "What radio frequency did the pilot use?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "negative-absent-project-context",
+      "split": "negative",
+      "query": "What encryption system did Project Meridian use?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "negative-absent-project-location-context",
+      "split": "negative",
+      "query": "Which radio frequency did Project Meridian use in Vienna?",
+      "expected_document_ids": [],
+      "top_k": 4,
+      "exclude_from_top_two": []
+    }
+  ]
+}

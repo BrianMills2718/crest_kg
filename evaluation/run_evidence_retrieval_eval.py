@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -14,9 +15,14 @@ from crest_app.retrieval import evaluate_retrieval_fixture  # noqa: E402
 
 
 def main() -> int:
-    result = evaluate_retrieval_fixture(
-        ROOT / "evaluation" / "evidence_retrieval_set_v1.json"
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--fixture",
+        type=Path,
+        default=ROOT / "evaluation" / "evidence_retrieval_set_v2.json",
     )
+    args = parser.parse_args()
+    result = evaluate_retrieval_fixture(args.fixture)
     print(json.dumps(result, indent=2))
     return 0 if result["passed"] else 1
 

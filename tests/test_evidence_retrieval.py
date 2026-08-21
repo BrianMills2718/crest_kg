@@ -15,12 +15,13 @@ ROOT = Path(__file__).parents[1]
 
 def test_frozen_evidence_retrieval_fixture_passes() -> None:
     result = evaluate_retrieval_fixture(
-        ROOT / "evaluation" / "evidence_retrieval_set_v1.json"
+        ROOT / "evaluation" / "evidence_retrieval_set_v2.json"
     )
     assert result["passed"], result
     assert {item["split"] for item in result["cases"]} == {
         "calibration",
-        "holdout",
+        "regression",
+        "negative",
     }
 
 

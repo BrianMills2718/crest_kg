@@ -61,6 +61,7 @@ STOP_WORDS = frozenset(
         "of",
         "on",
         "or",
+        "put",
         "that",
         "the",
         "their",
@@ -82,12 +83,29 @@ STOP_WORDS = frozenset(
 # Small, domain-neutral lexical concept families support common question/document
 # paraphrases without a model call. Values are stemmed by ``_stem`` at import.
 _RAW_CONCEPT_GROUPS = (
-    ("group", "organization", "body", "institute", "committee", "agency", "team"),
+    (
+        "group",
+        "organization",
+        "body",
+        "institute",
+        "committee",
+        "agency",
+        "team",
+        "entity",
+    ),
     ("organize", "coordinate", "convene", "arrange"),
     ("lead", "led", "direct", "operate", "manage", "supervise"),
     ("demonstration", "pilot", "exercise", "trial", "test"),
     ("date", "day", "schedule", "begin", "began", "begun", "start", "launch"),
-    ("disagreement", "conflict", "contradict", "correction", "dispute"),
+    (
+        "disagreement",
+        "conflict",
+        "contradict",
+        "correction",
+        "dispute",
+        "differ",
+        "diverge",
+    ),
     ("cost", "budget", "funding", "expense", "price"),
 )
 
@@ -123,7 +141,15 @@ def _tokens(value: str) -> tuple[str, ...]:
 def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
     concepts: list[tuple[str, frozenset[str]]] = []
     seen: set[frozenset[str]] = set()
-    for term in _tokens(question):
+    query_terms = list(_tokens(question))
+    normalized = " ".join(question.casefold().split())
+    # Question grammar can express a requested concept without using a document
+    # synonym. These domain-neutral cues stay deterministic and inspectable.
+    if re.search(r"\bwhen\b", normalized):
+        query_terms.append(_stem("date"))
+    if re.search(r"\bput\s+on\b", normalized):
+        query_terms.append(_stem("organize"))
+    for term in query_terms:
         alternatives = CONCEPT_BY_TERM.get(term, frozenset({term}))
         if alternatives in seen:
             continue
@@ -251,10 +277,12 @@ def rank_evidence(
         exact_matches = 0
         fuzzy_values: list[float] = []
         matched_terms: list[str] = []
+        matched_indexes: set[int] = set()
         for index, (query_term, alternatives) in enumerate(concepts):
             frequency = _concept_frequency(candidate.terms, alternatives)
             if frequency:
                 exact_matches += 1
+                matched_indexes.add(index)
                 matched_terms.append(query_term)
                 idf = math.log(
                     1 + (len(candidates) - document_frequencies[index] + 0.5)
@@ -269,12 +297,24 @@ def rank_evidence(
             fuzzy = _best_fuzzy(query_term, candidate.terms)
             fuzzy_values.append(fuzzy)
             if fuzzy >= 0.86:
+                matched_indexes.add(index)
                 matched_terms.append(query_term)
         fuzzy_match_count = sum(1 for value in fuzzy_values if 0.86 <= value < 1.0)
         match_count = exact_matches + fuzzy_match_count
         minimum_matches = 1 if len(concepts) <= 2 else 2
         coverage = match_count / len(concepts)
         if match_count < minimum_matches:
+            continue
+        # Shared project or location names are useful context, but cannot alone
+        # answer an absent-subject question. Require one non-common concept when
+        # overall coverage is weak; fully matched short context queries remain
+        # valid. This is corpus-relative rather than tied to proper nouns.
+        common_frequency = len(candidates) * 0.6
+        has_discriminating_match = any(
+            document_frequencies[index] <= max(1, common_frequency)
+            for index in matched_indexes
+        )
+        if coverage < 0.7 and not has_discriminating_match:
             continue
         phrase = 3.0 if normalized_question in " ".join(candidate.text.casefold().split()) else 0.0
         title_matches = sum(

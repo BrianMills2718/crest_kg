@@ -1,0 +1,44 @@
+{
+  "implementation_revision": "90803741b72f8f11936e9313b67f90ea2e9f6851",
+  "fixture": "evaluation/evidence_retrieval_set_v2.json",
+  "command": "PYTHONPATH=. .venv/bin/python -c 'evaluate_retrieval_fixture(evaluation/evidence_retrieval_set_v2.json)'",
+  "passed": false,
+  "cases": [
+    {
+      "case_id": "calibration-exact-vienna",
+      "passed": true,
+      "ranked_document_ids": ["meridian-coordination", "meridian-observation", "meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "regression-known-role-date",
+      "passed": true,
+      "ranked_document_ids": ["meridian-observation", "meridian-coordination", "meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "regression-unseen-role-date",
+      "passed": false,
+      "ranked_document_ids": [],
+      "missing_expected": ["meridian-coordination", "meridian-observation"]
+    },
+    {
+      "case_id": "negative-absent-no-context",
+      "passed": true,
+      "ranked_document_ids": []
+    },
+    {
+      "case_id": "negative-absent-project-context",
+      "passed": false,
+      "ranked_document_ids": ["meridian-lisbon-distractor", "meridian-coordination", "meridian-observation"]
+    },
+    {
+      "case_id": "negative-absent-project-location-context",
+      "passed": false,
+      "ranked_document_ids": ["meridian-coordination", "meridian-lisbon-distractor", "meridian-observation"]
+    }
+  ],
+  "diagnosis": {
+    "false_negative": "The query parser drops interrogative when, has no phrase cue for put on, and lacks entity/diverge concept-family members, leaving fewer than two matches.",
+    "false_positive": "The fixed two-match admission threshold treats repeated project/location context as sufficient even when every subject-specific query term is absent.",
+    "repair_hypothesis": "Add domain-neutral question/phrase concept cues and require either strong coverage or at least one discriminating matched concept whose document frequency is not corpus-common."
+  }
+}
