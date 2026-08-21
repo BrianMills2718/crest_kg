@@ -49,7 +49,7 @@ from .models import (
     UploadedDocumentReceipt,
     UploadedDocumentRecord,
 )
-from .retrieval import RetrievalDocument, rank_evidence
+from .retrieval import RetrievalDocument, select_evidence
 
 
 ROOT = Path(__file__).parents[1]
@@ -511,7 +511,10 @@ class CorpusCatalog:
                     body_text=raw.body_text,
                 )
             )
-        return rank_evidence(
+        # select_evidence, not rank_evidence: ranking always returns its best
+        # guesses, which is the wrong answer for a workbench that must be able
+        # to report that the retained sources do not address the question.
+        return select_evidence(
             question,
             documents,
             limit=limit,
