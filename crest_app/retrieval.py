@@ -209,17 +209,6 @@ def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
     return tuple(concepts)
 
 
-def _proper_query_terms(question: str) -> frozenset[str]:
-    """Return mid-sentence proper-name modifiers that may not occur verbatim."""
-
-    tokens = re.findall(r"[A-Za-z0-9]+", question)
-    return frozenset(
-        _stem(token)
-        for index, token in enumerate(tokens)
-        if index > 0 and token[:1].isupper()
-    )
-
-
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
     while start < end and body[start].isspace():
         start += 1
@@ -332,26 +321,6 @@ def rank_evidence(
         )
         for _, alternatives in concepts
     ]
-    candidate_term_sets = [candidate.terms for candidate in candidates]
-    optional_proper_terms = _proper_query_terms(question)
-    unsupported_terms = [
-        query_term
-        for index, (query_term, _alternatives) in enumerate(concepts)
-        if document_frequencies[index] == 0
-        and _alternatives not in CONCEPT_GROUPS
-        and query_term not in optional_proper_terms
-        and max(
-            (_best_fuzzy(query_term, terms) for terms in candidate_term_sets),
-            default=0.0,
-        )
-        < 0.86
-    ]
-    # Retrieval is an evidence admission boundary, not merely a partial-match
-    # search. If a requested non-name concept has no support anywhere in the
-    # current collection, return no evidence and let the brief report
-    # insufficient evidence rather than presenting contextual false positives.
-    if unsupported_terms:
-        return []
     average_length = sum(len(candidate.terms) for candidate in candidates) / len(candidates)
     scored: list[tuple[float, _ChunkCandidate, EvidenceScore, list[str]]] = []
     for candidate in candidates:
