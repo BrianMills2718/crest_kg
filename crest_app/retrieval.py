@@ -464,9 +464,10 @@ def _structural_subject_surfaces(question: str) -> frozenset[str]:
     """Extract subject phrases without treating arbitrary OOV words as identity.
 
     The grammar is intentionally inspectable: possessives, names adjacent to
-    ``Project``, short noun phrases ending in a source/event head, ``for X``,
-    and the first subject after an auxiliary/``who`` question. Direct requested
-    details such as an insurance policy or badge color are not subjects.
+    ``Project``, short noun phrases ending in a source/event head, ``for X`` or
+    ``under X``, and the first subject after an auxiliary/``who`` question.
+    Direct requested details such as an insurance policy or badge color are not
+    subjects.
     """
 
     raw_tokens = re.findall(r"[A-Za-z0-9]+(?:['’][sS])?", question)
@@ -491,6 +492,7 @@ def _structural_subject_surfaces(question: str) -> frozenset[str]:
         "or",
         "the",
         "to",
+        "under",
         "was",
         "were",
         "what",
@@ -552,7 +554,7 @@ def _structural_subject_surfaces(question: str) -> frozenset[str]:
             and surfaces[index - 1]
             in {"affiliated", "associated", "connected", "linked"}
         )
-        if surface != "for" and not identity_relation:
+        if surface not in {"for", "under"} and not identity_relation:
             continue
         candidate_index: int | None = None
         for candidate_index in range(index + 1, min(len(surfaces), index + 5)):
