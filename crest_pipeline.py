@@ -1151,6 +1151,65 @@ def derive_document_id(document: RawDocument) -> str:
     return f"document-{digest}"
 
 
+def load_document_records(
+    raw_documents: list[RawDocument],
+    *,
+    document_ids: list[str] | None,
+    max_chars: int,
+    corpus_label: str,
+) -> list[LoadedDocument]:
+    """Load source records through the canonical manifest and line boundary.
+
+    File-backed corpora and persisted workbench uploads both use this function,
+    so uploaded text cannot bypass the same stable-ID, source-window, hashing,
+    and numbered-line contracts used by tracked CREST records.
+    """
+
+    if max_chars <= 0:
+        raise ValueError("max_chars must be positive")
+    if not corpus_label.strip():
+        raise ValueError("corpus_label must contain non-whitespace text")
+    if document_ids is not None:
+        if not document_ids:
+            raise ValueError("at least one document ID is required")
+        if len(document_ids) != len(set(document_ids)):
+            raise ValueError("document IDs must be unique")
+
+    parsed = [RawDocument.model_validate(item) for item in raw_documents]
+    loaded_by_id: dict[str, LoadedDocument] = {}
+    for document in parsed:
+        document_id = derive_document_id(document)
+        if document_id in loaded_by_id:
+            raise ValueError(f"duplicate source document ID: {document_id}")
+        analyzed_end = min(len(document.body_text), max_chars)
+        analysis_text = document.body_text[:analyzed_end]
+        source_lines = build_source_lines(analysis_text)
+        manifest = SourceDocument(
+            document_id=document_id,
+            title=document.title,
+            source_url=document.url,
+            corpus_path=corpus_label,
+            body_sha256=_body_digest(document.body_text),
+            total_chars=len(document.body_text),
+            analyzed_start=0,
+            analyzed_end=analyzed_end,
+            analyzed_lines=len(source_lines),
+        )
+        loaded_by_id[document_id] = LoadedDocument(
+            manifest=manifest,
+            metadata=document.metadata,
+            analysis_text=analysis_text,
+            source_lines=source_lines,
+        )
+
+    if document_ids is None:
+        return [loaded_by_id[key] for key in sorted(loaded_by_id)]
+    missing = [document_id for document_id in document_ids if document_id not in loaded_by_id]
+    if missing:
+        raise ValueError(f"unknown document IDs: {', '.join(missing)}")
+    return [loaded_by_id[document_id] for document_id in document_ids]
+
+
 def load_corpus(corpus_path: Path, *, limit: int, max_chars: int) -> list[LoadedDocument]:
     """Load, validate, sort, and select an explicit CREST corpus."""
 
@@ -1173,38 +1232,12 @@ def load_corpus(corpus_path: Path, *, limit: int, max_chars: int) -> list[Loaded
     if len(parsed) < limit:
         raise ValueError(f"corpus contains {len(parsed)} documents, fewer than limit={limit}")
 
-    corpus_label = corpus_path.as_posix()
-    loaded: list[LoadedDocument] = []
-    seen_ids: set[str] = set()
-    for document in parsed:
-        document_id = derive_document_id(document)
-        if document_id in seen_ids:
-            raise ValueError(f"duplicate source document ID: {document_id}")
-        seen_ids.add(document_id)
-        analyzed_end = min(len(document.body_text), max_chars)
-        analysis_text = document.body_text[:analyzed_end]
-        source_lines = build_source_lines(analysis_text)
-        manifest = SourceDocument(
-            document_id=document_id,
-            title=document.title,
-            source_url=document.url,
-            corpus_path=corpus_label,
-            body_sha256=_body_digest(document.body_text),
-            total_chars=len(document.body_text),
-            analyzed_start=0,
-            analyzed_end=analyzed_end,
-            analyzed_lines=len(source_lines),
-        )
-        loaded.append(
-            LoadedDocument(
-                manifest=manifest,
-                metadata=document.metadata,
-                analysis_text=analysis_text,
-                source_lines=source_lines,
-            )
-        )
-
-    loaded.sort(key=lambda item: item.manifest.document_id)
+    loaded = load_document_records(
+        parsed,
+        document_ids=None,
+        max_chars=max_chars,
+        corpus_label=corpus_path.as_posix(),
+    )
     return loaded[:limit]
 
 
@@ -1216,22 +1249,15 @@ def load_selected_documents(
 ) -> list[LoadedDocument]:
     """Load an explicit document selection through the canonical source boundary."""
 
-    if not document_ids:
-        raise ValueError("at least one document ID is required")
-    if len(document_ids) != len(set(document_ids)):
-        raise ValueError("document IDs must be unique")
-    all_documents = load_corpus(
-        corpus_path,
-        limit=len(_raw_corpus_items(corpus_path)),
+    raw_documents = [
+        RawDocument.model_validate(item) for item in _raw_corpus_items(corpus_path)
+    ]
+    return load_document_records(
+        raw_documents,
+        document_ids=document_ids,
         max_chars=max_chars,
+        corpus_label=corpus_path.as_posix(),
     )
-    documents_by_id = {
-        document.manifest.document_id: document for document in all_documents
-    }
-    missing = [document_id for document_id in document_ids if document_id not in documents_by_id]
-    if missing:
-        raise ValueError(f"unknown document IDs: {', '.join(missing)}")
-    return [documents_by_id[document_id] for document_id in document_ids]
 
 
 def _raw_corpus_items(corpus_path: Path) -> list[Any]:

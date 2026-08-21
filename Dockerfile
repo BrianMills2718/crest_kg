@@ -25,7 +25,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 COPY --from=llm-client-wheel /wheels /wheels
-RUN python -m pip install --no-cache-dir -r requirements.txt /wheels/*.whl \
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install --no-cache-dir -r requirements.txt /wheels/*.whl \
     && rm -rf /wheels
 
 COPY crest_app /app/crest_app

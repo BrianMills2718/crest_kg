@@ -28,7 +28,7 @@
 
   async function api(path, options = {}) {
     const headers = { Accept: "application/json", ...(options.headers || {}) };
-    if (options.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+    if (options.body && !(options.body instanceof FormData) && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
     if (options.operator && token()) headers.Authorization = `Bearer ${token()}`;
     const response = await fetch(`./api/${path}`, { ...options, headers });
     const contentType = response.headers.get("content-type") || "";
@@ -55,27 +55,37 @@
         <div class="connector ${connector.state}"><i class="connector-dot"></i><div>
           <strong>${escapeHtml(connector.label)}${connector.document_count ? ` · ${connector.document_count}` : ""}</strong>
           <span>${escapeHtml(connector.detail)}</span>
+          ${connector.id === "cia-reading-room-live" && state.capabilities.graph_build_authorized ? '<button class="text-button connector-action" type="button" data-probe-cia>Recheck official endpoint</button>' : ""}
         </div></div>`).join("");
+      $("[data-probe-cia]")?.addEventListener("click", probeCiaConnector);
       $("[data-budget]").max = String(state.capabilities.max_build_budget_usd);
+      const uploadButton = $("[data-upload-open]");
+      uploadButton.disabled = !state.capabilities.document_upload_enabled || !state.capabilities.document_upload_authorized;
+      uploadButton.title = uploadButton.disabled ? "Open through the tailnet or enter the operator token." : "Add a private source document";
+      const searchConnector = $("[data-search-connector]");
+      searchConnector.querySelector('option[value="user-uploads"]').disabled = !state.capabilities.document_upload_authorized;
+      const live = state.capabilities.connectors.find((item) => item.id === "cia-reading-room-live");
+      searchConnector.querySelector('option[value="cia-reading-room-live"]').disabled = !state.capabilities.graph_build_authorized || live?.state !== "available";
       updateBuildControls();
     } catch (error) {
       $("[data-connectors]").innerHTML = `<div class="inline-error">Capability request failed: ${escapeHtml(error.message)}</div>`;
     }
   }
 
-  async function runSearch(query) {
+  async function runSearch(query, connectorId = $("[data-search-connector]").value) {
     const results = $("[data-results]");
     const errorBox = $("[data-search-error]");
     errorBox.hidden = true;
     results.innerHTML = '<div class="empty-state compact">Searching source text…</div>';
     try {
       const response = await api("search", {
-        method: "POST",
-        body: JSON.stringify({ query, connector_id: "bundled-crest", limit: 30 }),
+        method: "POST", operator: true,
+        body: JSON.stringify({ query, connector_id: connectorId, limit: 30 }),
       });
       state.results = response.results;
       $("[data-result-count]").textContent = `${response.total_matches} matches`;
-      $("[data-search-meta]").textContent = `Results from the bundled tracked archive · query “${response.query}”.`;
+      const sourceLabel = $("[data-search-connector]").selectedOptions[0]?.textContent || response.connector_id;
+      $("[data-search-meta]").textContent = `${sourceLabel} · query “${response.query}”.`;
       renderResults();
     } catch (error) {
       results.replaceChildren();
@@ -96,7 +106,7 @@
       return `<article class="result-card ${selected ? "is-selected" : ""}" data-result-id="${escapeHtml(result.document_id)}">
         <input type="checkbox" aria-label="Select ${escapeHtml(result.title)}" ${selected ? "checked" : ""} />
         <div><h3>${escapeHtml(result.title)}</h3>
-          <div class="result-meta">${escapeHtml(result.document_id)}${metadata ? ` · ${escapeHtml(metadata)}` : ""}</div>
+          <div class="result-meta"><span class="source-badge ${result.connector_id === "user-uploads" ? "private" : ""}">${result.connector_id === "user-uploads" ? "Private upload" : result.connector_id === "cia-reading-room-live" ? "CIA live" : "Bundled CREST"}</span> ${escapeHtml(result.document_id)}${metadata ? ` · ${escapeHtml(metadata)}` : ""}</div>
           <p>${escapeHtml(truncate(result.snippet, 280))}</p>
           <div class="result-actions"><button class="text-button" type="button" data-inspect-document>Inspect source</button></div>
         </div></article>`;
@@ -127,17 +137,81 @@
     content.innerHTML = '<div class="empty-state compact">Loading the tracked source…</div>';
     dialog.showModal();
     try {
-      const detail = await api(`documents/${encodeURIComponent(documentId)}`);
+      const detail = await api(`documents/${encodeURIComponent(documentId)}`, { operator: true });
       const metadata = Object.entries(detail.metadata).filter(([, value]) => value)
         .map(([key, value]) => `<span>${escapeHtml(key)}: ${escapeHtml(value)}</span>`).join("");
-      content.innerHTML = `<div class="eyebrow">Tracked source document</div>
+      content.innerHTML = `<div class="eyebrow">${detail.connector_id === "user-uploads" ? "Private uploaded source" : "Tracked source document"}</div>
         <h2>${escapeHtml(detail.title)}</h2>
         <p class="evidence-meta">${escapeHtml(detail.document_id)} · ${detail.body_chars.toLocaleString()} source characters · SHA-256 ${escapeHtml(detail.body_sha256.slice(0, 12))}…</p>
         <div class="document-meta">${metadata}</div>
         ${detail.source_url ? `<p><a href="${escapeHtml(detail.source_url)}" rel="noreferrer">Open CIA source record ↗</a></p>` : ""}
+        ${detail.connector_id === "user-uploads" ? `<div class="document-actions"><a class="button ghost small" href="./api/uploads/${encodeURIComponent(detail.document_id)}/original">Download original</a><button class="text-button danger" type="button" data-delete-upload="${escapeHtml(detail.document_id)}">Delete private source</button></div>` : ""}
         <div class="source-preview">${escapeHtml(detail.body_preview)}</div>`;
+      content.querySelector("[data-delete-upload]")?.addEventListener("click", () => deleteUpload(detail.document_id, detail.title));
     } catch (error) {
       content.innerHTML = `<div class="inline-error">Document request failed: ${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  async function probeCiaConnector() {
+    const button = $("[data-probe-cia]");
+    if (button) { button.disabled = true; button.textContent = "Checking…"; }
+    try {
+      const probe = await api("connectors/cia-reading-room-live/probe", { method: "POST", operator: true });
+      toast(`CIA connector ${probe.connector.state}: ${probe.connector.detail}`);
+      await loadCapabilities();
+    } catch (error) {
+      toast(`CIA connector probe failed: ${error.message}`);
+      await loadCapabilities();
+    }
+  }
+
+  async function uploadDocument(event) {
+    event.preventDefault();
+    const fileInput = $("[data-upload-file]");
+    const submit = $("[data-upload-submit]");
+    const status = $("[data-upload-status]");
+    const file = fileInput.files[0];
+    if (!file) { status.textContent = "Choose a source file first."; return; }
+    const form = new FormData();
+    form.append("file", file);
+    const title = $("[data-upload-title]").value.trim();
+    if (title) form.append("title", title);
+    submit.disabled = true;
+    status.textContent = file.type.startsWith("image/") ? "Running local OCR…" : "Extracting and indexing source text…";
+    try {
+      const receipt = await api("uploads", { method: "POST", body: form, operator: true });
+      status.textContent = `${receipt.duplicate ? "Already present" : "Added"} · ${receipt.body_chars.toLocaleString()} characters · ${humanize(receipt.extraction_method)}.`;
+      toast(`${receipt.title} is now searchable and ready for graph building.`);
+      $("[data-search-connector]").value = "all";
+      $("#query").value = receipt.title;
+      await loadCapabilities();
+      await runSearch(receipt.title, "all");
+      const uploaded = state.results.find((item) => item.document_id === receipt.document_id);
+      if (uploaded) {
+        state.selectedDocuments.set(uploaded.document_id, uploaded);
+        renderResults();
+        updateBuildControls();
+      }
+    } catch (error) {
+      status.textContent = `Upload failed: ${error.message}`;
+    } finally {
+      submit.disabled = false;
+    }
+  }
+
+  async function deleteUpload(documentId, title) {
+    if (!window.confirm(`Delete the private source “${title}”? Existing graph artifacts are retained.`)) return;
+    try {
+      await api(`uploads/${encodeURIComponent(documentId)}`, { method: "DELETE", operator: true });
+      state.selectedDocuments.delete(documentId);
+      $("[data-document-dialog]").close();
+      toast("Private source deleted. Existing restricted graphs were retained.");
+      await loadCapabilities();
+      await runSearch($("#query").value);
+      updateBuildControls();
+    } catch (error) {
+      toast(`Delete failed: ${error.message}`);
     }
   }
 
@@ -181,7 +255,7 @@
   async function pollJob(jobId) {
     window.clearTimeout(state.polling);
     try {
-      const job = await api(`jobs/${jobId}`);
+      const job = await api(`jobs/${jobId}`, { operator: true });
       $("[data-build-status]").textContent = `${humanize(job.state)} · ${job.progress_detail}`;
       if (job.state === "completed") {
         toast("Knowledge graph completed and opened.");
@@ -202,7 +276,7 @@
 
   async function loadGraphList(preferredId) {
     try {
-      const response = await api("graphs");
+      const response = await api("graphs", { operator: true });
       const picker = $("[data-graph-picker]");
       picker.innerHTML = response.graphs.map((graph) => `<option value="${escapeHtml(graph.id)}">${escapeHtml(graph.label)} · ${graph.entities}E/${graph.relationships}R</option>`).join("");
       picker.value = preferredId || state.graphId;
@@ -226,7 +300,7 @@
     $("[data-graph-empty]").hidden = false;
     $("[data-graph-empty]").textContent = "Loading graph artifact…";
     try {
-      state.graph = requireGraph(await api(`graphs/${encodeURIComponent(graphId)}`));
+      state.graph = requireGraph(await api(`graphs/${encodeURIComponent(graphId)}`, { operator: true }));
       state.graphId = graphId;
       state.entitiesById = new Map(state.graph.entities.map((entity) => [entity.id, entity]));
       state.selectedItem = null;
@@ -352,19 +426,53 @@
       ${relationship.evidence.map((item, index) => evidenceHtml(item, relationship.groundings[index])).join("")}`;
   }
 
+  async function downloadCurrentGraph(event) {
+    if (!token()) return;
+    event.preventDefault();
+    try {
+      const response = await fetch(`./api/graphs/${encodeURIComponent(state.graphId)}/export.json`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.detail || `Export failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `crest-${state.graphId}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast(`Export failed: ${error.message}`);
+    }
+  }
+
   function wireEvents() {
-    $("[data-search-form]").addEventListener("submit", (event) => { event.preventDefault(); runSearch(new FormData(event.currentTarget).get("query")); });
+    $("[data-search-form]").addEventListener("submit", (event) => { event.preventDefault(); runSearch(new FormData(event.currentTarget).get("query"), $("[data-search-connector]").value); });
+    $("[data-search-connector]").addEventListener("change", () => runSearch($("#query").value));
     $("[data-build-button]").addEventListener("click", startBuild);
     $("[data-token]").value = window.sessionStorage.getItem("crestOperatorToken") || "";
     $("[data-token]").addEventListener("change", async (event) => {
       if (event.target.value) window.sessionStorage.setItem("crestOperatorToken", event.target.value);
       else window.sessionStorage.removeItem("crestOperatorToken");
       await loadCapabilities();
+      await loadGraphList();
+      await runSearch($("#query").value);
     });
+    $("[data-export-link]").addEventListener("click", downloadCurrentGraph);
     $("[data-graph-picker]").addEventListener("change", (event) => loadGraph(event.target.value));
     $("[data-connected-only]").addEventListener("change", renderGraph);
     $("[data-fit-button]").addEventListener("click", () => { $("#knowledge-graph").setAttribute("viewBox", "0 0 900 620"); toast("Graph fitted to the available canvas."); });
     $("[data-dialog-close]").addEventListener("click", () => $("[data-document-dialog]").close());
+    $("[data-upload-open]").addEventListener("click", () => $("[data-upload-dialog]").showModal());
+    $("[data-upload-close]").addEventListener("click", () => $("[data-upload-dialog]").close());
+    $("[data-upload-form]").addEventListener("submit", uploadDocument);
+    $("[data-upload-file]").addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      $("[data-upload-file-label]").textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : "PDF, image, text, Markdown, CSV, or TSV";
+    });
     $("[data-help-button]").addEventListener("click", () => $("[data-help-dialog]").showModal());
     $("[data-help-close]").addEventListener("click", () => $("[data-help-dialog]").close());
   }

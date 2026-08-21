@@ -29,11 +29,16 @@ class Capabilities(ApiModel):
     graph_build_requires_operator: bool = True
     max_documents_per_build: int
     max_build_budget_usd: float
+    document_upload_enabled: bool
+    document_upload_authorized: bool
+    max_upload_bytes: int
 
 
 class SearchRequest(ApiModel):
     query: str = Field(min_length=1, max_length=200)
-    connector_id: Literal["bundled-crest"] = "bundled-crest"
+    connector_id: Literal[
+        "all", "bundled-crest", "user-uploads", "cia-reading-room-live"
+    ] = "all"
     limit: int = Field(default=20, ge=1, le=50)
 
     @field_validator("query")
@@ -47,6 +52,9 @@ class SearchRequest(ApiModel):
 
 class DocumentSummary(ApiModel):
     document_id: str
+    connector_id: Literal[
+        "bundled-crest", "user-uploads", "cia-reading-room-live"
+    ]
     title: str
     source_url: str | None
     document_type: str | None
@@ -66,12 +74,61 @@ class SearchResponse(ApiModel):
 
 class DocumentDetail(ApiModel):
     document_id: str
+    connector_id: Literal[
+        "bundled-crest", "user-uploads", "cia-reading-room-live"
+    ]
     title: str
     source_url: str | None
     metadata: dict[str, str]
     body_preview: str
     body_chars: int
     body_sha256: str
+
+
+UploadExtractionMethod = Literal[
+    "plain-text", "pdf-text", "pdf-ocr", "pdf-mixed", "image-ocr"
+]
+
+
+class UploadedDocumentRecord(ApiModel):
+    """Durable private source record persisted in the workbench data volume."""
+
+    document_id: str
+    title: str
+    original_filename: str
+    media_type: str
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    body_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    body_text: str = Field(min_length=1)
+    extraction_method: UploadExtractionMethod
+    page_count: int = Field(ge=1)
+    uploaded_at: datetime
+
+
+class UploadedDocumentReceipt(ApiModel):
+    document_id: str
+    title: str
+    original_filename: str
+    media_type: str
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    body_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    body_chars: int = Field(ge=1)
+    extraction_method: UploadExtractionMethod
+    page_count: int = Field(ge=1)
+    uploaded_at: datetime
+    duplicate: bool = False
+
+
+class UploadedDocumentList(ApiModel):
+    documents: list[UploadedDocumentReceipt]
+
+
+class ConnectorProbe(ApiModel):
+    connector: ConnectorStatus
+    checked_at: datetime
+    search_endpoint: str
+    search_http_status: int | None = None
+    document_http_status: int | None = None
 
 
 class GraphBuildRequest(ApiModel):
@@ -116,7 +173,15 @@ class GraphSummary(ApiModel):
     observed_cost_usd: float
     trace_id: str
     kind: Literal["example", "generated"]
+    restricted: bool = False
 
 
 class GraphList(ApiModel):
     graphs: list[GraphSummary]
+
+
+class GraphAccessRecord(ApiModel):
+    graph_id: str
+    restricted: bool
+    connector_ids: list[str]
+    recorded_at: datetime

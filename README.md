@@ -2,8 +2,9 @@
 
 CREST is an evidence-first research workbench for CIA Reading Room material.
 It lets a researcher search an available CREST corpus, inspect and select
-source documents, run a budget-bounded extraction, explore the resulting
-knowledge graph, and export the complete provenance-preserving artifact.
+source documents, privately upload PDFs, scans, and text files, run local OCR,
+build a budget-bounded evidence graph, and export the complete
+provenance-preserving artifact.
 
 `crest_app` owns the executable web/API surface and `crest_pipeline.py` remains
 the one canonical extraction path. The older numbered scripts are retained as
@@ -12,11 +13,14 @@ generated visualizations remain in the local archive but are excluded from Git
 because they are reproducible or redundant artifacts.
 
 The tracked source archive contains 40 CIA Reading Room documents, while the
-included five-document graph remains a labeled evaluation checkpoint. Live CIA
-search is currently unavailable because the Reading Room search and document
-routes redirect automated requests back to the landing page; the workbench
-shows that connector state explicitly and never presents bundled results as
-live search. The complete product contract and current boundaries are in
+included five-document graph remains a labeled evaluation checkpoint. Private
+uploads are persisted in the workbench data volume and pass through the same
+source hashing, numbered-line, extraction, and evidence contracts as bundled
+records. Live CIA acquisition is currently unavailable: the official search
+endpoint returns access denied from both the workstation and Mac mini, while
+Reading Room document routes redirect to the landing page. The workbench keeps
+the connector explicit and provides an operator probe rather than relabeling
+bundled or uploaded sources as live results. The complete product contract is in
 [`docs/WORKBENCH_PRODUCT.md`](docs/WORKBENCH_PRODUCT.md).
 
 ## Run the workbench
@@ -28,11 +32,16 @@ python -m pip install -r requirements.txt
 uvicorn crest_app.main:app --host 127.0.0.1 --port 8080
 ```
 
+Image and scanned-PDF OCR also requires the local `tesseract` executable. The
+Docker image installs it; text PDFs and UTF-8 text formats do not invoke OCR.
+
 Search, document inspection, saved graphs, and export are read-only. Provider
-spend is disabled unless `CREST_BUILD_ENABLED=1`; builds also require a trusted
+spend is disabled unless `CREST_BUILD_ENABLED=1`; uploads are disabled unless
+`CREST_UPLOAD_ENABLED=1`. Both writes require a trusted
 Tailscale identity or `CREST_OPERATOR_TOKEN`, and cannot exceed
-`CREST_MAX_BUILD_BUDGET_USD` (default `$0.25`). The UI uses the same typed API
-documented at `/api/docs`.
+their server bounds. Graph builds cannot exceed `CREST_MAX_BUILD_BUDGET_USD`
+(default `$0.25`); uploads default to 15 MiB, 50 pages, and one million
+extracted characters. The UI uses the same typed API documented at `/api/docs`.
 
 ## What the canonical path guarantees
 
@@ -103,7 +112,7 @@ python crest_pipeline.py validate \
 The browser workbench is hosted at
 <https://brian-mac-mini.tail9c321e.ts.net/crest/>. Its default graph is the
 audited relationship-binding v2 checkpoint, but the primary surface is the
-search, source-selection, build, exploration, and export workflow.
+upload/search, source-selection, build, exploration, and export workflow.
 
 The workbench retains the evaluation boundary: neither its tracked archive nor
 its five-document example is a complete CREST map, and corpus recall remains

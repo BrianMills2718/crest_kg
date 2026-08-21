@@ -27,7 +27,10 @@
     <main class="workbench">
       <aside class="research-panel" aria-label="Search and select CREST documents">
         <section class="panel-section source-section">
-          <div class="eyebrow">01 · Sources</div>
+          <div class="section-heading">
+            <div class="eyebrow">01 · Sources</div>
+            <button class="button ghost small" type="button" data-upload-open>Add document</button>
+          </div>
           <div data-connectors class="connector-list" aria-live="polite">
             <div class="skeleton line"></div>
             <div class="skeleton line"></div>
@@ -37,7 +40,13 @@
         <section class="panel-section search-section">
           <div class="eyebrow">02 · Search</div>
           <form data-search-form class="search-form">
-            <label for="query">Search the archive</label>
+            <label for="query">Search your source library</label>
+            <select data-search-connector aria-label="Search source">
+              <option value="all">Bundled archive + private uploads</option>
+              <option value="bundled-crest">Bundled CREST archive</option>
+              <option value="user-uploads">Private uploads</option>
+              <option value="cia-reading-room-live">CIA Reading Room live</option>
+            </select>
             <div class="search-control">
               <input id="query" name="query" type="search" value="disinformation" autocomplete="off" />
               <button type="submit" aria-label="Search">↵</button>
@@ -136,12 +145,31 @@
       <div data-document-content></div>
     </dialog>
 
+    <dialog data-upload-dialog class="upload-dialog">
+      <button class="dialog-close" type="button" data-upload-close aria-label="Close">×</button>
+      <div class="eyebrow">Add source document</div>
+      <h2>Turn a document into searchable evidence</h2>
+      <p class="dialog-intro">Upload a PDF, scanned image, or UTF-8 text file. Text extraction and OCR run locally; private sources and graphs remain operator-only.</p>
+      <form data-upload-form class="upload-form">
+        <label class="file-drop">
+          <input data-upload-file name="file" type="file" required accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.txt,.md,.markdown,.rst,.csv,.tsv,application/pdf,image/png,image/jpeg,image/tiff,text/plain" />
+          <span><strong>Choose a source file</strong><small data-upload-file-label>PDF, image, text, Markdown, CSV, or TSV</small></span>
+        </label>
+        <label class="field-label">Document title <input data-upload-title name="title" type="text" maxlength="200" placeholder="Optional — defaults to the filename" /></label>
+        <div class="upload-actions">
+          <button class="button primary" type="submit" data-upload-submit>Extract and add source</button>
+          <span data-upload-status>Ready for a private local extraction.</span>
+        </div>
+      </form>
+    </dialog>
+
     <dialog data-help-dialog class="help-dialog">
       <button class="dialog-close" type="button" data-help-close aria-label="Close">×</button>
       <div class="eyebrow">About CREST</div>
       <h2>From a source search to an evidence graph</h2>
-      <p>This is an active research workbench. Search and inspect real tracked CIA Reading Room records, select documents, and run the repository's traced extraction pipeline.</p>
-      <p>The bundled archive is currently available. Live CIA search is shown separately and will remain unavailable until its redirect behavior is repaired. The five-document graph is a labeled example checkpoint, not a claim of corpus coverage.</p>
+      <p>This is an active research workbench. Search tracked CIA records and your private uploaded PDFs, scans, or text files; inspect and select sources; then run the repository's traced extraction pipeline.</p>
+      <p>Uploads use native PDF text when available and local Tesseract OCR for scans. Private documents and graphs require a tailnet identity or operator token. The live CIA connector remains explicit when official endpoints deny or redirect acquisition.</p>
+      <p>The five-document graph is a labeled example checkpoint, not a claim of corpus coverage.</p>
       <p><a href="./api/docs">Open API documentation</a></p>
     </dialog>
 

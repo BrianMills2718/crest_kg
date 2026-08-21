@@ -11,7 +11,9 @@ def test_workbench_leads_with_the_search_to_graph_workflow() -> None:
     html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
 
     assert "CREST research workbench" in html
-    assert "Search the archive" in html
+    assert "Search your source library" in html
+    assert "Add document" in html
+    assert "Turn a document into searchable evidence" in html
     assert "Build knowledge graph" in html
     assert "Evidence" in html
     assert "Export JSON" in html
@@ -26,6 +28,9 @@ def test_workbench_actions_have_api_counterparts_and_fail_visible() -> None:
     for route in (
         'api("capabilities"',
         'api("search"',
+        'api("uploads"',
+        "api(`uploads/",
+        'api("connectors/cia-reading-room-live/probe"',
         "api(`documents/",
         'api("graphs"',
         "api(`jobs/",
@@ -35,6 +40,7 @@ def test_workbench_actions_have_api_counterparts_and_fail_visible() -> None:
     assert "Search failed:" in javascript
     assert "Build failed:" in javascript
     assert "Graph request failed:" in javascript
+    assert "Upload failed:" in javascript
     assert "relationship.groundings" in javascript
     assert "source_mention" in javascript
     assert "relation_phrase" in javascript
