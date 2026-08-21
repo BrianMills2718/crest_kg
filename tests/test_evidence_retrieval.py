@@ -5,6 +5,7 @@ from pathlib import Path
 from crest_app.models import BriefFinding, ProviderEvidenceBrief
 from crest_app.retrieval import (
     RetrievalDocument,
+    chunk_document,
     evaluate_retrieval_fixture,
     rank_evidence,
 )
@@ -25,6 +26,7 @@ def test_frozen_evidence_retrieval_fixtures_pass() -> None:
         "v12": {"regression", "negative"},
         "v13": {"regression", "negative"},
         "v14": {"regression", "negative"},
+        "v15": {"regression", "negative"},
     }
     for version, splits in expected_splits.items():
         result = evaluate_retrieval_fixture(
@@ -51,6 +53,33 @@ def test_evidence_chunks_preserve_exact_offsets_and_stable_ids() -> None:
     assert all(
         document.body_text[item.start_char : item.end_char] == item.text
         for item in first
+    )
+
+
+def test_chunking_prefers_exact_paragraph_boundaries() -> None:
+    paragraph = (
+        "Project Telltale ledger states the Bronze Wren Office coordinated the "
+        "harbor rehearsal on 4 April 1996. Evidence remains archived in bay seven."
+    )
+    document = RetrievalDocument(
+        document_id="doc-telltale",
+        connector_id="bundled-crest",
+        title="Project Telltale repeated ledger",
+        body_text="\n\n".join([paragraph] * 3),
+    )
+    chunks = chunk_document(
+        document,
+        max_chunk_chars=200,
+        overlap_chars=0,
+    )
+    assert [(item.start_char, item.end_char) for item in chunks] == [
+        (0, 143),
+        (145, 288),
+        (290, 433),
+    ]
+    assert all(
+        document.body_text[item.start_char : item.end_char] == item.text
+        for item in chunks
     )
 
 

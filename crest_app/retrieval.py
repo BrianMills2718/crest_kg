@@ -44,8 +44,10 @@ class _ChunkCandidate:
 STOP_WORDS = frozenset(
     {
         "a",
+        "all",
         "an",
         "and",
+        "any",
         "are",
         "as",
         "at",
@@ -65,6 +67,9 @@ STOP_WORDS = frozenset(
         "do",
         "does",
         "during",
+        "each",
+        "either",
+        "every",
         "for",
         "from",
         "give",
@@ -85,6 +90,7 @@ STOP_WORDS = frozenset(
         "many",
         "naming",
         "name",
+        "neither",
         "no",
         "of",
         "on",
@@ -99,6 +105,8 @@ STOP_WORDS = frozenset(
         "responsibl",
         "respectiv",
         "serv",
+        "several",
+        "some",
         "sourc",
         "summariz",
         "tell",
@@ -457,6 +465,7 @@ def _source_named_terms(value: str) -> frozenset[str]:
         if (stemmed := _stem(token)) and stemmed not in STOP_WORDS
         if CONCEPT_BY_TERM.get(stemmed, frozenset({stemmed}))
         not in FUNCTION_CONCEPT_GROUPS
+        if stemmed not in SUBJECT_HEAD_TERMS
     )
 
 
@@ -654,12 +663,18 @@ def chunk_document(
         end = hard_end
         if hard_end < len(body):
             floor = start + max_chunk_chars // 2
-            candidates = [
+            candidates = (
                 body.rfind("\n\n", floor, hard_end),
                 body.rfind(". ", floor, hard_end),
                 body.rfind(" ", floor, hard_end),
-            ]
-            boundary = max(candidates)
+            )
+            # Preserve the strongest available semantic boundary rather than
+            # allowing a later ordinary space to outrank a paragraph or
+            # sentence break.
+            boundary = next(
+                (candidate for candidate in candidates if candidate > start),
+                -1,
+            )
             if boundary > start:
                 end = boundary + (1 if body[boundary] == " " else 0)
         exact_start, exact_end, text = _trimmed_window(body, start, end)
@@ -726,6 +741,8 @@ def _benign_named_variant(term: str, candidate: str) -> bool:
     by the caller.
     """
 
+    term = re.sub(r"[^a-z0-9]", "", term.casefold())
+    candidate = re.sub(r"[^a-z0-9]", "", candidate.casefold())
     if term == candidate or min(len(term), len(candidate)) < 5:
         return False
     if _best_fuzzy(term, (candidate,)) < FUZZY_MATCH_THRESHOLD:
@@ -894,8 +911,8 @@ def rank_evidence(
             if surface_exact or declared_anchor_exact:
                 continue
             benign_named_variant = any(
-                _benign_named_variant(_stem(surface), candidate_term)
-                for candidate_term in candidate_named_stems
+                _benign_named_variant(surface, candidate_term)
+                for candidate_term in candidate.named_terms
             )
             if (
                 not benign_named_variant
