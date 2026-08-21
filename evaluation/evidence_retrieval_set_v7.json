@@ -1,0 +1,37 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v7",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T06:23:00Z",
+  "claim_scope": "Exact one-word fuzzy-collision failures from the v6 independent sign-off. Genuine no-support regression only; synthetic, not human gold, and not a recall claim.",
+  "decision_rule": "Every query must return zero evidence; fuzzy similarity alone must never admit a passage.",
+  "documents": [
+    {
+      "document_id": "meridian-coordination",
+      "title": "Project Meridian Vienna coordination note",
+      "body_text": "Project Meridian field note. The Harbor Institute acted as the organizing body for the Vienna pilot. Its conveners scheduled the first field exercise for 14 May 1987. Eastbridge Laboratory supplied instruments but did not direct the organizing committee."
+    },
+    {
+      "document_id": "meridian-observation",
+      "title": "Vienna demonstration observer correction",
+      "body_text": "Observer correction for Project Meridian. The Vienna demonstration began on 16 May 1987, not 14 May as stated in the preliminary scheduling note. Harbor Institute provided convening support, while Eastbridge Laboratory led operations at the field site."
+    },
+    {
+      "document_id": "meridian-lisbon-distractor",
+      "title": "Project Meridian Lisbon communications brief",
+      "body_text": "Project Meridian communications staff met in Lisbon during June 1987. The Harbor Institute reviewed press clippings for the Portuguese media campaign. This brief does not concern the Vienna field demonstration."
+    },
+    {
+      "document_id": "meridian-administration",
+      "title": "Regional archive administration",
+      "body_text": "The archive office renewed storage cabinets and travel forms for regional programs. No project costs, funding totals, or procurement budgets were recorded in this note."
+    }
+  ],
+  "cases": [
+    {"case_id": "programming-program", "split": "negative", "query": "Programming?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "reginald-regional", "split": "negative", "query": "Reginald?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "supple-supplied", "split": "negative", "query": "Supple?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "preview-review", "split": "negative", "query": "Preview?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "arbor-harbor", "split": "negative", "query": "Arbor?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "medial-media", "split": "negative", "query": "Medial?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []}
+  ]
+}
