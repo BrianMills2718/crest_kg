@@ -193,6 +193,10 @@ def relationship_fingerprint(
         "attributes": relationship.attributes,
         "evidence": [item.model_dump(mode="json") for item in relationship.evidence],
     }
+    if graph.schema_version == "crest-kg-v2":
+        payload["groundings"] = [
+            item.model_dump(mode="json") for item in relationship.groundings
+        ]
     return hashlib.sha256(_canonical_json(payload)).hexdigest()
 
 
@@ -405,8 +409,9 @@ def evaluate_relationship_quality(
         decision_rule=rule,
         passed=passed,
         licensed_claim=(
-            "Semantic precision and fidelity of the 79 relationships emitted in the "
-            "frozen five-document CREST artifact, as adjudicated from their exact quotes."
+            f"Semantic precision and fidelity of the {len(quality_set.cases)} "
+            "relationships emitted in the frozen CREST artifact, as adjudicated "
+            "from their exact quotes."
         ),
         non_claims=(
             "This output-conditioned census does not measure corpus relationship recall.",

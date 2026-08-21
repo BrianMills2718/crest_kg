@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -32,9 +33,18 @@ from pydantic import (
     model_validator,
 )
 
-PIPELINE_VERSION: Literal["crest-kg-v1"] = "crest-kg-v1"
+PIPELINE_VERSION: Literal["crest-kg-v2"] = "crest-kg-v2"
 PROMPT_PATH = Path(__file__).with_name("prompts") / "crest_extraction.yaml"
+PROMPT_REF = "crest_kg.crest_extraction@2.1"
+RECOVERABLE_PROMPT_REFS = frozenset(
+    {
+        "crest_kg.crest_extraction@2",
+        PROMPT_REF,
+    }
+)
 MAX_EVIDENCE_LINES = 5
+MAX_ENTITIES_PER_DOCUMENT = 30
+MAX_RELATIONSHIPS_PER_DOCUMENT = 12
 DOCUMENT_NUMBER_KEYS = (
     "Document Number (FOIA) /ESDN (CREST)",
     "Document Number",
@@ -157,18 +167,17 @@ class EvidenceCandidate(StrictModel):
         ge=1,
         description="First cited L-number from the supplied document, inclusive.",
     )
-    line_end: int = Field(
+    line_count: int = Field(
         ge=1,
-        description="Last cited L-number from the supplied document, inclusive.",
+        le=MAX_EVIDENCE_LINES,
+        description="Number of consecutive cited lines, from one through five.",
     )
 
-    @model_validator(mode="after")
-    def validate_line_range(self) -> Self:
-        if self.line_end < self.line_start:
-            raise ValueError("line_end must be greater than or equal to line_start")
-        if self.line_end - self.line_start + 1 > MAX_EVIDENCE_LINES:
-            raise ValueError(f"evidence may span at most {MAX_EVIDENCE_LINES} lines")
-        return self
+    @property
+    def line_end(self) -> int:
+        """Return the inclusive final line derived from the bounded count."""
+
+        return self.line_start + self.line_count - 1
 
 
 class EntityCandidate(StrictModel):
@@ -212,13 +221,37 @@ class RelationshipCandidate(StrictModel):
         min_length=1,
         description="Short directed predicate supported by the evidence quote.",
     )
+    source_mention: str = Field(
+        min_length=1,
+        description="Exact source-entity surface text copied from the cited quote.",
+    )
+    relation_phrase: str = Field(
+        min_length=1,
+        description="Exact predicate-supporting surface text copied from the cited quote.",
+    )
+    target_mention: str = Field(
+        min_length=1,
+        description="Exact target-entity surface text copied from the cited quote.",
+    )
+    support_reasoning: str = Field(
+        min_length=1,
+        description="Concise explanation of how the exact mentions support this directed edge.",
+    )
     attributes: dict[str, str] = Field(
         default_factory=dict,
         description="Only relationship attributes explicitly supported by the quote.",
     )
     evidence: EvidenceCandidate = Field(description="Bounded source lines supporting the relationship.")
 
-    @field_validator("source_entity_id", "target_entity_id", "relationship_type")
+    @field_validator(
+        "source_entity_id",
+        "target_entity_id",
+        "relationship_type",
+        "source_mention",
+        "relation_phrase",
+        "target_mention",
+        "support_reasoning",
+    )
     @classmethod
     def strip_relationship_text(cls, value: str) -> str:
         value = value.strip()
@@ -231,9 +264,11 @@ class DocumentExtraction(StrictModel):
     """Validated structured model output for one source document."""
 
     entities: list[EntityCandidate] = Field(
+        max_length=MAX_ENTITIES_PER_DOCUMENT,
         description="Entities supported by exact quotes in this document. Use an empty list when none qualify."
     )
     relationships: list[RelationshipCandidate] = Field(
+        max_length=MAX_RELATIONSHIPS_PER_DOCUMENT,
         description="Directed relationships whose endpoints are declared entities. Use an empty list when none qualify."
     )
 
@@ -292,6 +327,110 @@ class Provenance(StrictModel):
         return self
 
 
+class ExtractionRejection(StrictModel):
+    """Visible record of one model candidate rejected at the source boundary."""
+
+    document_id: str = Field(min_length=1, description="Source document identifier.")
+    item_kind: Literal["entity", "relationship"] = Field(
+        description="Candidate collection that contained the rejected item."
+    )
+    item_index: int = Field(ge=0, description="Zero-based index in the model response.")
+    candidate_ref: str = Field(
+        min_length=1,
+        description="Compact local identifier for the rejected candidate.",
+    )
+    reason: str = Field(
+        min_length=1,
+        description="Deterministic boundary failure that caused rejection.",
+    )
+
+
+class RecoveredExtractionReceipt(StrictModel):
+    """Trace-bound proof that one prior successful extraction was reused."""
+
+    document_id: str = Field(min_length=1, description="Recovered source document identifier.")
+    trace_id: str = Field(min_length=1, description="Exact successful document trace.")
+    call_id: int = Field(ge=1, description="Terminal llm_client call-row identity.")
+    logical_call_id: str = Field(
+        min_length=1,
+        description="Structured-call identity joining the selected attempt lifecycle.",
+    )
+    selected_attempt_ordinal: int = Field(
+        ge=0,
+        description="Zero-based selected structured-output attempt.",
+    )
+    schema_hash: str = Field(
+        min_length=1,
+        description="Provider-facing response-schema hash retained by llm_client.",
+    )
+    raw_sha256: str = Field(
+        pattern=r"^[0-9a-f]{64}$",
+        description="Digest of the selected raw provider content.",
+    )
+    selected_attempt_receipt_digest: str = Field(
+        pattern=r"^[0-9a-f]{64}$",
+        description="Integrity digest over the selected-attempt runtime evidence.",
+    )
+    response_sha256: str = Field(
+        pattern=r"^[0-9a-f]{64}$",
+        description="Digest of the normalized terminal response that was revalidated.",
+    )
+    model: str = Field(min_length=1, description="Resolved model that produced the response.")
+    prompt_ref: str = Field(
+        min_length=1,
+        description="Prompt version retained by the recovered terminal row.",
+    )
+    observed_cost_usd: float = Field(
+        ge=0,
+        description="Successful call cost reported in the recovered terminal row.",
+    )
+
+
+class RelationshipGrounding(StrictModel):
+    """Exact endpoint and predicate binding for one relationship observation."""
+
+    evidence: Provenance = Field(description="Exact source quote supporting the edge.")
+    source_mention: str = Field(
+        min_length=1,
+        description="Exact source-entity surface text inside evidence.quote.",
+    )
+    relation_phrase: str = Field(
+        min_length=1,
+        description="Exact predicate-supporting surface text inside evidence.quote.",
+    )
+    target_mention: str = Field(
+        min_length=1,
+        description="Exact target-entity surface text inside evidence.quote.",
+    )
+    support_reasoning: str = Field(
+        min_length=1,
+        description="Concise explanation of the directed semantic mapping.",
+    )
+
+    @field_validator(
+        "source_mention",
+        "relation_phrase",
+        "target_mention",
+        "support_reasoning",
+    )
+    @classmethod
+    def strip_grounding_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("value must contain non-whitespace text")
+        return value
+
+    @model_validator(mode="after")
+    def validate_exact_fragments(self) -> Self:
+        _validate_relationship_fragments(
+            quote=self.evidence.quote,
+            source_mention=self.source_mention,
+            relation_phrase=self.relation_phrase,
+            target_mention=self.target_mention,
+        )
+        return self
+
+
 class GraphEntity(StrictModel):
     """Canonical typed entity with aggregated grounded observations."""
 
@@ -323,38 +462,101 @@ class GraphRelationship(StrictModel):
         min_length=1,
         description="Source observations supporting this relationship.",
     )
+    groundings: list[RelationshipGrounding] = Field(
+        default_factory=list,
+        description=(
+            "Exact endpoint and predicate bindings for v2 observations; empty only for "
+            "legacy v1 artifacts."
+        ),
+    )
 
 
 class GraphArtifact(StrictModel):
     """Complete validated and provenance-preserving knowledge-graph artifact."""
 
-    schema_version: Literal["crest-kg-v1"] = Field(description="Graph contract version.")
+    schema_version: Literal["crest-kg-v1", "crest-kg-v2"] = Field(
+        description="Graph contract version."
+    )
     generated_at: datetime = Field(description="UTC time when the run completed.")
     model: str = Field(min_length=1, description="Resolved model used for extraction.")
+    prompt_ref: str | None = Field(
+        default=None,
+        description="Current extraction prompt contract; absent only on legacy v1 artifacts.",
+    )
     trace_id: str = Field(min_length=1, description="Root llm_client observability trace.")
     max_budget_usd: float = Field(gt=0, description="User-authorized run budget ceiling.")
-    observed_cost_usd: float = Field(ge=0, description="Cost reported by llm_client.")
+    observed_cost_usd: float = Field(
+        ge=0,
+        description="Successful current and recovered extraction cost reported by llm_client.",
+    )
+    prior_observed_cost_usd: float = Field(
+        default=0.0,
+        ge=0,
+        description="Known earlier spend not represented by a successful recovered extraction.",
+    )
+    unattributed_cost_reserve_usd: float = Field(
+        default=0.0,
+        ge=0,
+        description="Conservative budget reserve for interrupted calls lacking a terminal cost row.",
+    )
+    recovered_extractions: list[RecoveredExtractionReceipt] = Field(
+        default_factory=list,
+        description="Prior successful document calls reused without another provider request.",
+    )
     documents: list[SourceDocument] = Field(
         min_length=1,
         description="Exact, deterministic source selection for this run.",
     )
     entities: list[GraphEntity] = Field(description="Canonical grounded entities.")
     relationships: list[GraphRelationship] = Field(description="Canonical grounded relationships.")
+    rejections: list[ExtractionRejection] = Field(
+        default_factory=list,
+        description="Model candidates rejected by deterministic source-boundary checks.",
+    )
 
     @model_validator(mode="after")
     def validate_graph_integrity(self) -> Self:
-        if self.observed_cost_usd > self.max_budget_usd:
-            raise ValueError("observed cost exceeds the authorized budget")
+        if self.schema_version == "crest-kg-v2" and not self.prompt_ref:
+            raise ValueError("v2 graph must declare its extraction prompt reference")
+        accounted_cost = (
+            self.observed_cost_usd
+            + self.prior_observed_cost_usd
+            + self.unattributed_cost_reserve_usd
+        )
+        if accounted_cost > self.max_budget_usd + 1e-12:
+            raise ValueError("observed spend and reserve exceed the authorized budget")
 
         document_ids = [document.document_id for document in self.documents]
         if len(document_ids) != len(set(document_ids)):
             raise ValueError("document IDs must be unique")
         known_documents = set(document_ids)
 
+        recovered_document_ids = [
+            receipt.document_id for receipt in self.recovered_extractions
+        ]
+        if len(recovered_document_ids) != len(set(recovered_document_ids)):
+            raise ValueError("recovered extraction document IDs must be unique")
+        for receipt in self.recovered_extractions:
+            if receipt.document_id not in known_documents:
+                raise ValueError(
+                    "recovered extraction references unknown document: "
+                    f"{receipt.document_id}"
+                )
+            if receipt.model != self.model:
+                raise ValueError(
+                    f"recovered extraction model differs from graph model: {receipt.document_id}"
+                )
+        recovered_cost = sum(
+            receipt.observed_cost_usd for receipt in self.recovered_extractions
+        )
+        if recovered_cost > self.observed_cost_usd + 1e-12:
+            raise ValueError("recovered extraction cost exceeds observed graph cost")
+
         entity_ids = [entity.id for entity in self.entities]
         if len(entity_ids) != len(set(entity_ids)):
             raise ValueError("entity IDs must be unique")
         known_entities = set(entity_ids)
+        entities_by_id = {entity.id: entity for entity in self.entities}
 
         relationship_ids = [relationship.id for relationship in self.relationships]
         if len(relationship_ids) != len(set(relationship_ids)):
@@ -362,12 +564,27 @@ class GraphArtifact(StrictModel):
 
         for entity in self.entities:
             _validate_provenance_documents(entity.evidence, known_documents)
+        for rejection in self.rejections:
+            if rejection.document_id not in known_documents:
+                raise ValueError(
+                    f"rejection references unknown document: {rejection.document_id}"
+                )
         for relationship in self.relationships:
             if relationship.source not in known_entities:
                 raise ValueError(f"dangling relationship source: {relationship.source}")
             if relationship.target not in known_entities:
                 raise ValueError(f"dangling relationship target: {relationship.target}")
             _validate_provenance_documents(relationship.evidence, known_documents)
+            if self.schema_version == "crest-kg-v2":
+                if not relationship.groundings:
+                    raise ValueError(
+                        f"v2 relationship has no exact grounding: {relationship.id}"
+                    )
+                _validate_relationship_groundings(
+                    relationship,
+                    entities_by_id=entities_by_id,
+                    known_documents=known_documents,
+                )
         return self
 
 
@@ -384,6 +601,195 @@ def normalize_text(value: str) -> str:
 
     normalized = unicodedata.normalize("NFKC", value).casefold()
     return " ".join(normalized.split())
+
+
+_PRONOMINAL_MENTIONS = {
+    "i",
+    "he",
+    "her",
+    "hers",
+    "him",
+    "his",
+    "it",
+    "its",
+    "me",
+    "mine",
+    "my",
+    "our",
+    "ours",
+    "she",
+    "that",
+    "their",
+    "theirs",
+    "them",
+    "these",
+    "they",
+    "this",
+    "those",
+    "us",
+    "we",
+    "who",
+    "whom",
+    "whose",
+    "you",
+    "your",
+    "yours",
+}
+_INITIALISM_STOP_WORDS = {"a", "an", "and", "for", "of", "the", "to"}
+_LEADING_ARTICLES = {"a", "an", "the"}
+
+
+def _alphanumeric_words(value: str) -> tuple[str, ...]:
+    return tuple(re.findall(r"[a-z0-9]+", normalize_text(value)))
+
+
+def _semantic_key(value: str) -> str:
+    return " ".join(_alphanumeric_words(value))
+
+
+def _initialism(value: str) -> str:
+    return "".join(
+        word[0]
+        for word in _alphanumeric_words(value)
+        if word not in _INITIALISM_STOP_WORDS
+    )
+
+
+def _without_leading_articles(words: tuple[str, ...]) -> tuple[str, ...]:
+    index = 0
+    while index < len(words) and words[index] in _LEADING_ARTICLES:
+        index += 1
+    return words[index:]
+
+
+def _is_contiguous_word_sequence(
+    candidate: tuple[str, ...],
+    value: tuple[str, ...],
+) -> bool:
+    if not candidate or len(candidate) > len(value):
+        return False
+    width = len(candidate)
+    return any(
+        value[index : index + width] == candidate
+        for index in range(len(value) - width + 1)
+    )
+
+
+def mention_identifies_entity(mention: str, entity_name: str) -> bool:
+    """Return whether a non-pronominal surface mention names an entity."""
+
+    mention_key = _semantic_key(mention)
+    entity_key = _semantic_key(entity_name)
+    if not mention_key or not entity_key or mention_key in _PRONOMINAL_MENTIONS:
+        return False
+    mention_words = _without_leading_articles(_alphanumeric_words(mention))
+    entity_words = _without_leading_articles(_alphanumeric_words(entity_name))
+    if _is_contiguous_word_sequence(
+        mention_words, entity_words
+    ) or _is_contiguous_word_sequence(entity_words, mention_words):
+        return True
+
+    compact_mention = mention_key.replace(" ", "")
+    compact_entity = entity_key.replace(" ", "")
+    mention_initialism = _initialism(mention)
+    entity_initialism = _initialism(entity_name)
+    return bool(
+        len(compact_mention) >= 2
+        and len(compact_entity) >= 2
+        and (
+            compact_mention == entity_initialism
+            or compact_entity == mention_initialism
+        )
+    )
+
+
+def _require_exact_fragment(quote: str, fragment: str, field_name: str) -> None:
+    if fragment not in quote:
+        raise ValueError(f"{field_name} is not an exact substring of the cited quote")
+
+
+def _materialize_exact_fragment(quote: str, fragment: str, field_name: str) -> str:
+    """Map whitespace-equivalent model text back to exact source characters."""
+
+    if fragment in quote:
+        return fragment
+    pattern = "".join(
+        r"\s+" if part.isspace() else re.escape(part)
+        for part in re.split(r"(\s+)", fragment)
+        if part
+    )
+    match = re.search(pattern, quote)
+    if match is None:
+        raise ValueError(f"{field_name} is not an exact substring of the cited quote")
+    return match.group(0)
+
+
+def _validate_relationship_fragments(
+    *,
+    quote: str,
+    source_mention: str,
+    relation_phrase: str,
+    target_mention: str,
+) -> None:
+    _require_exact_fragment(quote, source_mention, "source_mention")
+    _require_exact_fragment(quote, relation_phrase, "relation_phrase")
+    _require_exact_fragment(quote, target_mention, "target_mention")
+    for field_name, mention in (
+        ("source_mention", source_mention),
+        ("target_mention", target_mention),
+    ):
+        if _semantic_key(mention) in _PRONOMINAL_MENTIONS:
+            raise ValueError(f"{field_name} may not be a pronoun or demonstrative")
+
+
+def _provenance_key(item: Provenance) -> tuple[str, int, int, str]:
+    return (item.document_id, item.start_char, item.end_char, item.quote)
+
+
+def _validate_relationship_groundings(
+    relationship: GraphRelationship,
+    *,
+    entities_by_id: dict[str, GraphEntity],
+    known_documents: set[str],
+) -> None:
+    source_entity = entities_by_id[relationship.source]
+    target_entity = entities_by_id[relationship.target]
+    _validate_provenance_documents(
+        [grounding.evidence for grounding in relationship.groundings],
+        known_documents,
+    )
+    evidence_keys = {_provenance_key(item) for item in relationship.evidence}
+    grounding_keys = {
+        _provenance_key(grounding.evidence) for grounding in relationship.groundings
+    }
+    if evidence_keys != grounding_keys:
+        raise ValueError(
+            f"relationship grounding/evidence mismatch: {relationship.id}"
+        )
+    for grounding in relationship.groundings:
+        if not mention_identifies_entity(
+            grounding.source_mention,
+            source_entity.name,
+        ):
+            raise ValueError(
+                f"source_mention does not identify {source_entity.name!r}: "
+                f"{grounding.source_mention!r}"
+            )
+        if not mention_identifies_entity(
+            grounding.target_mention,
+            target_entity.name,
+        ):
+            raise ValueError(
+                f"target_mention does not identify {target_entity.name!r}: "
+                f"{grounding.target_mention!r}"
+            )
+
+
+def safe_predicate(value: str, *, fallback: str = "related_to") -> str:
+    """Return a bounded lowercase snake_case relationship predicate."""
+
+    predicate = re.sub(r"[^a-z0-9]+", "_", normalize_text(value)).strip("_")
+    return predicate[:60] or fallback
 
 
 def safe_token(value: str, *, fallback: str = "item") -> str:
@@ -535,10 +941,153 @@ def validate_extraction_grounding(
 ) -> None:
     """Fail immediately when any model citation cannot bind to supplied source lines."""
 
+    entities_by_local_id = {entity.local_id: entity for entity in extraction.entities}
     for entity in extraction.entities:
         locate_evidence(document, entity.evidence)
     for relationship in extraction.relationships:
-        locate_evidence(document, relationship.evidence)
+        _validate_relationship_candidate(
+            document,
+            relationship,
+            entities_by_local_id=entities_by_local_id,
+        )
+
+
+def _validate_relationship_candidate(
+    document: LoadedDocument,
+    relationship: RelationshipCandidate,
+    *,
+    entities_by_local_id: dict[str, EntityCandidate],
+) -> RelationshipCandidate:
+    provenance = locate_evidence(document, relationship.evidence)
+    grounded_relationship = relationship.model_copy(
+        update={
+            "source_mention": _materialize_exact_fragment(
+                provenance.quote,
+                relationship.source_mention,
+                "source_mention",
+            ),
+            "relation_phrase": _materialize_exact_fragment(
+                provenance.quote,
+                relationship.relation_phrase,
+                "relation_phrase",
+            ),
+            "target_mention": _materialize_exact_fragment(
+                provenance.quote,
+                relationship.target_mention,
+                "target_mention",
+            ),
+        }
+    )
+    _validate_relationship_fragments(
+        quote=provenance.quote,
+        source_mention=grounded_relationship.source_mention,
+        relation_phrase=grounded_relationship.relation_phrase,
+        target_mention=grounded_relationship.target_mention,
+    )
+    source_entity = entities_by_local_id[grounded_relationship.source_entity_id]
+    target_entity = entities_by_local_id[grounded_relationship.target_entity_id]
+    if not mention_identifies_entity(
+        grounded_relationship.source_mention,
+        source_entity.name,
+    ):
+        raise ValueError(
+            f"source_mention does not identify {source_entity.name!r}: "
+            f"{grounded_relationship.source_mention!r}"
+        )
+    if not mention_identifies_entity(
+        grounded_relationship.target_mention,
+        target_entity.name,
+    ):
+        raise ValueError(
+            f"target_mention does not identify {target_entity.name!r}: "
+            f"{grounded_relationship.target_mention!r}"
+        )
+    return grounded_relationship
+
+
+def partition_extraction_grounding(
+    document: LoadedDocument,
+    extraction: DocumentExtraction,
+) -> tuple[DocumentExtraction, list[ExtractionRejection]]:
+    """Keep grounded candidates and return explicit records for every rejection."""
+
+    accepted_entities: list[EntityCandidate] = []
+    accepted_entity_ids: set[str] = set()
+    rejections: list[ExtractionRejection] = []
+    for index, entity in enumerate(extraction.entities):
+        try:
+            locate_evidence(document, entity.evidence)
+        except ValueError as exc:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document.manifest.document_id,
+                    item_kind="entity",
+                    item_index=index,
+                    candidate_ref=entity.local_id,
+                    reason=str(exc),
+                )
+            )
+        else:
+            accepted_entities.append(entity)
+            accepted_entity_ids.add(entity.local_id)
+
+    entities_by_local_id = {
+        entity.local_id: entity for entity in accepted_entities
+    }
+    accepted_relationships: list[RelationshipCandidate] = []
+    for index, relationship in enumerate(extraction.relationships):
+        candidate_ref = (
+            f"{relationship.source_entity_id}:"
+            f"{safe_predicate(relationship.relationship_type)}:"
+            f"{relationship.target_entity_id}"
+        )
+        missing_endpoints = sorted(
+            {
+                relationship.source_entity_id,
+                relationship.target_entity_id,
+            }
+            - accepted_entity_ids
+        )
+        if missing_endpoints:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document.manifest.document_id,
+                    item_kind="relationship",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=(
+                        "relationship endpoint failed entity grounding: "
+                        f"{missing_endpoints}"
+                    ),
+                )
+            )
+            continue
+        try:
+            grounded_relationship = _validate_relationship_candidate(
+                document,
+                relationship,
+                entities_by_local_id=entities_by_local_id,
+            )
+        except ValueError as exc:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document.manifest.document_id,
+                    item_kind="relationship",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=str(exc),
+                )
+            )
+        else:
+            accepted_relationships.append(grounded_relationship)
+
+    return (
+        DocumentExtraction(
+            entities=accepted_entities,
+            relationships=accepted_relationships,
+        ),
+        rejections,
+    )
 
 
 def canonical_entity_id(entity: EntityCandidate) -> str:
@@ -561,9 +1110,30 @@ def _merge_attributes(target: dict[str, list[str]], additions: dict[str, str]) -
 
 
 def _append_provenance(target: list[Provenance], item: Provenance) -> None:
-    key = (item.document_id, item.start_char, item.end_char, item.quote)
+    key = _provenance_key(item)
+    existing = {_provenance_key(entry) for entry in target}
+    if key not in existing:
+        target.append(item)
+
+
+def _append_grounding(
+    target: list[RelationshipGrounding], item: RelationshipGrounding
+) -> None:
+    key = (
+        _provenance_key(item.evidence),
+        item.source_mention,
+        item.relation_phrase,
+        item.target_mention,
+        item.support_reasoning,
+    )
     existing = {
-        (entry.document_id, entry.start_char, entry.end_char, entry.quote)
+        (
+            _provenance_key(entry.evidence),
+            entry.source_mention,
+            entry.relation_phrase,
+            entry.target_mention,
+            entry.support_reasoning,
+        )
         for entry in target
     }
     if key not in existing:
@@ -575,9 +1145,14 @@ def build_graph(
     extractions: list[DocumentExtraction],
     *,
     model: str,
+    prompt_ref: str = PROMPT_REF,
     trace_id: str,
     max_budget_usd: float,
     observed_cost_usd: float,
+    prior_observed_cost_usd: float = 0.0,
+    unattributed_cost_reserve_usd: float = 0.0,
+    recovered_extractions: list[RecoveredExtractionReceipt] | None = None,
+    rejections: list[ExtractionRejection] | None = None,
 ) -> GraphArtifact:
     """Merge validated per-document extractions into one integrity-checked graph."""
 
@@ -615,11 +1190,16 @@ def build_graph(
         for relationship_candidate in extraction.relationships:
             source = local_map[relationship_candidate.source_entity_id]
             target = local_map[relationship_candidate.target_entity_id]
-            normalized_type = safe_token(
-                relationship_candidate.relationship_type, fallback="related-to"
-            )
+            normalized_type = safe_predicate(relationship_candidate.relationship_type)
             key = (source, target, normalized_type)
             provenance = locate_evidence(document, relationship_candidate.evidence)
+            grounding = RelationshipGrounding(
+                evidence=provenance,
+                source_mention=relationship_candidate.source_mention,
+                relation_phrase=relationship_candidate.relation_phrase,
+                target_mention=relationship_candidate.target_mention,
+                support_reasoning=relationship_candidate.support_reasoning,
+            )
             relationship = relationships_by_key.get(key)
             if relationship is None:
                 digest = hashlib.sha256("\0".join(key).encode("utf-8")).hexdigest()[:12]
@@ -630,25 +1210,107 @@ def build_graph(
                     type=normalized_type,
                     attributes={},
                     evidence=[provenance],
+                    groundings=[grounding],
                 )
                 relationships_by_key[key] = relationship
             else:
                 _append_provenance(relationship.evidence, provenance)
+                _append_grounding(relationship.groundings, grounding)
             _merge_attributes(relationship.attributes, relationship_candidate.attributes)
 
     return GraphArtifact(
         schema_version=PIPELINE_VERSION,
         generated_at=datetime.now(timezone.utc),
         model=model,
+        prompt_ref=prompt_ref,
         trace_id=trace_id,
         max_budget_usd=max_budget_usd,
         observed_cost_usd=observed_cost_usd,
+        prior_observed_cost_usd=prior_observed_cost_usd,
+        unattributed_cost_reserve_usd=unattributed_cost_reserve_usd,
+        recovered_extractions=recovered_extractions or [],
         documents=[document.manifest for document in documents],
         entities=sorted(entities_by_id.values(), key=lambda entity: entity.id),
         relationships=sorted(
             relationships_by_key.values(), key=lambda relationship: relationship.id
         ),
+        rejections=rejections or [],
     )
+
+
+def recover_extraction_from_trace(
+    document: LoadedDocument,
+    *,
+    root_trace_id: str,
+    expected_model: str,
+) -> tuple[DocumentExtraction, RecoveredExtractionReceipt] | None:
+    """Recover and revalidate one exact successful prior document extraction."""
+
+    from llm_client import (
+        diagnose_runtime_selected_attempt_receipt_for_trace,
+        lookup_result,
+    )
+
+    document_trace_id = (
+        f"{root_trace_id}/documents/{safe_token(document.manifest.document_id)}"
+    )
+    result = lookup_result(document_trace_id)
+    if result is None:
+        return None
+
+    response = result.get("response")
+    result_model = result.get("model")
+    finish_reason = result.get("finish_reason")
+    prompt_ref = result.get("prompt_ref")
+    cost_value = result.get("cost")
+    if not isinstance(response, str) or not response.strip():
+        raise ValueError(f"recovered trace has no terminal response: {document_trace_id}")
+    if result_model != expected_model:
+        raise ValueError(
+            f"recovered trace model mismatch for {document.manifest.document_id}: "
+            f"expected {expected_model}, found {result_model!r}"
+        )
+    if finish_reason != "stop":
+        raise ValueError(
+            f"recovered trace did not finish with stop: {document_trace_id}"
+        )
+    if prompt_ref not in RECOVERABLE_PROMPT_REFS:
+        raise ValueError(
+            f"recovered trace prompt mismatch for {document.manifest.document_id}: "
+            f"{prompt_ref!r}"
+        )
+    if (
+        isinstance(cost_value, bool)
+        or not isinstance(cost_value, (int, float))
+        or not math.isfinite(float(cost_value))
+        or float(cost_value) < 0
+    ):
+        raise ValueError(f"recovered trace has invalid cost: {document_trace_id}")
+
+    receipt = diagnose_runtime_selected_attempt_receipt_for_trace(document_trace_id)
+    if receipt.trace_id != document_trace_id:
+        raise ValueError(f"selected-attempt receipt trace mismatch: {document_trace_id}")
+    if receipt.resolved_model != expected_model:
+        raise ValueError(
+            f"selected-attempt receipt model mismatch: {document_trace_id}"
+        )
+
+    extraction = DocumentExtraction.model_validate_json(response)
+    recovered = RecoveredExtractionReceipt(
+        document_id=document.manifest.document_id,
+        trace_id=document_trace_id,
+        call_id=receipt.call_id,
+        logical_call_id=receipt.logical_call_id,
+        selected_attempt_ordinal=receipt.selected_attempt_ordinal,
+        schema_hash=receipt.schema_hash,
+        raw_sha256=receipt.raw_sha256,
+        selected_attempt_receipt_digest=receipt.receipt_digest,
+        response_sha256=hashlib.sha256(response.encode("utf-8")).hexdigest(),
+        model=expected_model,
+        prompt_ref=prompt_ref,
+        observed_cost_usd=float(cost_value),
+    )
+    return extraction, recovered
 
 
 def run_extraction(
@@ -658,6 +1320,10 @@ def run_extraction(
     model_justification_override: str | None,
     trace_id: str,
     max_budget_usd: float,
+    resume_trace_ids: list[str] | None = None,
+    prior_observed_cost_usd: float = 0.0,
+    unattributed_cost_reserve_usd: float = 0.0,
+    max_output_tokens: int = 3_500,
 ) -> GraphArtifact:
     """Execute one fully traced structured extraction per selected document."""
 
@@ -673,36 +1339,100 @@ def run_extraction(
             "Resolved through llm_client get_model('graph_building', "
             "use_performance=False) for structured CREST graph extraction."
         )
+    if not math.isfinite(prior_observed_cost_usd) or prior_observed_cost_usd < 0:
+        raise ValueError("prior observed cost must be a finite nonnegative value")
+    if (
+        not math.isfinite(unattributed_cost_reserve_usd)
+        or unattributed_cost_reserve_usd < 0
+    ):
+        raise ValueError("unattributed cost reserve must be a finite nonnegative value")
+    if max_output_tokens <= 0:
+        raise ValueError("max output tokens must be greater than zero")
+
+    resume_roots = list(dict.fromkeys(resume_trace_ids or []))
+    if any(not root.strip() for root in resume_roots):
+        raise ValueError("resume trace IDs must be nonblank")
+    if trace_id in resume_roots:
+        raise ValueError("the new trace ID must differ from every resume trace ID")
+
+    recovered_by_document: dict[
+        str, tuple[DocumentExtraction, RecoveredExtractionReceipt]
+    ] = {}
+    for document in documents:
+        for resume_root in reversed(resume_roots):
+            recovered = recover_extraction_from_trace(
+                document,
+                root_trace_id=resume_root,
+                expected_model=model,
+            )
+            if recovered is not None:
+                recovered_by_document[document.manifest.document_id] = recovered
+                break
+
+    recovered_receipts = [
+        recovered_by_document[document.manifest.document_id][1]
+        for document in documents
+        if document.manifest.document_id in recovered_by_document
+    ]
+    recovered_cost = sum(receipt.observed_cost_usd for receipt in recovered_receipts)
+    authorized_new_call_budget = (
+        max_budget_usd
+        - prior_observed_cost_usd
+        - unattributed_cost_reserve_usd
+        - recovered_cost
+    )
+    missing_document_count = len(documents) - len(recovered_by_document)
+    if missing_document_count and authorized_new_call_budget <= 0:
+        raise ValueError("no authorized budget remains for unrecovered documents")
+
     extractions: list[DocumentExtraction] = []
-    observed_cost = 0.0
+    rejections: list[ExtractionRejection] = []
+    observed_cost = recovered_cost
 
     for document in documents:
-        messages = render_prompt(
-            PROMPT_PATH,
-            document_id=document.manifest.document_id,
-            title=document.manifest.title,
-            source_url=document.manifest.source_url or "",
-            metadata_json=json.dumps(document.metadata, ensure_ascii=False, sort_keys=True),
-            numbered_body_text=render_numbered_source(document),
-        )
-        extraction, result = call_llm_structured(
-            model,
-            messages,
-            response_model=DocumentExtraction,
-            task="crest_kg.entity_relationship_extraction",
-            trace_id=f"{trace_id}/documents/{safe_token(document.manifest.document_id)}",
-            budget_scope_trace_id=trace_id,
-            max_budget=max_budget_usd,
-            model_policy="enforce_allowlist",
-            model_justification=model_justification,
-            prompt_ref="crest_kg.crest_extraction@1",
-        )
+        recovered = recovered_by_document.get(document.manifest.document_id)
+        if recovered is not None:
+            extraction = recovered[0]
+            result = None
+        else:
+            messages = render_prompt(
+                PROMPT_PATH,
+                document_id=document.manifest.document_id,
+                title=document.manifest.title,
+                source_url=document.manifest.source_url or "",
+                metadata_json=json.dumps(
+                    document.metadata, ensure_ascii=False, sort_keys=True
+                ),
+                numbered_body_text=render_numbered_source(document),
+            )
+            extraction, result = call_llm_structured(
+                model,
+                messages,
+                response_model=DocumentExtraction,
+                task="crest_kg.entity_relationship_extraction",
+                trace_id=(
+                    f"{trace_id}/documents/"
+                    f"{safe_token(document.manifest.document_id)}"
+                ),
+                budget_scope_trace_id=trace_id,
+                max_budget=authorized_new_call_budget,
+                max_tokens=max_output_tokens,
+                num_retries=0,
+                model_policy="enforce_allowlist",
+                model_justification=model_justification,
+                prompt_ref=PROMPT_REF,
+            )
         # Re-validate explicitly at the project boundary even though llm_client
         # already returns the declared Pydantic type.
         validated = DocumentExtraction.model_validate(extraction.model_dump())
-        validate_extraction_grounding(document, validated)
-        extractions.append(validated)
-        observed_cost += float(result.cost or 0.0)
+        grounded, document_rejections = partition_extraction_grounding(
+            document,
+            validated,
+        )
+        extractions.append(grounded)
+        rejections.extend(document_rejections)
+        if result is not None:
+            observed_cost += float(result.cost or 0.0)
 
     return build_graph(
         documents,
@@ -711,6 +1441,10 @@ def run_extraction(
         trace_id=trace_id,
         max_budget_usd=max_budget_usd,
         observed_cost_usd=observed_cost,
+        prior_observed_cost_usd=prior_observed_cost_usd,
+        unattributed_cost_reserve_usd=unattributed_cost_reserve_usd,
+        recovered_extractions=recovered_receipts,
+        rejections=rejections,
     )
 
 
@@ -750,8 +1484,15 @@ def validate_graph_file(graph_path: Path) -> GraphArtifact:
 
 def _positive_float(value: str) -> float:
     parsed = float(value)
-    if parsed <= 0:
+    if not math.isfinite(parsed) or parsed <= 0:
         raise argparse.ArgumentTypeError("value must be greater than zero")
+    return parsed
+
+
+def _nonnegative_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed) or parsed < 0:
+        raise argparse.ArgumentTypeError("value must be a finite nonnegative number")
     return parsed
 
 
@@ -793,6 +1534,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="Required rationale when --model overrides the graph_building registry route.",
     )
     extract_parser.add_argument("--trace-id", help="Optional root trace ID.")
+    extract_parser.add_argument(
+        "--resume-trace-id",
+        action="append",
+        default=[],
+        help="Prior root trace to search for reusable successful document calls; repeatable.",
+    )
+    extract_parser.add_argument(
+        "--prior-observed-cost-usd",
+        type=_nonnegative_float,
+        default=0.0,
+        help="Known earlier spend charged against the total authorization.",
+    )
+    extract_parser.add_argument(
+        "--unattributed-cost-reserve-usd",
+        type=_nonnegative_float,
+        default=0.0,
+        help="Conservative reserve for interrupted provider work without a terminal cost row.",
+    )
+    extract_parser.add_argument(
+        "--max-output-tokens",
+        type=_positive_int,
+        default=3_500,
+        help="Per-document structured response token ceiling.",
+    )
     extract_parser.add_argument("--force", action="store_true")
 
     validate_parser = subparsers.add_parser(
@@ -828,12 +1593,17 @@ def main(argv: list[str] | None = None) -> int:
                 model_justification_override=args.model_justification,
                 trace_id=args.trace_id or _default_trace_id(),
                 max_budget_usd=args.max_budget_usd,
+                resume_trace_ids=args.resume_trace_id,
+                prior_observed_cost_usd=args.prior_observed_cost_usd,
+                unattributed_cost_reserve_usd=args.unattributed_cost_reserve_usd,
+                max_output_tokens=args.max_output_tokens,
             )
             write_graph(graph, args.output, force=args.force)
             print(
                 f"wrote {args.output}: {len(graph.documents)} documents, "
                 f"{len(graph.entities)} entities, {len(graph.relationships)} relationships, "
-                f"cost=${graph.observed_cost_usd:.6f}"
+                f"observed_cost=${graph.observed_cost_usd:.6f}, "
+                f"accounted_total=${graph.observed_cost_usd + graph.prior_observed_cost_usd + graph.unattributed_cost_reserve_usd:.6f}"
             )
             return 0
 
