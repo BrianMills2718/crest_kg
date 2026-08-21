@@ -35,7 +35,7 @@ from pydantic import (
 
 PIPELINE_VERSION: Literal["crest-kg-v2"] = "crest-kg-v2"
 PROMPT_PATH = Path(__file__).with_name("prompts") / "crest_extraction.yaml"
-PROMPT_REF = "crest_kg.crest_extraction@3"
+PROMPT_REF = "crest_kg.crest_extraction@4"
 RECOVERABLE_PROMPT_REFS = frozenset(
     {
         "crest_kg.crest_extraction@2",
@@ -43,8 +43,8 @@ RECOVERABLE_PROMPT_REFS = frozenset(
     }
 )
 MAX_EVIDENCE_LINES = 5
-MAX_ENTITIES_PER_DOCUMENT = 30
-MAX_RELATIONSHIPS_PER_DOCUMENT = 12
+MAX_ENTITIES_PER_DOCUMENT = 20
+MAX_RELATIONSHIPS_PER_DOCUMENT = 8
 DOCUMENT_NUMBER_KEYS = (
     "Document Number (FOIA) /ESDN (CREST)",
     "Document Number",
@@ -273,7 +273,6 @@ class ProviderEntityCandidate(StrictModel):
     local_id: str
     name: str
     entity_type: EntityKind = Field(alias="type")
-    attributes: dict[str, str] = Field(default_factory=dict)
     evidence: ProviderEvidenceCandidate
 
 
@@ -287,7 +286,6 @@ class ProviderRelationshipCandidate(StrictModel):
     relation_phrase: str
     target_mention: str
     support_reasoning: str
-    attributes: dict[str, str] = Field(default_factory=dict)
     evidence: ProviderEvidenceCandidate
 
 

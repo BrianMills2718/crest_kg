@@ -1,5 +1,5 @@
 name: crest_grounded_knowledge_graph_extraction
-version: "2.1"
+version: "2.2"
 description: Extract conservative typed relationships with exact endpoint and predicate binding.
 messages:
   - role: system
@@ -44,9 +44,9 @@ messages:
       11. Use person, organization, location, event, concept, time, work, or other. A report,
           memo, letter, book, or article is work; a bounded occurrence is event; a program,
           initiative, doctrine, or recurring practice is normally concept.
-      12. Keep attributes only when the same cited text explicitly supports their values.
-      13. Return at most 30 entities and at most 12 relationships. Select the strongest,
-          clearest relationships rather than trying to exhaust the document.
+      12. Return at most 20 entities and at most 8 relationships. Select the strongest,
+          clearest relationships rather than trying to exhaust the document. Keep
+          support_reasoning to one short sentence so the complete JSON response fits.
   - role: user
     content: |
       Document ID: {{ document_id }}
