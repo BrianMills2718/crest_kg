@@ -27,6 +27,7 @@ from crest_pipeline import (
 )
 
 from .acquisition import ExtractedUpload
+from .briefing import generate_evidence_brief
 from .connectors import SourceConnector
 from .models import (
     CollectionCreate,
@@ -35,6 +36,10 @@ from .models import (
     ConnectorStatus,
     DocumentDetail,
     DocumentSummary,
+    EvidenceBrief,
+    EvidenceChunk,
+    EvidenceInquiry,
+    EvidenceInquiryRequest,
     GraphAccessRecord,
     GraphBuildRequest,
     GraphJob,
@@ -525,6 +530,7 @@ class WorkbenchStore:
         self.graphs_dir = data_dir / "graphs"
         self.graph_access_dir = data_dir / "graph-access"
         self.collections_dir = data_dir / "collections"
+        self.inquiries_dir = data_dir / "inquiries"
         self.upload_records_dir = data_dir / "uploads" / "records"
         self.upload_files_dir = data_dir / "uploads" / "files"
         self.example_graph_path = example_graph
@@ -532,11 +538,13 @@ class WorkbenchStore:
         self.graphs_dir.mkdir(parents=True, exist_ok=True)
         self.graph_access_dir.mkdir(parents=True, exist_ok=True)
         self.collections_dir.mkdir(parents=True, exist_ok=True)
+        self.inquiries_dir.mkdir(parents=True, exist_ok=True)
         self.upload_records_dir.mkdir(parents=True, exist_ok=True)
         self.upload_files_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
         self._initialize_graph_access()
         self._mark_interrupted_jobs_failed()
+        self._mark_interrupted_inquiries_failed()
 
     def _initialize_graph_access(self) -> None:
         """Explicitly classify pre-feature graphs once, then fail closed forever."""
@@ -567,6 +575,18 @@ class WorkbenchStore:
                 job.updated_at = utc_now()
                 self.save_job(job)
 
+    def _mark_interrupted_inquiries_failed(self) -> None:
+        for path in self.inquiries_dir.glob("*.json"):
+            inquiry = EvidenceInquiry.model_validate_json(
+                path.read_text(encoding="utf-8")
+            )
+            if inquiry.state in {"queued", "running"}:
+                inquiry.state = "failed"
+                inquiry.error = "Service restarted before this evidence brief completed."
+                inquiry.progress_detail = "Evidence brief interrupted by service restart"
+                inquiry.updated_at = utc_now()
+                self.save_inquiry(inquiry)
+
     def save_job(self, job: GraphJob) -> None:
         with self._lock:
             _atomic_json(
@@ -586,6 +606,28 @@ class WorkbenchStore:
             for path in self.jobs_dir.glob("*.json")
         ]
         return sorted(jobs, key=lambda item: item.updated_at, reverse=True)
+
+    def save_inquiry(self, inquiry: EvidenceInquiry) -> None:
+        with self._lock:
+            _atomic_json(
+                self.inquiries_dir / f"{inquiry.id}.json",
+                inquiry.model_dump(mode="json"),
+            )
+
+    def get_inquiry(self, inquiry_id: str) -> EvidenceInquiry:
+        if not re.fullmatch(r"inquiry-[0-9a-f]{32}", inquiry_id):
+            raise KeyError(inquiry_id)
+        path = self.inquiries_dir / f"{inquiry_id}.json"
+        if not path.is_file():
+            raise KeyError(inquiry_id)
+        return EvidenceInquiry.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def list_inquiries(self) -> list[EvidenceInquiry]:
+        inquiries = [
+            EvidenceInquiry.model_validate_json(path.read_text(encoding="utf-8"))
+            for path in self.inquiries_dir.glob("*.json")
+        ]
+        return sorted(inquiries, key=lambda item: item.updated_at, reverse=True)
 
     def create_collection(self, payload: CollectionCreate) -> ResearchCollection:
         now = utc_now()
@@ -852,13 +894,31 @@ def persist_extracted_upload(
     return store.save_uploaded_document(record, source_bytes)
 
 
+class ProviderExecutionLane:
+    """One serialized worker shared by every provider-spending CREST job."""
+
+    def __init__(self) -> None:
+        self.executor = ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="crest-provider",
+        )
+
+    def submit(self, function, *args) -> None:
+        self.executor.submit(function, *args)
+
+
 class GraphJobRunner:
     """Single-lane executor that keeps provider-spending jobs serialized."""
 
-    def __init__(self, store: WorkbenchStore, catalog: CorpusCatalog) -> None:
+    def __init__(
+        self,
+        store: WorkbenchStore,
+        catalog: CorpusCatalog,
+        lane: ProviderExecutionLane | None = None,
+    ) -> None:
         self.store = store
         self.catalog = catalog
-        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="crest-build")
+        self.lane = lane or ProviderExecutionLane()
 
     def submit(self, request: GraphBuildRequest) -> GraphJob:
         now = utc_now()
@@ -872,7 +932,7 @@ class GraphJobRunner:
             progress_detail="Waiting for the extraction lane",
         )
         self.store.save_job(job)
-        self.executor.submit(self._run, job_id)
+        self.lane.submit(self._run, job_id)
         return job
 
     def _run(self, job_id: str) -> None:
@@ -922,6 +982,76 @@ class GraphJobRunner:
             job.progress_detail = "Graph build failed"
             job.updated_at = utc_now()
             self.store.save_job(job)
+
+
+class EvidenceInquiryRunner:
+    """Persist evidence before one citation-validated synthesis call."""
+
+    def __init__(
+        self,
+        store: WorkbenchStore,
+        lane: ProviderExecutionLane,
+    ) -> None:
+        self.store = store
+        self.lane = lane
+
+    def submit(
+        self,
+        request: EvidenceInquiryRequest,
+        *,
+        collection: ResearchCollection,
+        evidence: list[EvidenceChunk],
+    ) -> EvidenceInquiry:
+        now = utc_now()
+        inquiry = EvidenceInquiry(
+            id=f"inquiry-{uuid4().hex}",
+            state="queued",
+            request=request,
+            collection_title=collection.title,
+            evidence=evidence,
+            created_at=now,
+            updated_at=now,
+            progress_detail=(
+                "Waiting for the provider lane"
+                if evidence
+                else "Completing without a model because no evidence matched"
+            ),
+        )
+        self.store.save_inquiry(inquiry)
+        self.lane.submit(self._run, inquiry.id)
+        return inquiry
+
+    def _run(self, inquiry_id: str) -> None:
+        inquiry = self.store.get_inquiry(inquiry_id)
+        try:
+            inquiry.state = "running"
+            inquiry.updated_at = utc_now()
+            inquiry.trace_id = f"crest_kg/inquiries/{inquiry.id}"
+            inquiry.progress_detail = "Synthesizing a citation-valid evidence brief"
+            self.store.save_inquiry(inquiry)
+            brief: EvidenceBrief = generate_evidence_brief(
+                question=inquiry.request.question,
+                collection_title=inquiry.collection_title,
+                evidence=inquiry.evidence,
+                trace_id=inquiry.trace_id,
+                max_budget_usd=inquiry.request.max_budget_usd,
+                max_output_tokens=inquiry.request.max_output_tokens,
+                structured_retries=1,
+            )
+            inquiry.brief = brief
+            inquiry.state = "completed"
+            inquiry.progress_detail = (
+                f"Completed {brief.answer_status} brief with "
+                f"{len(brief.findings)} finding(s)"
+            )
+            inquiry.updated_at = utc_now()
+            self.store.save_inquiry(inquiry)
+        except Exception as exc:
+            inquiry.state = "failed"
+            inquiry.error = f"{type(exc).__name__}: {exc}"
+            inquiry.progress_detail = "Evidence brief failed; ranked evidence was retained"
+            inquiry.updated_at = utc_now()
+            self.store.save_inquiry(inquiry)
 
 
 def request_is_operator(

@@ -26,6 +26,9 @@ from .models import (
     ConnectorStatus,
     DocumentDetail,
     EvidencePreview,
+    EvidenceInquiry,
+    EvidenceInquiryList,
+    EvidenceInquiryRequest,
     EvidenceQueryRequest,
     GraphBuildRequest,
     GraphJob,
@@ -40,7 +43,9 @@ from .models import (
 from .services import (
     ConnectorUnavailable,
     CorpusCatalog,
+    EvidenceInquiryRunner,
     GraphJobRunner,
+    ProviderExecutionLane,
     WorkbenchStore,
     persist_extracted_upload,
     request_is_operator,
@@ -71,10 +76,14 @@ def create_app(
     resolved_catalog = catalog or CorpusCatalog(store=resolved_store)
     if resolved_catalog.store is None:
         resolved_catalog.store = resolved_store
-    runner = GraphJobRunner(resolved_store, resolved_catalog)
+    provider_lane = ProviderExecutionLane()
+    runner = GraphJobRunner(resolved_store, resolved_catalog, provider_lane)
+    inquiry_runner = EvidenceInquiryRunner(resolved_store, provider_lane)
     app.state.catalog = resolved_catalog
     app.state.store = resolved_store
     app.state.runner = runner
+    app.state.inquiry_runner = inquiry_runner
+    app.state.provider_lane = provider_lane
 
     def operator_status(
         authorization: str | None, tailscale_login: str | None
@@ -107,6 +116,12 @@ def create_app(
             return resolved_store.get_collection(collection_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Collection not found") from exc
+
+    def require_inquiry(inquiry_id: str) -> EvidenceInquiry:
+        try:
+            return resolved_store.get_inquiry(inquiry_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Inquiry not found") from exc
 
     async def ingest_upload(
         file: UploadFile, *, title: str | None = None
@@ -188,6 +203,11 @@ def create_app(
             max_build_budget_usd=float(
                 os.getenv("CREST_MAX_BUILD_BUDGET_USD", "0.25")
             ),
+            evidence_brief_enabled=os.getenv("CREST_BRIEF_ENABLED", "0") == "1",
+            evidence_brief_authorized=is_operator,
+            max_evidence_budget_usd=float(
+                os.getenv("CREST_MAX_BRIEF_BUDGET_USD", "0.15")
+            ),
             document_upload_enabled=uploads_enabled,
             document_upload_authorized=is_operator,
             max_upload_bytes=max_upload_bytes(),
@@ -263,6 +283,66 @@ def create_app(
                 max_chars_per_document=payload.max_chars_per_document,
             ),
         )
+
+    @app.post("/api/inquiries", response_model=EvidenceInquiry, status_code=202)
+    def create_inquiry(
+        payload: EvidenceInquiryRequest,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> EvidenceInquiry:
+        if os.getenv("CREST_BRIEF_ENABLED", "0") != "1":
+            raise HTTPException(status_code=503, detail="Evidence briefs are disabled")
+        require_operator(
+            authorization,
+            tailscale_login,
+            action="Evidence brief generation",
+        )
+        budget_ceiling = float(os.getenv("CREST_MAX_BRIEF_BUDGET_USD", "0.15"))
+        if payload.max_budget_usd > budget_ceiling:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "Requested evidence budget exceeds the "
+                    f"${budget_ceiling:.2f} server ceiling"
+                ),
+            )
+        collection = require_collection(payload.collection_id)
+        evidence = resolved_catalog.rank_collection_evidence(
+            payload.question,
+            document_ids=collection.document_ids,
+            limit=payload.evidence_limit,
+            max_chars_per_document=payload.max_chars_per_document,
+        )
+        return app.state.inquiry_runner.submit(
+            payload,
+            collection=collection,
+            evidence=evidence,
+        )
+
+    @app.get("/api/inquiries", response_model=EvidenceInquiryList)
+    def list_inquiries(
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> EvidenceInquiryList:
+        require_operator(
+            authorization,
+            tailscale_login,
+            action="Inquiry history access",
+        )
+        return EvidenceInquiryList(inquiries=resolved_store.list_inquiries())
+
+    @app.get("/api/inquiries/{inquiry_id}", response_model=EvidenceInquiry)
+    def get_inquiry(
+        inquiry_id: str,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> EvidenceInquiry:
+        require_operator(
+            authorization,
+            tailscale_login,
+            action="Inquiry access",
+        )
+        return require_inquiry(inquiry_id)
 
     @app.post(
         "/api/collections",
@@ -520,6 +600,40 @@ def create_app(
                 status_code=422,
                 detail=f"Unknown document IDs: {', '.join(unknown_ids)}",
             )
+        if payload.inquiry_id:
+            inquiry = require_inquiry(payload.inquiry_id)
+            if inquiry.state != "completed" or inquiry.brief is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Focused graph handoff requires a completed evidence inquiry",
+                )
+            if payload.collection_id != inquiry.request.collection_id:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Focused graph handoff must use the inquiry collection",
+                )
+            cited_ids = set(inquiry.brief.synthesis_citation_ids)
+            cited_ids.update(
+                citation_id
+                for finding in inquiry.brief.findings
+                for citation_id in finding.citation_ids
+            )
+            cited_documents = {
+                item.document_id for item in inquiry.evidence if item.id in cited_ids
+            }
+            uncited_documents = [
+                document_id
+                for document_id in payload.document_ids
+                if document_id not in cited_documents
+            ]
+            if uncited_documents:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        "Documents are not cited by the selected inquiry: "
+                        + ", ".join(uncited_documents)
+                    ),
+                )
         if payload.collection_id:
             collection = require_collection(payload.collection_id)
             outside_collection = [

@@ -29,6 +29,9 @@ class Capabilities(ApiModel):
     graph_build_requires_operator: bool = True
     max_documents_per_build: int
     max_build_budget_usd: float
+    evidence_brief_enabled: bool
+    evidence_brief_authorized: bool
+    max_evidence_budget_usd: float
     document_upload_enabled: bool
     document_upload_authorized: bool
     max_upload_bytes: int
