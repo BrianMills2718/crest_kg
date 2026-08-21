@@ -1,0 +1,98 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v5",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T06:03:00Z",
+  "claim_scope": "Deterministic passage-ranking regression: answerable Project Meridian paraphrases must retrieve both decisive sources ahead of the distractor, and queries with no meaningful lexical or concept support must return no chunks. Context-rich answerability classification belongs to the evidence brief and is explicitly not measured here.",
+  "provenance": "Answerable cases are exact runtime-only failures from the independent v4 rejection at revision 041e24e; negative controls contain no supported collection concept. This set is no longer blind, is not human gold, and does not measure real-world recall.",
+  "decision_rule": "All cases and offsets must pass. A fresh verifier must invent new answerable paraphrases and no-support controls before deployment; contextual absent-subject questions are out of this ranker gate and must not be scored as retrieval false positives.",
+  "documents": [
+    {
+      "document_id": "meridian-coordination",
+      "title": "Project Meridian Vienna coordination note",
+      "body_text": "Project Meridian field note. The Harbor Institute acted as the organizing body for the Vienna pilot. Its conveners scheduled the first field exercise for 14 May 1987. Eastbridge Laboratory supplied instruments but did not direct the organizing committee."
+    },
+    {
+      "document_id": "meridian-observation",
+      "title": "Vienna demonstration observer correction",
+      "body_text": "Observer correction for Project Meridian. The Vienna demonstration began on 16 May 1987, not 14 May as stated in the preliminary scheduling note. Harbor Institute provided convening support, while Eastbridge Laboratory led operations at the field site."
+    },
+    {
+      "document_id": "meridian-lisbon-distractor",
+      "title": "Project Meridian Lisbon communications brief",
+      "body_text": "Project Meridian communications staff met in Lisbon during June 1987. The Harbor Institute reviewed press clippings for the Portuguese media campaign. This brief does not concern the Vienna field demonstration."
+    },
+    {
+      "document_id": "meridian-administration",
+      "title": "Regional archive administration",
+      "body_text": "The archive office renewed storage cabinets and travel forms for regional programs. No project costs, funding totals, or procurement budgets were recorded in this note."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "quick-check-set-up-dates",
+      "split": "regression",
+      "query": "Quick check: who set up Project Meridian's Vienna pilot, and what two start dates do the notes give?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "pin-down-convening-dates",
+      "split": "regression",
+      "query": "I'm trying to pin this down: who was in charge of convening the Austrian exercise, and which May dates appear in the paperwork?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "got-demonstration-together",
+      "split": "regression",
+      "query": "So who got the Vienna demonstration together for Project Meridian, and did it commence on 14 or 16 May 1987?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "outfit-staged-trial",
+      "split": "regression",
+      "query": "From these records, identify the outfit that staged the Austrian trial and the pair of opening dates they give.",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "organization-convened-memo-days",
+      "split": "regression",
+      "query": "Which organization convened the Vienna pilot? Also, what May dates do the two memos assign to day one?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "brought-field-test-together",
+      "split": "regression",
+      "query": "Who brought Project Meridian's Austrian field test together, and what starting dates are recorded in the two write-ups?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {
+      "case_id": "no-support-radio-frequency",
+      "split": "negative",
+      "query": "What radio frequency was used?",
+      "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []
+    },
+    {
+      "case_id": "no-support-quantum-telemetry",
+      "split": "negative",
+      "query": "Describe quantum telemetry protocols.",
+      "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []
+    },
+    {
+      "case_id": "no-support-airline",
+      "split": "negative",
+      "query": "Which airline transported the delegation?",
+      "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []
+    }
+  ]
+}
