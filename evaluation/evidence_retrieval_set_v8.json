@@ -1,0 +1,45 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v8",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T06:45:50Z",
+  "claim_scope": "Exact target-anchor and common-concept failures from the v7 independent sign-off: one relevant paraphrase and six unrelated external-subject controls. Synthetic regression only; not human gold or real-world recall.",
+  "decision_rule": "The answerable case must retrieve coordination and observation in the top four with no Lisbon top-two distractor; every unrelated external-subject query must return []; all offsets must be exact. A fresh independent verifier remains required.",
+  "documents": [
+    {
+      "document_id": "meridian-coordination",
+      "title": "Project Meridian Vienna coordination note",
+      "body_text": "Project Meridian field note. The Harbor Institute acted as the organizing body for the Vienna pilot. Its conveners scheduled the first field exercise for 14 May 1987. Eastbridge Laboratory supplied instruments but did not direct the organizing committee."
+    },
+    {
+      "document_id": "meridian-observation",
+      "title": "Vienna demonstration observer correction",
+      "body_text": "Observer correction for Project Meridian. The Vienna demonstration began on 16 May 1987, not 14 May as stated in the preliminary scheduling note. Harbor Institute provided convening support, while Eastbridge Laboratory led operations at the field site."
+    },
+    {
+      "document_id": "meridian-lisbon-distractor",
+      "title": "Project Meridian Lisbon communications brief",
+      "body_text": "Project Meridian communications staff met in Lisbon during June 1987. The Harbor Institute reviewed press clippings for the Portuguese media campaign. This brief does not concern the Vienna field demonstration."
+    },
+    {
+      "document_id": "meridian-administration",
+      "title": "Regional archive administration",
+      "body_text": "The archive office renewed storage cabinets and travel forms for regional programs. No project costs, funding totals, or procurement budgets were recorded in this note."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "paperwork-organizer-beginnings",
+      "split": "regression",
+      "query": "The paperwork names an organizer and two beginnings for Meridian's Austrian demonstration. What are they?",
+      "expected_document_ids": ["meridian-coordination", "meridian-observation"],
+      "top_k": 4,
+      "exclude_from_top_two": ["meridian-lisbon-distractor"]
+    },
+    {"case_id": "no-support-mars-institution", "split": "negative", "query": "Which institution operated the Mars Pathfinder mission?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "no-support-paris-convener", "split": "negative", "query": "What agency convened the Paris climate summit?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "no-support-olympic-committee", "split": "negative", "query": "Name the committee that supervised the Olympic torch relay.", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "no-support-genome-laboratory", "split": "negative", "query": "Which laboratory led the Human Genome Project?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "no-support-debate-host", "split": "negative", "query": "Who hosted the first televised presidential debate?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []},
+    {"case_id": "no-support-chess-observer", "split": "negative", "query": "Which observer corrected the chess tournament schedule?", "expected_document_ids": [], "top_k": 4, "exclude_from_top_two": []}
+  ]
+}
