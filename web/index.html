@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ede9df" />
     <title>CREST research workbench</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%231d342f%22/><circle cx=%2221%22 cy=%2232%22 r=%226%22 fill=%22%23df734c%22/><circle cx=%2245%22 cy=%2218%22 r=%226%22 fill=%22%23e6bd63%22/><circle cx=%2247%22 cy=%2247%22 r=%226%22 fill=%22%2395b6a2%22/><path d=%22M26 29 40 21M26 35l15 9%22 stroke=%22white%22 stroke-width=%223%22/></svg>" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260820-collections" />
   </head>
   <body>
     <header class="topbar">
@@ -19,6 +19,7 @@
           <span>Open graph</span>
           <select data-graph-picker aria-label="Open a saved graph"></select>
         </label>
+        <button class="button ghost" type="button" data-history-open>Recent activity</button>
         <a class="button ghost" data-export-link href="./api/graphs/example-fixed-v2/export.json">Export JSON</a>
         <button class="icon-button" type="button" data-help-button aria-label="About this workbench">?</button>
       </div>
@@ -30,6 +31,19 @@
           <div class="section-heading">
             <div class="eyebrow">01 · Sources</div>
             <button class="button ghost small" type="button" data-upload-open>Add document</button>
+          </div>
+          <div class="collection-control">
+            <div class="collection-row">
+              <label for="collection-picker">Research collection</label>
+              <button class="text-button" type="button" data-collection-new>New collection</button>
+            </div>
+            <select id="collection-picker" data-collection-picker aria-label="Active research collection">
+              <option value="">All documents</option>
+            </select>
+            <label class="collection-scope" data-collection-scope-wrap hidden>
+              <input type="checkbox" data-collection-scope checked /> Search only this collection
+            </label>
+            <div class="collection-summary" data-collection-summary>Choose or create a collection to organize a research thread.</div>
           </div>
           <div data-connectors class="connector-list" aria-live="polite">
             <div class="skeleton line"></div>
@@ -147,20 +161,45 @@
 
     <dialog data-upload-dialog class="upload-dialog">
       <button class="dialog-close" type="button" data-upload-close aria-label="Close">×</button>
-      <div class="eyebrow">Add source document</div>
-      <h2>Turn a document into searchable evidence</h2>
-      <p class="dialog-intro">Upload a PDF, scanned image, or UTF-8 text file. Text extraction and OCR run locally; private sources and graphs remain operator-only.</p>
+      <div class="eyebrow">Add source documents</div>
+      <h2>Turn documents into searchable evidence</h2>
+      <p class="dialog-intro">Add one source or a batch. Text extraction and OCR run locally; every file gets its own success or failure result, and private sources and graphs remain operator-only.</p>
       <form data-upload-form class="upload-form">
         <label class="file-drop">
-          <input data-upload-file name="file" type="file" required accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.txt,.md,.markdown,.rst,.csv,.tsv,application/pdf,image/png,image/jpeg,image/tiff,text/plain" />
-          <span><strong>Choose a source file</strong><small data-upload-file-label>PDF, image, text, Markdown, CSV, or TSV</small></span>
+          <input data-upload-file name="files" type="file" multiple required accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.txt,.md,.markdown,.rst,.csv,.tsv,application/pdf,image/png,image/jpeg,image/tiff,text/plain" />
+          <span><strong>Choose source files</strong><small data-upload-file-label>Up to 10 PDF, image, text, Markdown, CSV, or TSV files</small></span>
         </label>
-        <label class="field-label">Document title <input data-upload-title name="title" type="text" maxlength="200" placeholder="Optional — defaults to the filename" /></label>
         <div class="upload-actions">
-          <button class="button primary" type="submit" data-upload-submit>Extract and add source</button>
-          <span data-upload-status>Ready for a private local extraction.</span>
+          <button class="button primary" type="submit" data-upload-submit>Extract and add sources</button>
+          <span data-upload-status>Ready for private local extraction.</span>
+        </div>
+        <div class="batch-results" data-batch-results hidden></div>
+      </form>
+    </dialog>
+
+    <dialog data-collection-dialog class="collection-dialog">
+      <button class="dialog-close" type="button" data-collection-close aria-label="Close">×</button>
+      <div class="eyebrow">New research collection</div>
+      <h2>Start a durable research thread</h2>
+      <p class="dialog-intro">A collection organizes source references. Deleting it never deletes the underlying documents or completed graphs.</p>
+      <form data-collection-form class="upload-form">
+        <label class="field-label">Collection name <input data-collection-title name="title" type="text" maxlength="120" required placeholder="Project Aster" /></label>
+        <label class="field-label">Description <input data-collection-description name="description" type="text" maxlength="500" placeholder="Optional research question or scope" /></label>
+        <div class="upload-actions">
+          <button class="button primary" type="submit" data-collection-submit>Create collection</button>
+          <span data-collection-status>Sources can be added after creation or during upload.</span>
         </div>
       </form>
+    </dialog>
+
+    <dialog data-history-dialog class="history-dialog">
+      <button class="dialog-close" type="button" data-history-close aria-label="Close">×</button>
+      <div class="eyebrow">Persistent build history</div>
+      <h2>Recent activity</h2>
+      <p class="dialog-intro">Completed graphs and failed or interrupted jobs remain discoverable after a refresh or service restart.</p>
+      <div data-job-history class="job-history" aria-live="polite">
+        <div class="empty-state compact">Loading recent jobs…</div>
+      </div>
     </dialog>
 
     <dialog data-help-dialog class="help-dialog">
@@ -174,6 +213,6 @@
     </dialog>
 
     <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
-    <script src="./app.js" defer></script>
+    <script src="./app.js?v=20260820-collections" defer></script>
   </body>
 </html>

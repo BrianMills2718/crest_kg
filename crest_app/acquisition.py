@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from .models import UploadExtractionMethod
 
 
 TEXT_SUFFIXES = {".txt", ".md", ".markdown", ".rst", ".csv", ".tsv"}
@@ -29,14 +32,17 @@ class ExtractionUnavailable(AcquisitionError):
     """A required local extraction dependency is unavailable."""
 
 
-@dataclass(frozen=True)
-class ExtractedUpload:
+class ExtractedUpload(BaseModel):
+    """Strict portable result produced before persistence or catalog adoption."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     filename: str
     title: str
     media_type: str
-    body_text: str
-    extraction_method: str
-    page_count: int
+    body_text: str = Field(min_length=1)
+    extraction_method: UploadExtractionMethod
+    page_count: int = Field(ge=1)
 
 
 def safe_filename(filename: str | None) -> str:

@@ -3,9 +3,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
-from crest_app.acquisition import extract_upload
+from crest_app.acquisition import ExtractedUpload, extract_upload
+from crest_app.connectors import SourceConnector
 from crest_app.main import create_app
 from crest_app.models import GraphJob
 from crest_app.services import CiaReadingRoomConnector, WorkbenchStore
@@ -229,6 +232,162 @@ def test_uploaded_text_is_private_searchable_and_buildable(
     assert client.get(f"/api/documents/{document_id}", headers=auth).status_code == 404
 
 
+def test_private_collection_scopes_search_build_and_upload_deletion(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("CREST_UPLOAD_ENABLED", "1")
+    monkeypatch.setenv("CREST_BUILD_ENABLED", "1")
+    monkeypatch.setenv("CREST_OPERATOR_TOKEN", "test-operator-token")
+    app = create_app(data_dir=tmp_path)
+    client = TestClient(app)
+    auth = {"Authorization": "Bearer test-operator-token"}
+
+    assert client.get("/api/collections").status_code == 403
+    created = client.post(
+        "/api/collections",
+        json={"title": "  Project   Aster  ", "description": "Field sources"},
+        headers=auth,
+    )
+    assert created.status_code == 201
+    collection_id = created.json()["id"]
+    assert created.json()["title"] == "Project Aster"
+
+    bundled = client.post(
+        "/api/search", json={"query": "disinformation", "limit": 2}
+    ).json()["results"]
+    bundled_id, outside_id = bundled[0]["document_id"], bundled[1]["document_id"]
+    upload = client.post(
+        "/api/uploads",
+        files={
+            "file": (
+                "aster-note.txt",
+                b"Project Aster analyst Rowan reported from Vienna.",
+                "text/plain",
+            )
+        },
+        headers=auth,
+    )
+    upload_id = upload.json()["document_id"]
+
+    membership = client.put(
+        f"/api/collections/{collection_id}/documents",
+        json={"document_ids": [bundled_id, upload_id]},
+        headers=auth,
+    )
+    assert membership.status_code == 200
+    assert membership.json()["document_ids"] == [bundled_id, upload_id]
+
+    assert (
+        client.post(
+            "/api/search",
+            json={"query": "Aster", "collection_id": collection_id},
+        ).status_code
+        == 403
+    )
+    scoped = client.post(
+        "/api/search",
+        json={"query": "Aster", "collection_id": collection_id},
+        headers=auth,
+    )
+    assert [item["document_id"] for item in scoped.json()["results"]] == [upload_id]
+
+    outside_build = client.post(
+        "/api/graphs",
+        json={
+            "document_ids": [outside_id],
+            "collection_id": collection_id,
+            "max_budget_usd": 0.05,
+        },
+        headers=auth,
+    )
+    assert outside_build.status_code == 422
+    assert "outside the selected collection" in outside_build.json()["detail"]
+
+    deleted = client.delete(f"/api/uploads/{upload_id}", headers=auth)
+    assert deleted.status_code == 200
+    collection = client.get(f"/api/collections/{collection_id}", headers=auth)
+    assert collection.json()["document_ids"] == [bundled_id]
+
+    assert client.delete(f"/api/collections/{collection_id}", headers=auth).status_code == 200
+    assert client.get(f"/api/documents/{bundled_id}").status_code == 200
+
+
+def test_batch_upload_reports_partial_success_and_adds_collection_members(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("CREST_UPLOAD_ENABLED", "1")
+    monkeypatch.setenv("CREST_OPERATOR_TOKEN", "test-operator-token")
+    client = TestClient(create_app(data_dir=tmp_path))
+    auth = {"Authorization": "Bearer test-operator-token"}
+    collection_id = client.post(
+        "/api/collections",
+        json={"title": "Project Aster"},
+        headers=auth,
+    ).json()["id"]
+
+    batch = client.post(
+        "/api/uploads/batch",
+        data={"collection_id": collection_id},
+        files=[
+            ("files", ("brief-one.txt", b"Aster brief one.", "text/plain")),
+            ("files", ("archive.zip", b"PK\x03\x04", "application/zip")),
+            ("files", ("brief-two.md", b"Aster brief two.", "text/markdown")),
+        ],
+        headers=auth,
+    )
+    assert batch.status_code == 200
+    payload = batch.json()
+    assert len(payload["successes"]) == 2
+    assert payload["failures"] == [
+        {
+            "filename": "archive.zip",
+            "status_code": 415,
+            "detail": "Supported uploads are PDF, PNG, JPEG, TIFF, plain text, Markdown, CSV, and TSV.",
+        }
+    ]
+    collection = client.get(f"/api/collections/{collection_id}", headers=auth).json()
+    assert collection["document_ids"] == [
+        item["document_id"] for item in payload["successes"]
+    ]
+
+    invalid_collection = client.post(
+        "/api/uploads/batch",
+        data={"collection_id": "collection-0000000000000000"},
+        files=[("files", ("not-persisted.txt", b"Do not persist.", "text/plain"))],
+        headers=auth,
+    )
+    assert invalid_collection.status_code == 404
+    assert len(client.get("/api/uploads", headers=auth).json()["documents"]) == 2
+
+
+def test_job_history_survives_restart_and_marks_interrupted_work_failed(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("CREST_OPERATOR_TOKEN", "test-operator-token")
+    store = WorkbenchStore(tmp_path)
+    now = datetime.now(timezone.utc)
+    store.save_job(
+        GraphJob(
+            id="interrupted-job",
+            state="running",
+            request={"document_ids": ["05259029"], "max_budget_usd": 0.05},
+            created_at=now,
+            updated_at=now,
+            progress_detail="Extracting",
+        )
+    )
+
+    restarted = WorkbenchStore(tmp_path)
+    client = TestClient(create_app(store=restarted))
+    auth = {"Authorization": "Bearer test-operator-token"}
+    assert client.get("/api/jobs").status_code == 403
+    history = client.get("/api/jobs", headers=auth)
+    assert history.status_code == 200
+    assert history.json()["jobs"][0]["id"] == "interrupted-job"
+    assert history.json()["jobs"][0]["state"] == "failed"
+    assert "restart" in history.json()["jobs"][0]["error"].lower()
+
+
 def test_upload_rejects_unsupported_and_oversized_inputs(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -291,6 +450,17 @@ def test_pdf_text_and_image_ocr_share_the_upload_contract(monkeypatch) -> None:
     )
     assert extracted_image.extraction_method == "image-ocr"
     assert extracted_image.title == "Scanned field note"
+
+    with pytest.raises(ValidationError):
+        ExtractedUpload(
+            filename="invalid.txt",
+            title="Invalid",
+            media_type="text/plain",
+            body_text="",
+            extraction_method="plain-text",
+            page_count=0,
+            undeclared_field="not allowed",
+        )
 
 
 def test_record_loader_preserves_explicit_uploaded_selection_order() -> None:
@@ -356,6 +526,7 @@ def test_cia_connector_activates_only_when_search_and_document_acquisition_work(
     monkeypatch,
 ) -> None:
     connector = CiaReadingRoomConnector()
+    assert isinstance(connector, SourceConnector)
     result_url = "https://www.cia.gov/readingroom/document/cia-test-1"
     search_payload = {
         "web": {

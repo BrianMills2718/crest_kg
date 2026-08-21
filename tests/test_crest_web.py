@@ -13,7 +13,9 @@ def test_workbench_leads_with_the_search_to_graph_workflow() -> None:
     assert "CREST research workbench" in html
     assert "Search your source library" in html
     assert "Add document" in html
-    assert "Turn a document into searchable evidence" in html
+    assert "Turn documents into searchable evidence" in html
+    assert "Research collection" in html
+    assert "Recent activity" in html
     assert "Build knowledge graph" in html
     assert "Evidence" in html
     assert "Export JSON" in html
@@ -28,11 +30,14 @@ def test_workbench_actions_have_api_counterparts_and_fail_visible() -> None:
     for route in (
         'api("capabilities"',
         'api("search"',
-        'api("uploads"',
+        'api("uploads/batch"',
         "api(`uploads/",
+        'api("collections"',
+        "api(`collections/",
         'api("connectors/cia-reading-room-live/probe"',
         "api(`documents/",
         'api("graphs"',
+        'api("jobs"',
         "api(`jobs/",
         "api(`graphs/",
     ):

@@ -9,7 +9,7 @@
   const state = {
     capabilities: null, results: [], selectedDocuments: new Map(), graph: null,
     graphId: "example-fixed-v2", entitiesById: new Map(), selectedItem: null,
-    polling: null,
+    collections: [], collectionId: null, jobs: [], polling: null,
   };
   const $ = (selector) => document.querySelector(selector);
 
@@ -25,6 +25,9 @@
     return text.length > length ? `${text.slice(0, length - 1)}…` : text;
   }
   function token() { return $("[data-token]").value.trim(); }
+  function activeCollection() {
+    return state.collections.find((item) => item.id === state.collectionId) || null;
+  }
 
   async function api(path, options = {}) {
     const headers = { Accept: "application/json", ...(options.headers || {}) };
@@ -72,20 +75,136 @@
     }
   }
 
+  function renderCollectionControls() {
+    const picker = $("[data-collection-picker]");
+    const active = activeCollection();
+    picker.innerHTML = '<option value="">All documents</option>' + state.collections.map((collection) =>
+      `<option value="${escapeHtml(collection.id)}">${escapeHtml(collection.title)} · ${collection.document_ids.length}</option>`
+    ).join("");
+    picker.value = active?.id || "";
+    picker.disabled = !state.capabilities?.graph_build_authorized;
+    $("[data-collection-new]").disabled = !state.capabilities?.graph_build_authorized;
+    $("[data-collection-scope-wrap]").hidden = !active;
+    const summary = $("[data-collection-summary]");
+    if (!active) {
+      summary.textContent = state.capabilities?.graph_build_authorized
+        ? "Choose or create a collection to organize a research thread."
+        : "Collections are private; open through the tailnet or enter the operator token.";
+    } else {
+      summary.innerHTML = `<span><strong>${escapeHtml(active.title)}</strong> · ${active.document_ids.length} source${active.document_ids.length === 1 ? "" : "s"}${active.description ? ` · ${escapeHtml(active.description)}` : ""}</span><button class="text-button danger" type="button" data-collection-delete>Delete collection</button>`;
+      summary.querySelector("[data-collection-delete]").addEventListener("click", deleteActiveCollection);
+    }
+  }
+
+  async function loadCollections(preferredId = state.collectionId) {
+    if (!state.capabilities?.graph_build_authorized) {
+      state.collections = [];
+      state.collectionId = null;
+      renderCollectionControls();
+      return;
+    }
+    try {
+      const response = await api("collections", { operator: true });
+      state.collections = response.collections;
+      state.collectionId = state.collections.some((item) => item.id === preferredId) ? preferredId : null;
+      renderCollectionControls();
+    } catch (error) {
+      state.collections = [];
+      state.collectionId = null;
+      renderCollectionControls();
+      toast(`Collection request failed: ${error.message}`);
+    }
+  }
+
+  async function createCollection(event) {
+    event.preventDefault();
+    const submit = $("[data-collection-submit]");
+    const status = $("[data-collection-status]");
+    submit.disabled = true;
+    status.textContent = "Creating durable collection…";
+    try {
+      const collection = await api("collections", {
+        method: "POST", operator: true,
+        body: JSON.stringify({
+          title: $("[data-collection-title]").value,
+          description: $("[data-collection-description]").value,
+        }),
+      });
+      await loadCollections(collection.id);
+      state.selectedDocuments.clear();
+      $("[data-collection-scope]").checked = true;
+      $("[data-collection-dialog]").close();
+      await runSearch($("#query").value);
+      updateBuildControls();
+      toast(`${collection.title} is ready for sources.`);
+    } catch (error) {
+      status.textContent = `Collection creation failed: ${error.message}`;
+    } finally {
+      submit.disabled = false;
+    }
+  }
+
+  async function replaceCollectionDocuments(documentIds) {
+    const active = activeCollection();
+    if (!active) return;
+    const updated = await api(`collections/${encodeURIComponent(active.id)}/documents`, {
+      method: "PUT", operator: true,
+      body: JSON.stringify({ document_ids: documentIds }),
+    });
+    state.collections = state.collections.map((item) => item.id === updated.id ? updated : item);
+    renderCollectionControls();
+  }
+
+  async function toggleCollectionMembership(documentId) {
+    const active = activeCollection();
+    if (!active) return;
+    const isMember = active.document_ids.includes(documentId);
+    const nextIds = isMember
+      ? active.document_ids.filter((item) => item !== documentId)
+      : [...active.document_ids, documentId];
+    try {
+      await replaceCollectionDocuments(nextIds);
+      if (isMember) state.selectedDocuments.delete(documentId);
+      renderResults();
+      updateBuildControls();
+      toast(`${isMember ? "Removed from" : "Added to"} ${active.title}.`);
+    } catch (error) {
+      toast(`Collection update failed: ${error.message}`);
+    }
+  }
+
+  async function deleteActiveCollection() {
+    const active = activeCollection();
+    if (!active || !window.confirm(`Delete the collection “${active.title}”? Its source documents and graphs will be retained.`)) return;
+    try {
+      await api(`collections/${encodeURIComponent(active.id)}`, { method: "DELETE", operator: true });
+      state.collectionId = null;
+      state.selectedDocuments.clear();
+      await loadCollections();
+      await runSearch($("#query").value);
+      updateBuildControls();
+      toast("Collection deleted. Its sources and completed graphs were retained.");
+    } catch (error) {
+      toast(`Collection deletion failed: ${error.message}`);
+    }
+  }
+
   async function runSearch(query, connectorId = $("[data-search-connector]").value) {
     const results = $("[data-results]");
     const errorBox = $("[data-search-error]");
     errorBox.hidden = true;
     results.innerHTML = '<div class="empty-state compact">Searching source text…</div>';
     try {
+      const scopedCollectionId = state.collectionId && $("[data-collection-scope]").checked ? state.collectionId : null;
       const response = await api("search", {
         method: "POST", operator: true,
-        body: JSON.stringify({ query, connector_id: connectorId, limit: 30 }),
+        body: JSON.stringify({ query, connector_id: connectorId, limit: 30, collection_id: scopedCollectionId }),
       });
       state.results = response.results;
       $("[data-result-count]").textContent = `${response.total_matches} matches`;
       const sourceLabel = $("[data-search-connector]").selectedOptions[0]?.textContent || response.connector_id;
-      $("[data-search-meta]").textContent = `${sourceLabel} · query “${response.query}”.`;
+      const scopeLabel = scopedCollectionId ? ` within ${activeCollection()?.title}` : "";
+      $("[data-search-meta]").textContent = `${sourceLabel}${scopeLabel} · query “${response.query}”.`;
       renderResults();
     } catch (error) {
       results.replaceChildren();
@@ -97,24 +216,28 @@
   function renderResults() {
     const container = $("[data-results]");
     if (!state.results.length) {
-      container.innerHTML = '<div class="empty-state compact">No tracked documents matched this query.</div>';
+      const scoped = activeCollection() && $("[data-collection-scope]").checked;
+      container.innerHTML = `<div class="empty-state compact">No tracked documents matched this query.${scoped ? " Uncheck collection-only search to find sources to add." : ""}</div>`;
       return;
     }
     container.innerHTML = state.results.map((result) => {
       const selected = state.selectedDocuments.has(result.document_id);
+      const collection = activeCollection();
+      const isMember = collection?.document_ids.includes(result.document_id) || false;
       const metadata = [result.document_type, result.publication_date, result.page_count ? `${result.page_count} pp.` : null].filter(Boolean).join(" · ");
       return `<article class="result-card ${selected ? "is-selected" : ""}" data-result-id="${escapeHtml(result.document_id)}">
-        <input type="checkbox" aria-label="Select ${escapeHtml(result.title)}" ${selected ? "checked" : ""} />
+        <input type="checkbox" aria-label="Select ${escapeHtml(result.title)}" ${selected ? "checked" : ""} ${collection && !isMember ? "disabled" : ""} />
         <div><h3>${escapeHtml(result.title)}</h3>
           <div class="result-meta"><span class="source-badge ${result.connector_id === "user-uploads" ? "private" : ""}">${result.connector_id === "user-uploads" ? "Private upload" : result.connector_id === "cia-reading-room-live" ? "CIA live" : "Bundled CREST"}</span> ${escapeHtml(result.document_id)}${metadata ? ` · ${escapeHtml(metadata)}` : ""}</div>
           <p>${escapeHtml(truncate(result.snippet, 280))}</p>
-          <div class="result-actions"><button class="text-button" type="button" data-inspect-document>Inspect source</button></div>
+          <div class="result-actions"><button class="text-button" type="button" data-inspect-document>Inspect source</button>${collection ? `<button class="text-button ${isMember ? "danger" : ""}" type="button" data-toggle-membership>${isMember ? "Remove from" : "Add to"} ${escapeHtml(collection.title)}</button>` : ""}</div>
         </div></article>`;
     }).join("");
     container.querySelectorAll("[data-result-id]").forEach((card) => {
       const id = card.dataset.resultId;
       card.querySelector("input").addEventListener("change", (event) => toggleDocument(id, event.target.checked));
       card.querySelector("[data-inspect-document]").addEventListener("click", () => inspectDocument(id));
+      card.querySelector("[data-toggle-membership]")?.addEventListener("click", () => toggleCollectionMembership(id));
     });
   }
 
@@ -171,28 +294,29 @@
     const fileInput = $("[data-upload-file]");
     const submit = $("[data-upload-submit]");
     const status = $("[data-upload-status]");
-    const file = fileInput.files[0];
-    if (!file) { status.textContent = "Choose a source file first."; return; }
+    const files = [...fileInput.files];
+    if (!files.length) { status.textContent = "Choose at least one source file first."; return; }
     const form = new FormData();
-    form.append("file", file);
-    const title = $("[data-upload-title]").value.trim();
-    if (title) form.append("title", title);
+    files.forEach((file) => form.append("files", file));
+    if (state.collectionId) form.append("collection_id", state.collectionId);
     submit.disabled = true;
-    status.textContent = file.type.startsWith("image/") ? "Running local OCR…" : "Extracting and indexing source text…";
+    const results = $("[data-batch-results]");
+    results.hidden = true;
+    status.textContent = `Extracting and indexing ${files.length} source${files.length === 1 ? "" : "s"}…`;
     try {
-      const receipt = await api("uploads", { method: "POST", body: form, operator: true });
-      status.textContent = `${receipt.duplicate ? "Already present" : "Added"} · ${receipt.body_chars.toLocaleString()} characters · ${humanize(receipt.extraction_method)}.`;
-      toast(`${receipt.title} is now searchable and ready for graph building.`);
+      const receipt = await api("uploads/batch", { method: "POST", body: form, operator: true });
+      status.textContent = `${receipt.successes.length} added · ${receipt.failures.length} failed.`;
+      results.innerHTML = [
+        ...receipt.successes.map((item) => `<div class="batch-result success"><strong>${escapeHtml(item.title)}</strong><span>${item.duplicate ? "Already present" : "Added"} · ${item.body_chars.toLocaleString()} characters · ${escapeHtml(humanize(item.extraction_method))}</span></div>`),
+        ...receipt.failures.map((item) => `<div class="batch-result failure"><strong>${escapeHtml(item.filename)}</strong><span>${escapeHtml(item.detail)}</span></div>`),
+      ].join("");
+      results.hidden = false;
+      toast(`${receipt.successes.length} source${receipt.successes.length === 1 ? " is" : "s are"} now searchable${activeCollection() ? ` in ${activeCollection().title}` : ""}.`);
       $("[data-search-connector]").value = "all";
-      $("#query").value = receipt.title;
+      if (receipt.successes[0]) $("#query").value = receipt.successes[0].title;
       await loadCapabilities();
-      await runSearch(receipt.title, "all");
-      const uploaded = state.results.find((item) => item.document_id === receipt.document_id);
-      if (uploaded) {
-        state.selectedDocuments.set(uploaded.document_id, uploaded);
-        renderResults();
-        updateBuildControls();
-      }
+      await loadCollections(state.collectionId);
+      await runSearch($("#query").value, "all");
     } catch (error) {
       status.textContent = `Upload failed: ${error.message}`;
     } finally {
@@ -208,6 +332,7 @@
       $("[data-document-dialog]").close();
       toast("Private source deleted. Existing restricted graphs were retained.");
       await loadCapabilities();
+      await loadCollections(state.collectionId);
       await runSearch($("#query").value);
       updateBuildControls();
     } catch (error) {
@@ -223,10 +348,13 @@
     const button = $("[data-build-button]");
     const status = $("[data-build-status]");
     const capabilities = state.capabilities;
-    button.disabled = !count || !capabilities || !capabilities.graph_build_enabled || !capabilities.graph_build_authorized;
+    const collection = activeCollection();
+    const outsideCollection = collection && [...state.selectedDocuments.keys()].some((id) => !collection.document_ids.includes(id));
+    button.disabled = !count || !capabilities || !capabilities.graph_build_enabled || !capabilities.graph_build_authorized || outsideCollection;
     if (!count) status.textContent = "Search and select a document to begin.";
     else if (!capabilities?.graph_build_enabled) status.textContent = "Graph building is disabled on this server.";
     else if (!capabilities.graph_build_authorized) status.textContent = "Open through the tailnet or enter the operator token.";
+    else if (outsideCollection) status.textContent = `Add every selected source to ${collection.title} before building.`;
     else status.textContent = "Authorized · one traced build will use the stated ceiling.";
   }
 
@@ -240,6 +368,7 @@
         method: "POST", operator: true,
         body: JSON.stringify({
           document_ids: [...state.selectedDocuments.keys()],
+          collection_id: state.collectionId,
           max_chars_per_document: Number($("[data-max-chars]").value),
           max_budget_usd: Number($("[data-budget]").value),
           refine_relationships: false,
@@ -261,11 +390,14 @@
         toast("Knowledge graph completed and opened.");
         await loadGraphList(job.graph_id);
         await loadGraph(job.graph_id);
+        await loadJobs();
         updateBuildControls();
       } else if (job.state === "failed") {
         $("[data-build-status]").textContent = `Build failed: ${job.error}`;
+        await loadJobs();
         updateBuildControls();
       } else {
+        await loadJobs();
         state.polling = window.setTimeout(() => pollJob(jobId), 1600);
       }
     } catch (error) {
@@ -281,6 +413,42 @@
       picker.innerHTML = response.graphs.map((graph) => `<option value="${escapeHtml(graph.id)}">${escapeHtml(graph.label)} · ${graph.entities}E/${graph.relationships}R</option>`).join("");
       picker.value = preferredId || state.graphId;
     } catch (error) { toast(`Saved graphs request failed: ${error.message}`); }
+  }
+
+  function renderJobs() {
+    const container = $("[data-job-history]");
+    if (!state.capabilities?.graph_build_authorized) {
+      container.innerHTML = '<div class="empty-state compact">Recent jobs are private. Open through the tailnet or enter the operator token.</div>';
+      return;
+    }
+    if (!state.jobs.length) {
+      container.innerHTML = '<div class="empty-state compact">No graph builds have been submitted yet.</div>';
+      return;
+    }
+    container.innerHTML = state.jobs.map((job) => `<article class="job-card ${escapeHtml(job.state)}">
+      <div class="job-card-heading"><strong>${escapeHtml(humanize(job.state))}</strong><time>${escapeHtml(new Date(job.updated_at).toLocaleString())}</time></div>
+      <p>${job.request.document_ids.length} document${job.request.document_ids.length === 1 ? "" : "s"}${job.request.collection_id ? " · collection build" : ""} · ceiling $${Number(job.request.max_budget_usd).toFixed(2)}</p>
+      <span>${escapeHtml(job.error || job.progress_detail)}</span>
+      ${job.graph_id ? `<button class="button ghost small" type="button" data-open-job-graph="${escapeHtml(job.graph_id)}">Open completed graph</button>` : ""}
+    </article>`).join("");
+    container.querySelectorAll("[data-open-job-graph]").forEach((button) => button.addEventListener("click", async () => {
+      await loadGraph(button.dataset.openJobGraph);
+      $("[data-history-dialog]").close();
+    }));
+  }
+
+  async function loadJobs() {
+    if (!state.capabilities?.graph_build_authorized) {
+      state.jobs = [];
+      renderJobs();
+      return;
+    }
+    try {
+      state.jobs = (await api("jobs", { operator: true })).jobs;
+      renderJobs();
+    } catch (error) {
+      $("[data-job-history]").innerHTML = `<div class="inline-error">Job history failed: ${escapeHtml(error.message)}</div>`;
+    }
   }
 
   function requireGraph(payload) {
@@ -452,13 +620,32 @@
   function wireEvents() {
     $("[data-search-form]").addEventListener("submit", (event) => { event.preventDefault(); runSearch(new FormData(event.currentTarget).get("query"), $("[data-search-connector]").value); });
     $("[data-search-connector]").addEventListener("change", () => runSearch($("#query").value));
+    $("[data-collection-picker]").addEventListener("change", async (event) => {
+      state.collectionId = event.target.value || null;
+      state.selectedDocuments.clear();
+      $("[data-collection-scope]").checked = Boolean(state.collectionId);
+      renderCollectionControls();
+      await runSearch($("#query").value);
+      updateBuildControls();
+    });
+    $("[data-collection-scope]").addEventListener("change", () => runSearch($("#query").value));
+    $("[data-collection-new]").addEventListener("click", () => {
+      $("[data-collection-form]").reset();
+      $("[data-collection-status]").textContent = "Sources can be added after creation or during upload.";
+      $("[data-collection-dialog]").showModal();
+      $("[data-collection-title]").focus();
+    });
+    $("[data-collection-close]").addEventListener("click", () => $("[data-collection-dialog]").close());
+    $("[data-collection-form]").addEventListener("submit", createCollection);
     $("[data-build-button]").addEventListener("click", startBuild);
     $("[data-token]").value = window.sessionStorage.getItem("crestOperatorToken") || "";
     $("[data-token]").addEventListener("change", async (event) => {
       if (event.target.value) window.sessionStorage.setItem("crestOperatorToken", event.target.value);
       else window.sessionStorage.removeItem("crestOperatorToken");
       await loadCapabilities();
+      await loadCollections();
       await loadGraphList();
+      await loadJobs();
       await runSearch($("#query").value);
     });
     $("[data-export-link]").addEventListener("click", downloadCurrentGraph);
@@ -470,16 +657,24 @@
     $("[data-upload-close]").addEventListener("click", () => $("[data-upload-dialog]").close());
     $("[data-upload-form]").addEventListener("submit", uploadDocument);
     $("[data-upload-file]").addEventListener("change", (event) => {
-      const file = event.target.files[0];
-      $("[data-upload-file-label]").textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : "PDF, image, text, Markdown, CSV, or TSV";
+      const files = [...event.target.files];
+      const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+      $("[data-upload-file-label]").textContent = files.length ? `${files.length} file${files.length === 1 ? "" : "s"} · ${(totalBytes / 1024 / 1024).toFixed(2)} MB total` : "Up to 10 PDF, image, text, Markdown, CSV, or TSV files";
     });
     $("[data-help-button]").addEventListener("click", () => $("[data-help-dialog]").showModal());
     $("[data-help-close]").addEventListener("click", () => $("[data-help-dialog]").close());
+    $("[data-history-open]").addEventListener("click", async () => {
+      $("[data-history-dialog]").showModal();
+      await loadJobs();
+    });
+    $("[data-history-close]").addEventListener("click", () => $("[data-history-dialog]").close());
   }
 
   async function initialize() {
     wireEvents();
-    await Promise.all([loadCapabilities(), loadGraphList(), runSearch("disinformation")]);
+    await loadCapabilities();
+    await loadCollections();
+    await Promise.all([loadGraphList(), loadJobs(), runSearch("disinformation")]);
     await loadGraph("example-fixed-v2");
   }
   initialize().catch((error) => { $("[data-graph-empty]").textContent = `Workbench initialization failed: ${error.message}`; });

@@ -4,22 +4,26 @@
 
 CREST is an evidence-first document-to-knowledge-graph workbench. A researcher
 can search tracked CIA Reading Room material, privately add PDFs, scans, and
-text files, inspect and select sources, run a budget-bounded LLM extraction,
-explore the resulting graph, and export its provenance-preserving artifact.
+text files in partial-success batches, organize sources into persistent research
+collections, inspect and select sources, run a collection-scoped budget-bounded
+LLM extraction, recover prior jobs after refresh or restart, explore the
+resulting graph, and export its provenance-preserving artifact.
 
 The public product entry point is the workbench at `/crest/`. A fixed graph or
 evaluation artifact is supporting evidence, not the product front door.
 
 ## Primary workflow
 
-1. Upload a private source or search an available connector with ordinary keywords.
-2. Observe native extraction, OCR, duplicate, unsupported, or failed state.
-3. Inspect result metadata and source text before selecting documents.
-4. Select one to three documents and explicitly authorize a dollar ceiling.
-5. Start one traced graph-build job through the same API used by the UI.
-6. Observe queued, running, failed, or completed state without silent fallback.
-7. Explore entities, relationships, exact source quotes, and grounding spans.
-8. Download the validated `crest-kg-v2` JSON artifact.
+1. Create or choose a private research collection, or work across all documents.
+2. Batch-add private sources or search an available connector with ordinary keywords.
+3. Observe native extraction, OCR, duplicate, unsupported, or failed state for every file.
+4. Add tracked sources to the collection and search only its current membership.
+5. Inspect result metadata and source text before selecting one to three documents.
+6. Explicitly authorize a dollar ceiling and start one traced, collection-guarded graph job.
+7. Observe queued, running, failed, interrupted, or completed state without silent fallback.
+8. Refresh or restart and reopen the persisted job and completed graph from recent activity.
+9. Explore entities, relationships, exact source quotes, and grounding spans.
+10. Download the validated `crest-kg-v2` JSON artifact.
 
 The stable acquisition example is uploading a short field memorandum, finding
 it by title or body text, selecting it, building its graph, and opening an
@@ -34,6 +38,8 @@ extracted assertion's exact source evidence.
   embedded text when present and local Tesseract OCR otherwise; PNG, JPEG, and
   TIFF use OCR; UTF-8 text, Markdown, RST, CSV, and TSV use direct text. The
   original bytes and validated extracted text share one content-addressed ID.
+  Batch ingestion applies the byte/page/pixel/text ceilings independently and
+  reports every success and failure without rolling back valid siblings.
 - `cia-reading-room-live`: implemented against the official current
   `/search/results` response and Reading Room HTML contract, but visibly
   unavailable unless both search and document acquisition succeed. As of
@@ -41,7 +47,27 @@ extracted assertion's exact source evidence.
   mini, and direct document routes redirect to the landing page.
 
 Additional corpora and a repaired live connector should implement the same
-typed search/document boundary rather than introduce another extraction path.
+`SourceConnector` search/document/probe boundary rather than introduce another
+extraction path. Local files cross the strict `ExtractedUpload` contract before
+persistence. These seams remain repository-local until a real second maintained
+project adopts them.
+
+## Collection and recovery contract
+
+Collections are operator-private metadata records containing an ordered,
+duplicate-free list of durable bundled or uploaded document IDs. They do not own
+or copy source bytes. Deleting an upload removes it from every collection;
+deleting a collection preserves its sources and completed graphs. Existing
+sources remain available under All documents without a migration.
+
+Collection-scoped searches can only return current members. A graph request that
+names a collection is rejected if any selected document is not a member. Live
+connector results are not durable members because their document cache does not
+survive restart; retain that material as an uploaded source first.
+
+Jobs are persisted newest-first and private. A service restart changes queued or
+running records to explicit failed state; it never pretends an interrupted model
+call completed. Completed job records link back to their persisted graph.
 
 ## Execution and trust boundary
 
@@ -69,7 +95,7 @@ budget; source-grounding validation is never relaxed to rescue a bad response.
 
 ## Product stage and explicit non-goals
 
-This is an active development product, not a finished corpus-scale platform.
+This is a private single-operator internal product, not a finished corpus-scale platform.
 It does not claim live CIA coverage, layout-preserving OCR, handwriting
 recognition, non-English OCR packs, corpus recall, multi-user collaboration, or
 production-scale job orchestration. The
@@ -83,6 +109,14 @@ example checkpoint.
 - An authorized operator can upload text, a text PDF, and a scanned image;
   inspect extraction method and source hashes; search the result; select it;
   download the original; and delete it.
+- An authorized operator can create Project Aster, ingest two valid sources and
+  one unsupported file in a single batch, retain both successes, and understand
+  the failed item without inspecting logs.
+- Collection-only search cannot return non-members, collection graph builds
+  reject non-members, upload deletion repairs memberships, and collection
+  deletion preserves sources and graphs.
+- Recent activity survives refresh; service-interrupted work is shown as failed,
+  and completed jobs reopen their persisted graph.
 - Private source text and private-source graphs are unavailable without an
   operator identity.
 - Searching `disinformation` returns real tracked CREST documents with source

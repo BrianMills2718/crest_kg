@@ -27,7 +27,10 @@ from crest_pipeline import (
 )
 
 from .acquisition import ExtractedUpload
+from .connectors import SourceConnector
 from .models import (
+    CollectionCreate,
+    CollectionUpdate,
     ConnectorProbe,
     ConnectorStatus,
     DocumentDetail,
@@ -36,6 +39,7 @@ from .models import (
     GraphBuildRequest,
     GraphJob,
     GraphSummary,
+    ResearchCollection,
     SearchResponse,
     UploadedDocumentReceipt,
     UploadedDocumentRecord,
@@ -295,7 +299,7 @@ class CorpusCatalog:
         corpus_path: Path = DEFAULT_CORPUS,
         *,
         store: WorkbenchStore | None = None,
-        cia_connector: CiaReadingRoomConnector | None = None,
+        cia_connector: SourceConnector | None = None,
     ) -> None:
         self.corpus_path = corpus_path
         self.store = store
@@ -328,7 +332,6 @@ class CorpusCatalog:
                     for record in self.store.list_uploaded_documents()
                 }
             )
-        documents.update(self.cia_connector._documents)
         return documents
 
     @staticmethod
@@ -374,8 +377,9 @@ class CorpusCatalog:
         limit: int,
         connector_id: str = "all",
         include_uploads: bool = False,
+        document_ids: set[str] | None = None,
     ) -> SearchResponse:
-        if connector_id == "cia-reading-room-live":
+        if connector_id == "cia-reading-room-live" and document_ids is None:
             return self.cia_connector.search(query, limit=limit)
         documents: dict[str, tuple[RawDocument, str]] = {}
         if connector_id in {"all", "bundled-crest"}:
@@ -395,6 +399,12 @@ class CorpusCatalog:
                     for record in self.store.list_uploaded_documents()
                 }
             )
+        if document_ids is not None:
+            documents = {
+                document_id: value
+                for document_id, value in documents.items()
+                if document_id in document_ids
+            }
         normalized_query = " ".join(query.casefold().split())
         terms = tuple(dict.fromkeys(re.findall(r"[a-z0-9]+", normalized_query)))
         scored: list[tuple[float, str, RawDocument, str, str]] = []
@@ -472,7 +482,7 @@ class CorpusCatalog:
 
 
 class WorkbenchStore:
-    """Atomic JSON persistence for jobs and graph artifacts."""
+    """Atomic JSON persistence for collections, sources, jobs, and graph artifacts."""
 
     example_id = "example-fixed-v2"
 
@@ -481,12 +491,14 @@ class WorkbenchStore:
         self.jobs_dir = data_dir / "jobs"
         self.graphs_dir = data_dir / "graphs"
         self.graph_access_dir = data_dir / "graph-access"
+        self.collections_dir = data_dir / "collections"
         self.upload_records_dir = data_dir / "uploads" / "records"
         self.upload_files_dir = data_dir / "uploads" / "files"
         self.example_graph_path = example_graph
         self.jobs_dir.mkdir(parents=True, exist_ok=True)
         self.graphs_dir.mkdir(parents=True, exist_ok=True)
         self.graph_access_dir.mkdir(parents=True, exist_ok=True)
+        self.collections_dir.mkdir(parents=True, exist_ok=True)
         self.upload_records_dir.mkdir(parents=True, exist_ok=True)
         self.upload_files_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
@@ -534,6 +546,99 @@ class WorkbenchStore:
         if not path.is_file():
             raise KeyError(job_id)
         return GraphJob.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def list_jobs(self) -> list[GraphJob]:
+        jobs = [
+            GraphJob.model_validate_json(path.read_text(encoding="utf-8"))
+            for path in self.jobs_dir.glob("*.json")
+        ]
+        return sorted(jobs, key=lambda item: item.updated_at, reverse=True)
+
+    def create_collection(self, payload: CollectionCreate) -> ResearchCollection:
+        now = utc_now()
+        collection = ResearchCollection(
+            id=f"collection-{secrets.token_hex(8)}",
+            title=payload.title,
+            description=payload.description,
+            document_ids=[],
+            created_at=now,
+            updated_at=now,
+        )
+        with self._lock:
+            _atomic_json(
+                self.collections_dir / f"{collection.id}.json",
+                collection.model_dump(mode="json"),
+            )
+        return collection
+
+    def get_collection(self, collection_id: str) -> ResearchCollection:
+        if not re.fullmatch(r"collection-[0-9a-f]{16}", collection_id):
+            raise KeyError(collection_id)
+        path = self.collections_dir / f"{collection_id}.json"
+        if not path.is_file():
+            raise KeyError(collection_id)
+        return ResearchCollection.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def list_collections(self) -> list[ResearchCollection]:
+        collections = [
+            ResearchCollection.model_validate_json(path.read_text(encoding="utf-8"))
+            for path in self.collections_dir.glob("*.json")
+        ]
+        return sorted(collections, key=lambda item: item.updated_at, reverse=True)
+
+    def _save_collection(self, collection: ResearchCollection) -> ResearchCollection:
+        with self._lock:
+            _atomic_json(
+                self.collections_dir / f"{collection.id}.json",
+                collection.model_dump(mode="json"),
+            )
+        return collection
+
+    def update_collection(
+        self, collection_id: str, payload: CollectionUpdate
+    ) -> ResearchCollection:
+        collection = self.get_collection(collection_id)
+        changes = payload.model_dump(exclude_none=True)
+        if not changes:
+            return collection
+        return self._save_collection(
+            collection.model_copy(update={**changes, "updated_at": utc_now()})
+        )
+
+    def replace_collection_documents(
+        self, collection_id: str, document_ids: list[str]
+    ) -> ResearchCollection:
+        collection = self.get_collection(collection_id)
+        if collection.document_ids == document_ids:
+            return collection
+        return self._save_collection(
+            collection.model_copy(
+                update={"document_ids": document_ids, "updated_at": utc_now()}
+            )
+        )
+
+    def add_collection_documents(
+        self, collection_id: str, document_ids: list[str]
+    ) -> ResearchCollection:
+        collection = self.get_collection(collection_id)
+        combined = list(dict.fromkeys([*collection.document_ids, *document_ids]))
+        return self.replace_collection_documents(collection_id, combined)
+
+    def delete_collection(self, collection_id: str) -> ResearchCollection:
+        with self._lock:
+            collection = self.get_collection(collection_id)
+            (self.collections_dir / f"{collection_id}.json").unlink()
+        return collection
+
+    def remove_document_from_collections(self, document_id: str) -> None:
+        with self._lock:
+            for collection in self.list_collections():
+                if document_id not in collection.document_ids:
+                    continue
+                self.replace_collection_documents(
+                    collection.id,
+                    [item for item in collection.document_ids if item != document_id],
+                )
 
     @staticmethod
     def _upload_receipt(
@@ -595,6 +700,7 @@ class WorkbenchStore:
     def delete_uploaded_document(self, document_id: str) -> UploadedDocumentRecord:
         with self._lock:
             record = self.get_uploaded_document(document_id)
+            self.remove_document_from_collections(document_id)
             record_path = self.upload_records_dir / f"{document_id}.json"
             source_path = self.upload_files_dir / f"{document_id}.source"
             record_path.unlink()

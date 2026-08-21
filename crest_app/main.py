@@ -15,13 +15,21 @@ from .acquisition import (
     extract_upload,
 )
 from .models import (
+    BatchUploadFailure,
+    BatchUploadReceipt,
     Capabilities,
+    CollectionCreate,
+    CollectionDocumentsRequest,
+    CollectionList,
+    CollectionUpdate,
     ConnectorProbe,
     ConnectorStatus,
     DocumentDetail,
     GraphBuildRequest,
     GraphJob,
+    GraphJobList,
     GraphList,
+    ResearchCollection,
     SearchRequest,
     SearchResponse,
     UploadedDocumentList,
@@ -49,7 +57,7 @@ def create_app(
 ) -> FastAPI:
     app = FastAPI(
         title="CREST research workbench API",
-        version="0.1.0",
+        version="0.2.0",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
         root_path=os.getenv("CREST_ROOT_PATH", ""),
@@ -88,6 +96,49 @@ def create_app(
 
     def max_upload_bytes() -> int:
         return int(os.getenv("CREST_MAX_UPLOAD_BYTES", str(15 * 1024 * 1024)))
+
+    def max_batch_files() -> int:
+        return int(os.getenv("CREST_MAX_BATCH_FILES", "10"))
+
+    def require_collection(collection_id: str) -> ResearchCollection:
+        try:
+            return resolved_store.get_collection(collection_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Collection not found") from exc
+
+    async def ingest_upload(
+        file: UploadFile, *, title: str | None = None
+    ) -> UploadedDocumentReceipt:
+        ceiling = max_upload_bytes()
+        source_bytes = await file.read(ceiling + 1)
+        await file.close()
+        if not source_bytes:
+            raise HTTPException(status_code=422, detail="The uploaded file is empty")
+        if len(source_bytes) > ceiling:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Upload exceeds the {ceiling:,}-byte server limit",
+            )
+        try:
+            extracted = extract_upload(
+                source_bytes,
+                filename=file.filename,
+                supplied_title=title,
+                max_pages=int(os.getenv("CREST_MAX_UPLOAD_PAGES", "50")),
+                max_extracted_chars=int(
+                    os.getenv("CREST_MAX_EXTRACTED_CHARS", "1000000")
+                ),
+                max_image_pixels=int(
+                    os.getenv("CREST_MAX_IMAGE_PIXELS", "40000000")
+                ),
+            )
+        except UnsupportedUpload as exc:
+            raise HTTPException(status_code=415, detail=str(exc)) from exc
+        except ExtractionUnavailable as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except AcquisitionError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return persist_extracted_upload(resolved_store, extracted, source_bytes)
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -138,6 +189,7 @@ def create_app(
             document_upload_enabled=uploads_enabled,
             document_upload_authorized=is_operator,
             max_upload_bytes=max_upload_bytes(),
+            max_batch_files=max_batch_files(),
         )
 
     @app.post("/api/search", response_model=SearchResponse)
@@ -147,6 +199,14 @@ def create_app(
         tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
     ) -> SearchResponse:
         is_operator = operator_status(authorization, tailscale_login)
+        collection = None
+        if payload.collection_id:
+            require_operator(
+                authorization,
+                tailscale_login,
+                action="Collection search",
+            )
+            collection = require_collection(payload.collection_id)
         if payload.connector_id in {"user-uploads", "cia-reading-room-live"}:
             require_operator(
                 authorization,
@@ -159,6 +219,7 @@ def create_app(
                 limit=payload.limit,
                 connector_id=payload.connector_id,
                 include_uploads=is_operator,
+                document_ids=(set(collection.document_ids) if collection else None),
             )
         except ConnectorUnavailable as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -179,6 +240,93 @@ def create_app(
         return resolved_catalog.cia_connector.probe()
 
     @app.post(
+        "/api/collections",
+        response_model=ResearchCollection,
+        status_code=201,
+    )
+    def create_collection(
+        payload: CollectionCreate,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> ResearchCollection:
+        require_operator(authorization, tailscale_login, action="Collection creation")
+        return resolved_store.create_collection(payload)
+
+    @app.get("/api/collections", response_model=CollectionList)
+    def list_collections(
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> CollectionList:
+        require_operator(authorization, tailscale_login, action="Collection listing")
+        return CollectionList(collections=resolved_store.list_collections())
+
+    @app.get("/api/collections/{collection_id}", response_model=ResearchCollection)
+    def get_collection(
+        collection_id: str,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> ResearchCollection:
+        require_operator(authorization, tailscale_login, action="Collection access")
+        return require_collection(collection_id)
+
+    @app.patch("/api/collections/{collection_id}", response_model=ResearchCollection)
+    def update_collection(
+        collection_id: str,
+        payload: CollectionUpdate,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> ResearchCollection:
+        require_operator(authorization, tailscale_login, action="Collection update")
+        require_collection(collection_id)
+        return resolved_store.update_collection(collection_id, payload)
+
+    @app.put(
+        "/api/collections/{collection_id}/documents",
+        response_model=ResearchCollection,
+    )
+    def replace_collection_documents(
+        collection_id: str,
+        payload: CollectionDocumentsRequest,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> ResearchCollection:
+        require_operator(authorization, tailscale_login, action="Collection membership update")
+        require_collection(collection_id)
+        unknown_ids = [
+            document_id
+            for document_id in payload.document_ids
+            if not resolved_catalog.contains(document_id)
+        ]
+        if unknown_ids:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Unknown document IDs: {', '.join(unknown_ids)}",
+            )
+        live_ids = [
+            document_id
+            for document_id in payload.document_ids
+            if resolved_catalog.connector_for(document_id) == "cia-reading-room-live"
+        ]
+        if live_ids:
+            raise HTTPException(
+                status_code=422,
+                detail="Live connector results are not durable collection members; upload a retained source instead",
+            )
+        return resolved_store.replace_collection_documents(
+            collection_id, payload.document_ids
+        )
+
+    @app.delete("/api/collections/{collection_id}", response_model=ResearchCollection)
+    def delete_collection(
+        collection_id: str,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> ResearchCollection:
+        require_operator(authorization, tailscale_login, action="Collection deletion")
+        require_collection(collection_id)
+        return resolved_store.delete_collection(collection_id)
+
+    @app.post(
         "/api/uploads",
         response_model=UploadedDocumentReceipt,
         status_code=201,
@@ -196,36 +344,51 @@ def create_app(
             tailscale_login,
             action="Document upload",
         )
-        ceiling = max_upload_bytes()
-        source_bytes = await file.read(ceiling + 1)
-        await file.close()
-        if not source_bytes:
-            raise HTTPException(status_code=422, detail="The uploaded file is empty")
-        if len(source_bytes) > ceiling:
+        return await ingest_upload(file, title=title)
+
+    @app.post("/api/uploads/batch", response_model=BatchUploadReceipt)
+    async def upload_document_batch(
+        files: list[UploadFile] = File(...),
+        collection_id: str | None = Form(default=None),
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> BatchUploadReceipt:
+        if not upload_enabled():
+            raise HTTPException(status_code=503, detail="Document upload is disabled")
+        require_operator(authorization, tailscale_login, action="Batch document upload")
+        if not files:
+            raise HTTPException(status_code=422, detail="Choose at least one source file")
+        if len(files) > max_batch_files():
             raise HTTPException(
                 status_code=413,
-                detail=f"Upload exceeds the {ceiling:,}-byte server limit",
+                detail=f"Batch exceeds the {max_batch_files()}-file server limit",
             )
-        try:
-            extracted = extract_upload(
-                source_bytes,
-                filename=file.filename,
-                supplied_title=title,
-                max_pages=int(os.getenv("CREST_MAX_UPLOAD_PAGES", "50")),
-                max_extracted_chars=int(
-                    os.getenv("CREST_MAX_EXTRACTED_CHARS", "1000000")
-                ),
-                max_image_pixels=int(
-                    os.getenv("CREST_MAX_IMAGE_PIXELS", "40000000")
-                ),
+        if collection_id:
+            require_collection(collection_id)
+        successes: list[UploadedDocumentReceipt] = []
+        failures: list[BatchUploadFailure] = []
+        for file in files:
+            filename = file.filename or "upload"
+            try:
+                successes.append(await ingest_upload(file))
+            except HTTPException as exc:
+                failures.append(
+                    BatchUploadFailure(
+                        filename=filename,
+                        status_code=exc.status_code,
+                        detail=str(exc.detail),
+                    )
+                )
+        if collection_id and successes:
+            resolved_store.add_collection_documents(
+                collection_id,
+                [item.document_id for item in successes],
             )
-        except UnsupportedUpload as exc:
-            raise HTTPException(status_code=415, detail=str(exc)) from exc
-        except ExtractionUnavailable as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
-        except AcquisitionError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return persist_extracted_upload(resolved_store, extracted, source_bytes)
+        return BatchUploadReceipt(
+            collection_id=collection_id,
+            successes=successes,
+            failures=failures,
+        )
 
     @app.get("/api/uploads", response_model=UploadedDocumentList)
     def list_uploads(
@@ -332,7 +495,30 @@ def create_app(
                 status_code=422,
                 detail=f"Unknown document IDs: {', '.join(unknown_ids)}",
             )
+        if payload.collection_id:
+            collection = require_collection(payload.collection_id)
+            outside_collection = [
+                document_id
+                for document_id in payload.document_ids
+                if document_id not in collection.document_ids
+            ]
+            if outside_collection:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        "Documents are outside the selected collection: "
+                        + ", ".join(outside_collection)
+                    ),
+                )
         return app.state.runner.submit(payload)
+
+    @app.get("/api/jobs", response_model=GraphJobList)
+    def list_jobs(
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> GraphJobList:
+        require_operator(authorization, tailscale_login, action="Job history access")
+        return GraphJobList(jobs=resolved_store.list_jobs())
 
     @app.get("/api/jobs/{job_id}", response_model=GraphJob)
     def get_job(

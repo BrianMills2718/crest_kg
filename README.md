@@ -3,7 +3,9 @@
 CREST is an evidence-first research workbench for CIA Reading Room material.
 It lets a researcher search an available CREST corpus, inspect and select
 source documents, privately upload PDFs, scans, and text files, run local OCR,
-build a budget-bounded evidence graph, and export the complete
+organize partial-success batches into persistent research collections, build a
+collection-scoped budget-bounded evidence graph, recover recent jobs after a
+refresh or restart, and export the complete
 provenance-preserving artifact.
 
 `crest_app` owns the executable web/API surface and `crest_pipeline.py` remains
@@ -16,7 +18,8 @@ The tracked source archive contains 40 CIA Reading Room documents, while the
 included five-document graph remains a labeled evaluation checkpoint. Private
 uploads are persisted in the workbench data volume and pass through the same
 source hashing, numbered-line, extraction, and evidence contracts as bundled
-records. Live CIA acquisition is currently unavailable: the official search
+records. Collections retain source references without owning source bytes, and
+deleting one never deletes its documents or graphs. Live CIA acquisition is currently unavailable: the official search
 endpoint returns access denied from both the workstation and Mac mini, while
 Reading Room document routes redirect to the landing page. The workbench keeps
 the connector explicit and provides an operator probe rather than relabeling
@@ -42,6 +45,15 @@ Tailscale identity or `CREST_OPERATOR_TOKEN`, and cannot exceed
 their server bounds. Graph builds cannot exceed `CREST_MAX_BUILD_BUDGET_USD`
 (default `$0.25`); uploads default to 15 MiB, 50 pages, and one million
 extracted characters. The UI uses the same typed API documented at `/api/docs`.
+
+Authorized operators can create private collections, add or remove durable
+bundled/uploaded members, scope search and graph builds to a collection, and
+reopen completed or failed jobs from Recent activity. Multi-file ingestion uses
+`POST /api/uploads/batch`; each file succeeds or fails independently, while an
+invalid collection is rejected before any file is persisted. The current
+repository-local extension seams are the strict `ExtractedUpload` result and
+the `SourceConnector` protocol in `crest_app`; shared-package extraction waits
+for a real second maintained consumer.
 
 ## What the canonical path guarantees
 

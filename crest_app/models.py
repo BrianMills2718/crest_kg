@@ -32,6 +32,7 @@ class Capabilities(ApiModel):
     document_upload_enabled: bool
     document_upload_authorized: bool
     max_upload_bytes: int
+    max_batch_files: int
 
 
 class SearchRequest(ApiModel):
@@ -40,6 +41,9 @@ class SearchRequest(ApiModel):
         "all", "bundled-crest", "user-uploads", "cia-reading-room-live"
     ] = "all"
     limit: int = Field(default=20, ge=1, le=50)
+    collection_id: str | None = Field(
+        default=None, pattern=r"^collection-[0-9a-f]{16}$"
+    )
 
     @field_validator("query")
     @classmethod
@@ -123,6 +127,83 @@ class UploadedDocumentList(ApiModel):
     documents: list[UploadedDocumentReceipt]
 
 
+class BatchUploadFailure(ApiModel):
+    filename: str
+    status_code: int = Field(ge=400, le=599)
+    detail: str
+
+
+class BatchUploadReceipt(ApiModel):
+    collection_id: str | None
+    successes: list[UploadedDocumentReceipt]
+    failures: list[BatchUploadFailure]
+
+
+class CollectionCreate(ApiModel):
+    title: str = Field(min_length=1, max_length=120)
+    description: str = Field(default="", max_length=500)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if not normalized:
+            raise ValueError("title must contain non-whitespace text")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def normalize_description(cls, value: str) -> str:
+        return " ".join(value.split())
+
+
+class CollectionUpdate(ApiModel):
+    title: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_optional_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = " ".join(value.split())
+        if not normalized:
+            raise ValueError("title must contain non-whitespace text")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def normalize_optional_description(cls, value: str | None) -> str | None:
+        return " ".join(value.split()) if value is not None else None
+
+
+class CollectionDocumentsRequest(ApiModel):
+    document_ids: list[str] = Field(default_factory=list, max_length=100)
+
+    @field_validator("document_ids")
+    @classmethod
+    def unique_document_ids(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value]
+        if any(not item for item in cleaned):
+            raise ValueError("document IDs must be nonblank")
+        if len(cleaned) != len(set(cleaned)):
+            raise ValueError("document IDs must be unique")
+        return cleaned
+
+
+class ResearchCollection(ApiModel):
+    id: str = Field(pattern=r"^collection-[0-9a-f]{16}$")
+    title: str
+    description: str
+    document_ids: list[str]
+    created_at: datetime
+    updated_at: datetime
+
+
+class CollectionList(ApiModel):
+    collections: list[ResearchCollection]
+
+
 class ConnectorProbe(ApiModel):
     connector: ConnectorStatus
     checked_at: datetime
@@ -133,6 +214,9 @@ class ConnectorProbe(ApiModel):
 
 class GraphBuildRequest(ApiModel):
     document_ids: list[str] = Field(min_length=1, max_length=3)
+    collection_id: str | None = Field(
+        default=None, pattern=r"^collection-[0-9a-f]{16}$"
+    )
     max_chars_per_document: int = Field(default=12_000, ge=1_000, le=20_000)
     max_budget_usd: float = Field(default=0.10, gt=0, le=5.0)
     refine_relationships: bool = False
@@ -161,6 +245,10 @@ class GraphJob(ApiModel):
     trace_id: str | None = None
     error: str | None = None
     progress_detail: str
+
+
+class GraphJobList(ApiModel):
+    jobs: list[GraphJob]
 
 
 class GraphSummary(ApiModel):
