@@ -48,34 +48,62 @@ STOP_WORDS = frozenset(
         "as",
         "at",
         "be",
+        "between",
+        "both",
         "by",
+        "can",
+        "could",
         "did",
         "do",
         "does",
         "for",
         "from",
+        "give",
+        "had",
         "how",
         "in",
         "is",
         "it",
+        "its",
+        "identify",
+        "along",
+        "behind",
+        "me",
+        "naming",
+        "name",
         "of",
         "on",
         "or",
         "put",
+        "report",
+        "responsibl",
+        "respectiv",
+        "serv",
+        "sourc",
+        "summariz",
+        "tell",
         "that",
         "the",
         "their",
         "there",
         "this",
         "to",
+        "two",
+        "versu",
         "was",
         "were",
         "what",
         "when",
+        "where",
         "which",
         "who",
+        "whether",
         "why",
         "with",
+        "you",
+        "exist",
+        "pleas",
+        "s",
     }
 )
 
@@ -93,11 +121,31 @@ _RAW_CONCEPT_GROUPS = (
         "agency",
         "team",
         "entity",
+        "organizer",
+        "role",
     ),
     ("organize", "coordinate", "convene", "arrange"),
     ("lead", "led", "direct", "operate", "manage", "supervise"),
-    ("demonstration", "pilot", "exercise", "trial", "test"),
-    ("date", "day", "schedule", "begin", "began", "begun", "start", "launch"),
+    ("demonstration", "pilot", "exercise", "trial", "test", "undertaking"),
+    (
+        "date",
+        "day",
+        "days",
+        "schedule",
+        "begin",
+        "began",
+        "begun",
+        "start",
+        "launch",
+        "kickoff",
+        "open",
+        "opened",
+        "opening",
+        "calendar",
+        "observe",
+        "observed",
+        "supposed",
+    ),
     (
         "disagreement",
         "conflict",
@@ -106,6 +154,9 @@ _RAW_CONCEPT_GROUPS = (
         "dispute",
         "differ",
         "diverge",
+        "disagree",
+        "reconcile",
+        "competing",
     ),
     ("cost", "budget", "funding", "expense", "price"),
 )
@@ -129,33 +180,6 @@ CONCEPT_GROUPS = tuple(
 CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
 }
-
-_FOCUS_BOUNDARIES = frozenset(
-    _stem(token)
-    for token in (
-        "arranged",
-        "behind",
-        "convened",
-        "coordinated",
-        "did",
-        "do",
-        "does",
-        "had",
-        "has",
-        "have",
-        "is",
-        "organized",
-        "powered",
-        "protected",
-        "put",
-        "responsible",
-        "transported",
-        "was",
-        "were",
-        "will",
-    )
-)
-
 
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(
@@ -185,42 +209,15 @@ def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
     return tuple(concepts)
 
 
-def _query_focus_concepts(
-    question: str,
-) -> tuple[tuple[str, frozenset[str]], ...]:
-    """Extract an explicit requested subject from common question forms.
+def _proper_query_terms(question: str) -> frozenset[str]:
+    """Return mid-sentence proper-name modifiers that may not occur verbatim."""
 
-    Context overlap can rank a supported answer, but it cannot establish that a
-    source discusses the requested airline, algorithm, vehicle, or other head
-    subject. This deliberately small grammar is transparent and fails back to
-    the broader retrieval rule when a question has no explicit focus phrase.
-    """
-
-    raw_terms = re.findall(r"[A-Za-z0-9]+", question.casefold())
-    if not raw_terms:
-        return ()
-    start: int | None = None
-    if raw_terms[0] in {"which", "what"}:
-        start = 1
-    elif len(raw_terms) > 2 and raw_terms[:2] in (["how", "many"], ["how", "much"]):
-        start = 2
-    elif raw_terms[0] in {"identify", "name"}:
-        start = 1
-    if start is None:
-        return ()
-    focus: list[tuple[str, frozenset[str]]] = []
-    seen: set[frozenset[str]] = set()
-    for raw_term in raw_terms[start:]:
-        term = _stem(raw_term)
-        if term in _FOCUS_BOUNDARIES:
-            break
-        if not term or term in STOP_WORDS:
-            continue
-        alternatives = CONCEPT_BY_TERM.get(term, frozenset({term}))
-        if alternatives not in seen:
-            focus.append((term, alternatives))
-            seen.add(alternatives)
-    return tuple(focus)
+    tokens = re.findall(r"[A-Za-z0-9]+", question)
+    return frozenset(
+        _stem(token)
+        for index, token in enumerate(tokens)
+        if index > 0 and token[:1].isupper()
+    )
 
 
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
@@ -308,7 +305,6 @@ def rank_evidence(
 
     normalized_question = " ".join(question.casefold().split())
     concepts = _query_concepts(question)
-    focus_concepts = _query_focus_concepts(question)
     if not concepts or limit <= 0:
         return []
     candidates = [
@@ -336,15 +332,29 @@ def rank_evidence(
         )
         for _, alternatives in concepts
     ]
+    candidate_term_sets = [candidate.terms for candidate in candidates]
+    optional_proper_terms = _proper_query_terms(question)
+    unsupported_terms = [
+        query_term
+        for index, (query_term, _alternatives) in enumerate(concepts)
+        if document_frequencies[index] == 0
+        and _alternatives not in CONCEPT_GROUPS
+        and query_term not in optional_proper_terms
+        and max(
+            (_best_fuzzy(query_term, terms) for terms in candidate_term_sets),
+            default=0.0,
+        )
+        < 0.86
+    ]
+    # Retrieval is an evidence admission boundary, not merely a partial-match
+    # search. If a requested non-name concept has no support anywhere in the
+    # current collection, return no evidence and let the brief report
+    # insufficient evidence rather than presenting contextual false positives.
+    if unsupported_terms:
+        return []
     average_length = sum(len(candidate.terms) for candidate in candidates) / len(candidates)
     scored: list[tuple[float, _ChunkCandidate, EvidenceScore, list[str]]] = []
     for candidate in candidates:
-        if focus_concepts and not any(
-            _concept_frequency(candidate.terms, alternatives) > 0
-            or _best_fuzzy(query_term, candidate.terms) >= 0.86
-            for query_term, alternatives in focus_concepts
-        ):
-            continue
         bm25 = 0.0
         exact_matches = 0
         fuzzy_values: list[float] = []
