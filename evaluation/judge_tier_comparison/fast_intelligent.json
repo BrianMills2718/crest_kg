@@ -1,0 +1,227 @@
+{
+  "summary": {
+    "scored_probes": 20,
+    "skipped_degenerate": 5,
+    "rank_recall": 0.85,
+    "recall_after_gate": 0.7,
+    "abstention_when_answer_absent": 0.75
+  },
+  "rows": [
+    {
+      "probe_id": "probe-000",
+      "question": "The three categories were 'white,' 'gray,' and 'black' operations. The Soviet Union classified normal diplomatic, trade, aid, and informational efforts as 'white' operations. 'Gray' operations involved overt Soviet contacts with foreign communist parties, 'clandestine' radio stations, or well-known media outlets for disinformation, which were widely known to be under Soviet direction but not officially acknowledged. 'Black' operations generally involved elements of deception and often employed clandestine means to mask Moscow's hand.",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-001",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000403760003-2",
+      "source_title": "DEFECTORS",
+      "passage": "The people you meet act differently. The American culture is totally different from European culture. It is a very traumatic experience. It's like standing like a child and learning everything from scratch. You may say, \"Well, he was stationed here for four years or more. He knew Americans.\" Well, it's different to be here as an intelligence operative representing the superpower, or standing here as a defector, defenseless, trying to find his own place in the new society. It's a tremendously difficult period for every individual. LEHRER: Was it difficult for you? BITTMAN: It was very difficult. And I would say that I hit a bottom, not after three months.",
+      "question": "How does Ladislav Bittman describe the experience of adjusting to American culture as a defector, according to the interview with Jim Lehrer?",
+      "expected_answer": "Bittman describes the experience as traumatic, like learning everything from scratch, and notes that it was very difficult for him personally, hitting a bottom not after three months.",
+      "skipped": "degenerate-self-referential-question"
+    },
+    {
+      "probe_id": "probe-002",
+      "question": "What term did the Soviets use to describe the use of overt and covert techniques to influence, deceive and mislead a target, intending to make them act against their own interests?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": false,
+      "leaked_documents": [
+        "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000302320015-9"
+      ]
+    },
+    {
+      "probe_id": "probe-003",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp85b00263r000200170006-8",
+      "source_title": "DCI BRIEFING FOR HPSCI ON SEPTEMBER 20, 1981",
+      "passage": "Fielding hits teams for assasination of moderate Arab Ambassador C. Sub-Saharan Africa 1. Soviet,objective: encourage/facilitate insurgency against South Africa and isolate Pretoria regime a. Military training for insurgents b. Disinformation/forgeries 2. Libyan-objective: undercut Western influence throughout continent a. Subvert Upper Volta, Chad, Niger, Somalia b. Supporting radical regimes in Ghana, Benin c. Supporting spread of Islamic religion as means of acquiring political power 3. Cuban objective: supporting radical regimes in 5 SECRET Approved For Release 2007/0510EZ DP85B00263R000200170006-8 Angola, Ethiopia, Mozambique a. Assist liberation movements b.",
+      "question": "Which three countries were identified as having objectives in Sub-Saharan Africa, according to the document?",
+      "expected_answer": "The Soviet Union, Libya, and Cuba.",
+      "skipped": "degenerate-self-referential-question"
+    },
+    {
+      "probe_id": "probe-004",
+      "question": "What did a recent KGB manual reveal about how Soviet intelligence redefined 'dezinformatsiya'?",
+      "rank_hit": true,
+      "recall_hit": false,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-005",
+      "question": "Which U.S. administration and its ally were attempting to influence a future Iranian government after the death of Ayatollah Khomeini?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-006",
+      "question": "What specific charge did Soviet radio make in April regarding joint US-Zaire military maneuvers?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-007",
+      "question": "Which Soviet organization ordered the disinformation portraying Yuri Andropov as a liberal reformist?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-008",
+      "question": "What term does CIA Director Stansfield Turner use to describe the potential damage to American credibility from lies?",
+      "rank_hit": false,
+      "recall_hit": false,
+      "abstained_when_source_removed": false,
+      "leaked_documents": [
+        "https://www.cia.gov/readingroom/document/cia-rdp91-00901r000600400018-2",
+        "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000201460004-8"
+      ]
+    },
+    {
+      "probe_id": "probe-009",
+      "source_identity": "https://www.cia.gov/readingroom/document/05259029",
+      "source_title": "LETTER TO EDITOR, NY TRIBUNE, FROM ANATOLYI GOLITSYN RE \"NEW LIES FOR OLD\"",
+      "passage": "Such KGB designs provide an oppor- tunity to analyze the dissident movement in the U.S.S.R. as a new \"Trust\". Mr. Navrozov tries to defend the dissident move- ment, completely ignoring past experiences and the new KGB design Approved for Release: 2018/04/10 C05259029 Approved for Release: 2018/04/10 C05259029 to manipulate the political opposition. I find this kind of attitude in a dissident as rather strange. Further, his boast- ful references in his articles concerning Soviet defectse spend- ing and his in the last My response denigration of my views on Soviet military efforts twenty years can only be characterized as ridiculous.",
+      "question": "What does Mr. Navrozov try to defend according to the KGB designs?",
+      "expected_answer": "the dissident movement",
+      "skipped": "degenerate-self-referential-question"
+    },
+    {
+      "probe_id": "probe-010",
+      "question": "What did Arnaud de Borchgrave say about giving equal time to people trained in Leninist precepts?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-011",
+      "question": "Which country was identified as the primary focus for the conference on disinformation discussed at the 24 January consultation?",
+      "rank_hit": true,
+      "recall_hit": false,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-012",
+      "question": "What was the name of the KGB directorate created in 1967 for disinformation operations, and who ordered its establishment?",
+      "rank_hit": false,
+      "recall_hit": false,
+      "abstained_when_source_removed": false,
+      "leaked_documents": [
+        "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000807500040-1"
+      ]
+    },
+    {
+      "probe_id": "probe-013",
+      "question": "Who was the Vice President that approved the release of A. Golitsyn's statement?",
+      "rank_hit": true,
+      "recall_hit": false,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-014",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp80b01676r000500010047-7",
+      "source_title": "LETTER TO HONORABLE CLARK CLIFFORD FROM W. F. RABORN",
+      "passage": "A basic requirement of Soviet policy and a major objective of the Soviet Intelligence Services is the destruction of effective security collaboration among the non-Communist countries in order to carry out Soviet long-term strategic plans for subversion, political upheavals, popular fronts and the eventual political isolation of the United States. 3. Defamation and forgery operations are conceived, directed and perpetrated by a single organization located outside the target areas which makes use of local Communist or pro- Communist propagandists and of cooperating Communist Bloc intelligence and security services.",
+      "question": "What was a major objective of the Soviet Intelligence Services according to this passage?",
+      "expected_answer": "The Soviet Intelligence Services sought to destroy effective security collaboration among non-Communist countries.",
+      "skipped": "degenerate-self-referential-question"
+    },
+    {
+      "probe_id": "probe-015",
+      "question": "Who believed the Soviets would blame the United States if they did not achieve their goals at the 1985 Reagan-Gorbachev summit in Geneva, and what was his background?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-016",
+      "question": "What did conference participants agree the government needed to neutralize?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-017",
+      "question": "Which individual stated that it is important to never stop questioning the government as part of the democratic process?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": false,
+      "leaked_documents": [
+        "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000201460004-8"
+      ]
+    },
+    {
+      "probe_id": "probe-018",
+      "source_identity": "https://www.cia.gov/readingroom/document/cia-rdp90-00965r000605760007-4",
+      "source_title": "WHITE HOUSE DECEPTION?",
+      "passage": "25 the Wall Street Journal, quoting admin- istration sources, reported that Qaddafi was planning new terrorist attacks and that the US and Libya were on a collision course. Bombarded by questions from journal- ists, White House press spokesman August termed the news report authlo b \" Other published reports followed. \" But the Pbst in it, Poindexter memo as sa - all had concluded omciais a iprrnnct .",
+      "question": "According to the Wall Street Journal, what was Qaddafi reportedly planning and what did it predict for US-Libya relations?",
+      "expected_answer": "Qaddafi was planning new terrorist attacks and that the US and Libya were on a collision course.",
+      "skipped": "degenerate-self-referential-question"
+    },
+    {
+      "probe_id": "probe-019",
+      "question": "Who was a KGB officer in the Tokyo residency who defected to the United States in 1979?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": false,
+      "leaked_documents": [
+        "https://www.cia.gov/readingroom/document/cia-rdp90-00552r000505100043-5"
+      ]
+    },
+    {
+      "probe_id": "probe-020",
+      "question": "Which group did Larry Speakes claim to have 'great lies' about, in the context of overriding a presidential veto?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-021",
+      "question": "Which person cited two Soviet defectors as a source for the claim that the KGB may have hundreds of recruited agents among foreign journalists?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-022",
+      "question": "What actions did the Soviets allegedly take to derail President Reagan's 1984 re-election bid? The report states they did so through a forged FBI document and a campaign by the Communist Party U.S.A.",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-023",
+      "question": "Who is the founder of the European Center for International Relations and Strategy?",
+      "rank_hit": false,
+      "recall_hit": false,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    },
+    {
+      "probe_id": "probe-024",
+      "question": "In which country did the CIA attempt to convince the population that the CIA was trying to overthrow their government?",
+      "rank_hit": true,
+      "recall_hit": true,
+      "abstained_when_source_removed": true,
+      "leaked_documents": []
+    }
+  ]
+}
