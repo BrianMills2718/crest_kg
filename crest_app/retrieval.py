@@ -111,13 +111,19 @@ STOP_WORDS = frozenset(
 
 # Small, domain-neutral lexical concept families support common question/document
 # paraphrases without a model call. Values are stemmed by ``_stem`` at import.
-_RAW_CONCEPT_GROUPS = (
+_RAW_ANCHOR_CONCEPT_GROUPS = (
+    ("austria", "austrian", "vienna"),
+)
+
+
+_RAW_FUNCTION_CONCEPT_GROUPS = (
     (
         "group",
         "organization",
         "body",
         "institute",
         "institution",
+        "laboratory",
         "committee",
         "agency",
         "team",
@@ -125,6 +131,7 @@ _RAW_CONCEPT_GROUPS = (
         "organizer",
         "role",
         "host",
+        "observer",
     ),
     ("organize", "coordinate", "convene", "arrange"),
     ("lead", "led", "direct", "operate", "manage", "supervise"),
@@ -137,6 +144,9 @@ _RAW_CONCEPT_GROUPS = (
         "undertaking",
         "event",
         "gathering",
+        "project",
+        "program",
+        "mission",
     ),
     (
         "date",
@@ -159,6 +169,8 @@ _RAW_CONCEPT_GROUPS = (
         "timetable",
         "timing",
         "debut",
+        "first",
+        "preliminary",
     ),
     (
         "disagreement",
@@ -176,6 +188,9 @@ _RAW_CONCEPT_GROUPS = (
 )
 
 
+_RAW_CONCEPT_GROUPS = _RAW_ANCHOR_CONCEPT_GROUPS + _RAW_FUNCTION_CONCEPT_GROUPS
+
+
 def _stem(token: str) -> str:
     value = re.sub(r"[^a-z0-9]", "", token.casefold())
     if len(value) > 5 and value.endswith("ies"):
@@ -190,6 +205,9 @@ def _stem(token: str) -> str:
 
 CONCEPT_GROUPS = tuple(
     frozenset(_stem(token) for token in group) for group in _RAW_CONCEPT_GROUPS
+)
+FUNCTION_CONCEPT_GROUPS = frozenset(
+    CONCEPT_GROUPS[len(_RAW_ANCHOR_CONCEPT_GROUPS) :]
 )
 CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
@@ -380,16 +398,18 @@ def rank_evidence(
         # "preview" matching "review") from becoming evidence.
         if exact_matches == 0 or match_count < minimum_matches:
             continue
-        # Shared project or location names are useful context, but cannot alone
-        # answer an absent-subject question. Require one non-common concept when
-        # overall coverage is weak; fully matched short context queries remain
-        # valid. This is corpus-relative rather than tied to proper nouns.
-        common_frequency = len(candidates) * 0.6
-        has_discriminating_match = any(
-            document_frequencies[index] <= max(1, common_frequency)
-            for index in matched_indexes
-        )
-        if coverage < 0.7 and not has_discriminating_match:
+        # Role, action, event, and date families explain what the question asks
+        # for, but cannot by themselves redirect a collection toward an absent
+        # external subject. If the query names any target terms, at least one of
+        # those terms (or a declared anchor synonym) must match this passage.
+        # A query made entirely of function concepts remains valid within its
+        # explicitly selected collection.
+        target_indexes = {
+            index
+            for index, (_, alternatives) in enumerate(concepts)
+            if alternatives not in FUNCTION_CONCEPT_GROUPS
+        }
+        if target_indexes and not (target_indexes & matched_indexes):
             continue
         phrase = 3.0 if normalized_question in " ".join(candidate.text.casefold().split()) else 0.0
         title_matches = sum(

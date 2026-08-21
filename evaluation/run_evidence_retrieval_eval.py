@@ -19,7 +19,7 @@ def main() -> int:
     parser.add_argument(
         "--fixture",
         type=Path,
-        default=ROOT / "evaluation" / "evidence_retrieval_set_v7.json",
+        default=ROOT / "evaluation" / "evidence_retrieval_set_v8.json",
     )
     args = parser.parse_args()
     result = evaluate_retrieval_fixture(args.fixture)
