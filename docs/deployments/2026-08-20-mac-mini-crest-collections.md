@@ -21,6 +21,13 @@
 No Tailscale route was added, removed, or changed. The live container reports
 healthy and `/crest/health` reports the exact revision above.
 
+The host's credential source uses shell syntax, including directives that are
+not accepted by Docker's `--env-file` parser. Promotion therefore did not pass
+that source to Docker directly: it copied only the already-approved application
+environment keys from the prior live container into the replacement invocation
+without printing or persisting their values. This preserved the credential
+boundary while keeping an invalid shell-style file out of Docker's parser.
+
 ## User-visible increment
 
 The workbench now provides private persistent research collections. An operator
