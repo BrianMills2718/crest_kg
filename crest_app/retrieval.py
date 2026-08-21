@@ -47,6 +47,7 @@ STOP_WORDS = frozenset(
         "are",
         "as",
         "at",
+        "also",
         "be",
         "between",
         "both",
@@ -61,6 +62,7 @@ STOP_WORDS = frozenset(
         "give",
         "had",
         "how",
+        "i",
         "in",
         "is",
         "it",
@@ -154,6 +156,7 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "days",
         "schedule",
         "begin",
+        "beginning",
         "began",
         "begun",
         "start",
@@ -171,6 +174,7 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "debut",
         "first",
         "preliminary",
+        "mark",
     ),
     (
         "disagreement",
@@ -183,7 +187,11 @@ _RAW_FUNCTION_CONCEPT_GROUPS = (
         "disagree",
         "reconcile",
         "competing",
+        "correct",
+        "corrected",
     ),
+    ("supply", "provide", "furnish"),
+    ("instrument", "equipment"),
     ("cost", "budget", "funding", "expense", "price"),
 )
 
@@ -213,6 +221,37 @@ CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
 }
 
+
+QUESTION_LEAD_WORDS = frozenset(
+    {
+        "at",
+        "can",
+        "compare",
+        "did",
+        "does",
+        "for",
+        "from",
+        "give",
+        "how",
+        "identify",
+        "is",
+        "name",
+        "please",
+        "quick",
+        "resolve",
+        "so",
+        "the",
+        "trace",
+        "was",
+        "what",
+        "when",
+        "where",
+        "which",
+        "who",
+        "why",
+    }
+)
+
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(
         stemmed
@@ -241,6 +280,17 @@ def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
         seen.add(alternatives)
         concepts.append((term, alternatives))
     return tuple(concepts)
+
+
+def _named_query_terms(question: str) -> frozenset[str]:
+    """Return capitalized target cues, excluding ordinary question leads."""
+
+    return frozenset(
+        stemmed
+        for token in re.findall(r"[A-Za-z0-9]+", question)
+        if token[0].isupper() and token.casefold() not in QUESTION_LEAD_WORDS
+        if (stemmed := _stem(token)) and stemmed not in STOP_WORDS
+    )
 
 
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
@@ -332,6 +382,7 @@ def rank_evidence(
 
     normalized_question = " ".join(question.casefold().split())
     concepts = _query_concepts(question)
+    named_query_terms = _named_query_terms(question)
     if not concepts or limit <= 0:
         return []
     candidates = [
@@ -367,11 +418,13 @@ def rank_evidence(
         fuzzy_values: list[float] = []
         matched_terms: list[str] = []
         matched_indexes: set[int] = set()
+        exact_matched_indexes: set[int] = set()
         for index, (query_term, alternatives) in enumerate(concepts):
             frequency = _concept_frequency(candidate.terms, alternatives)
             if frequency:
                 exact_matches += 1
                 matched_indexes.add(index)
+                exact_matched_indexes.add(index)
                 matched_terms.append(query_term)
                 idf = math.log(
                     1 + (len(candidates) - document_frequencies[index] + 0.5)
@@ -409,7 +462,17 @@ def rank_evidence(
             for index, (_, alternatives) in enumerate(concepts)
             if alternatives not in FUNCTION_CONCEPT_GROUPS
         }
-        if target_indexes and not (target_indexes & matched_indexes):
+        if target_indexes and not (target_indexes & exact_matched_indexes):
+            continue
+        named_target_indexes = {
+            index
+            for index in target_indexes
+            if concepts[index][0] in named_query_terms
+        }
+        if named_target_indexes and (
+            not (named_target_indexes & exact_matched_indexes)
+            or not named_target_indexes.issubset(matched_indexes)
+        ):
             continue
         phrase = 3.0 if normalized_question in " ".join(candidate.text.casefold().split()) else 0.0
         title_matches = sum(
