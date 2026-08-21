@@ -198,6 +198,104 @@ def test_grounding_rejects_relationship_fragment_not_in_quote(tmp_path: Path) ->
         validate_extraction_grounding(document, extraction)
 
 
+def test_grounding_rejects_predicate_direction_missing_from_exact_phrase(
+    tmp_path: Path,
+) -> None:
+    corpus_path = tmp_path / "corpus.json"
+    corpus_path.write_text(
+        json.dumps(
+            [
+                {
+                    "title": "Direction",
+                    "metadata": {"Document Number": "DIRECTION"},
+                    "body_text": "Central Committee and KGB preparations continued.",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    document = load_corpus(corpus_path, limit=1, max_chars=10_000)[0]
+    extraction = DocumentExtraction(
+        entities=[
+            EntityCandidate(
+                local_id="committee",
+                name="Central Committee",
+                type=EntityKind.ORGANIZATION,
+                evidence=EvidenceCandidate(line_start=1, line_count=1),
+            ),
+            EntityCandidate(
+                local_id="kgb",
+                name="KGB",
+                type=EntityKind.ORGANIZATION,
+                evidence=EvidenceCandidate(line_start=1, line_count=1),
+            ),
+        ],
+        relationships=[
+            RelationshipCandidate(
+                source_entity_id="committee",
+                target_entity_id="kgb",
+                type="prepared_for",
+                source_mention="Central Committee",
+                relation_phrase="Central Committee and KGB preparations",
+                target_mention="KGB",
+                support_reasoning="The phrase mentions joint preparations, not preparation for KGB.",
+                evidence=EvidenceCandidate(line_start=1, line_count=1),
+            )
+        ],
+    )
+
+    with pytest.raises(ValueError, match="not lexically supported"):
+        validate_extraction_grounding(document, extraction)
+
+
+def test_grounding_rejects_punctuation_only_relation_phrase(tmp_path: Path) -> None:
+    corpus_path = tmp_path / "corpus.json"
+    corpus_path.write_text(
+        json.dumps(
+            [
+                {
+                    "title": "List",
+                    "metadata": {"Document Number": "LIST"},
+                    "body_text": "FBI, J. Edgar Hoover",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    document = load_corpus(corpus_path, limit=1, max_chars=10_000)[0]
+    extraction = DocumentExtraction(
+        entities=[
+            EntityCandidate(
+                local_id="fbi",
+                name="FBI",
+                type=EntityKind.ORGANIZATION,
+                evidence=EvidenceCandidate(line_start=1, line_count=1),
+            ),
+            EntityCandidate(
+                local_id="hoover",
+                name="J. Edgar Hoover",
+                type=EntityKind.PERSON,
+                evidence=EvidenceCandidate(line_start=1, line_count=1),
+            ),
+        ],
+        relationships=[
+            RelationshipCandidate(
+                source_entity_id="fbi",
+                target_entity_id="hoover",
+                type="is_related_to",
+                source_mention="FBI",
+                relation_phrase=",",
+                target_mention="J. Edgar Hoover",
+                support_reasoning="The names only occur in a list.",
+                evidence=EvidenceCandidate(line_start=1, line_count=1),
+            )
+        ],
+    )
+
+    with pytest.raises(ValueError, match="not lexically supported"):
+        validate_extraction_grounding(document, extraction)
+
+
 def test_partition_records_rejected_relationship_without_silent_fallback(
     tmp_path: Path,
 ) -> None:

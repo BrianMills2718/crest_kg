@@ -566,6 +566,10 @@ def validate_provider_relationship_extraction(
 class RecoveredExtractionReceipt(StrictModel):
     """Trace-bound proof that one prior successful extraction was reused."""
 
+    stage: Literal["primary", "relationship_refinement"] = Field(
+        default="primary",
+        description="Pipeline stage whose successful response was reused.",
+    )
     document_id: str = Field(min_length=1, description="Recovered source document identifier.")
     trace_id: str = Field(min_length=1, description="Exact successful document trace.")
     call_id: int = Field(ge=1, description="Terminal llm_client call-row identity.")
@@ -757,20 +761,27 @@ class GraphArtifact(StrictModel):
             raise ValueError("document IDs must be unique")
         known_documents = set(document_ids)
 
-        recovered_document_ids = [
-            receipt.document_id for receipt in self.recovered_extractions
+        recovered_stage_documents = [
+            (receipt.stage, receipt.document_id)
+            for receipt in self.recovered_extractions
         ]
-        if len(recovered_document_ids) != len(set(recovered_document_ids)):
-            raise ValueError("recovered extraction document IDs must be unique")
+        if len(recovered_stage_documents) != len(set(recovered_stage_documents)):
+            raise ValueError("recovered extraction stage/document pairs must be unique")
         for receipt in self.recovered_extractions:
             if receipt.document_id not in known_documents:
                 raise ValueError(
                     "recovered extraction references unknown document: "
                     f"{receipt.document_id}"
                 )
-            if receipt.model != self.model:
+            expected_receipt_model = (
+                self.relationship_model
+                if receipt.stage == "relationship_refinement"
+                else self.model
+            )
+            if receipt.model != expected_receipt_model:
                 raise ValueError(
-                    f"recovered extraction model differs from graph model: {receipt.document_id}"
+                    "recovered extraction model differs from its graph stage model: "
+                    f"{receipt.stage}/{receipt.document_id}"
                 )
         recovered_cost = sum(
             receipt.observed_cost_usd for receipt in self.recovered_extractions
@@ -863,6 +874,35 @@ _PRONOMINAL_MENTIONS = {
 }
 _INITIALISM_STOP_WORDS = {"a", "an", "and", "for", "of", "the", "to"}
 _LEADING_ARTICLES = {"a", "an", "the"}
+_PREDICATE_HELPER_WORDS = {
+    "a",
+    "an",
+    "be",
+    "been",
+    "being",
+    "had",
+    "has",
+    "have",
+    "is",
+    "of",
+    "the",
+    "was",
+    "were",
+}
+_DIRECTIONAL_PREDICATE_WORDS = {
+    "against",
+    "at",
+    "by",
+    "for",
+    "from",
+    "in",
+    "into",
+    "on",
+    "through",
+    "to",
+    "toward",
+    "with",
+}
 
 
 def _alphanumeric_words(value: str) -> tuple[str, ...]:
@@ -899,6 +939,35 @@ def _is_contiguous_word_sequence(
         value[index : index + width] == candidate
         for index in range(len(value) - width + 1)
     )
+
+
+def _word_stem(word: str) -> str:
+    for suffix in ("ations", "ation", "ments", "ment", "ingly", "edly", "ing", "ied", "ed", "es", "s"):
+        if word.endswith(suffix) and len(word) - len(suffix) >= 4:
+            if suffix == "ied":
+                return f"{word[:-3]}y"
+            return word[: -len(suffix)]
+    return word
+
+
+def predicate_supported_by_phrase(predicate: str, relation_phrase: str) -> bool:
+    """Require lexical predicate support, including explicit directional words."""
+
+    predicate_words = _alphanumeric_words(predicate)
+    phrase_words = _alphanumeric_words(relation_phrase)
+    if not any(len(word) >= 2 for word in phrase_words):
+        return False
+    for word in predicate_words:
+        if word in _DIRECTIONAL_PREDICATE_WORDS and word not in phrase_words:
+            return False
+    predicate_stems = {
+        _word_stem(word)
+        for word in predicate_words
+        if word not in _PREDICATE_HELPER_WORDS
+        and word not in _DIRECTIONAL_PREDICATE_WORDS
+    }
+    phrase_stems = {_word_stem(word) for word in phrase_words}
+    return bool(predicate_stems & phrase_stems)
 
 
 def mention_identifies_entity(mention: str, entity_name: str) -> bool:
@@ -993,6 +1062,14 @@ def _validate_relationship_groundings(
             f"relationship grounding/evidence mismatch: {relationship.id}"
         )
     for grounding in relationship.groundings:
+        if not predicate_supported_by_phrase(
+            relationship.relationship_type,
+            grounding.relation_phrase,
+        ):
+            raise ValueError(
+                f"relationship predicate is not supported by its exact phrase: "
+                f"{relationship.id}"
+            )
         if not mention_identifies_entity(
             grounding.source_mention,
             source_entity.name,
@@ -1210,6 +1287,13 @@ def _validate_relationship_candidate(
         relation_phrase=grounded_relationship.relation_phrase,
         target_mention=grounded_relationship.target_mention,
     )
+    if not predicate_supported_by_phrase(
+        grounded_relationship.relationship_type,
+        grounded_relationship.relation_phrase,
+    ):
+        raise ValueError(
+            "relationship type is not lexically supported by relation_phrase"
+        )
     source_entity = entities_by_local_id[grounded_relationship.source_entity_id]
     target_entity = entities_by_local_id[grounded_relationship.target_entity_id]
     if not mention_identifies_entity(
@@ -1482,6 +1566,54 @@ def build_graph(
     )
 
 
+def _recover_trace_payload(
+    trace_id: str,
+    *,
+    expected_model: str,
+    allowed_prompt_refs: frozenset[str],
+) -> tuple[str, str, float, Any] | None:
+    """Join one successful terminal response to its selected-attempt receipt."""
+
+    from llm_client import (
+        diagnose_runtime_selected_attempt_receipt_for_trace,
+        lookup_result,
+    )
+
+    result = lookup_result(trace_id)
+    if result is None:
+        return None
+    response = result.get("response")
+    result_model = result.get("model")
+    finish_reason = result.get("finish_reason")
+    prompt_ref = result.get("prompt_ref")
+    cost_value = result.get("cost")
+    if not isinstance(response, str) or not response.strip():
+        raise ValueError(f"recovered trace has no terminal response: {trace_id}")
+    if result_model != expected_model:
+        raise ValueError(
+            f"recovered trace model mismatch for {trace_id}: "
+            f"expected {expected_model}, found {result_model!r}"
+        )
+    if finish_reason != "stop":
+        raise ValueError(f"recovered trace did not finish with stop: {trace_id}")
+    if not isinstance(prompt_ref, str) or prompt_ref not in allowed_prompt_refs:
+        raise ValueError(f"recovered trace prompt mismatch for {trace_id}: {prompt_ref!r}")
+    if (
+        isinstance(cost_value, bool)
+        or not isinstance(cost_value, (int, float))
+        or not math.isfinite(float(cost_value))
+        or float(cost_value) < 0
+    ):
+        raise ValueError(f"recovered trace has invalid cost: {trace_id}")
+
+    receipt = diagnose_runtime_selected_attempt_receipt_for_trace(trace_id)
+    if receipt.trace_id != trace_id:
+        raise ValueError(f"selected-attempt receipt trace mismatch: {trace_id}")
+    if receipt.resolved_model != expected_model:
+        raise ValueError(f"selected-attempt receipt model mismatch: {trace_id}")
+    return response, prompt_ref, float(cost_value), receipt
+
+
 def recover_extraction_from_trace(
     document: LoadedDocument,
     *,
@@ -1494,54 +1626,17 @@ def recover_extraction_from_trace(
 ] | None:
     """Recover and revalidate one exact successful prior document extraction."""
 
-    from llm_client import (
-        diagnose_runtime_selected_attempt_receipt_for_trace,
-        lookup_result,
-    )
-
     document_trace_id = (
         f"{root_trace_id}/documents/{safe_token(document.manifest.document_id)}"
     )
-    result = lookup_result(document_trace_id)
-    if result is None:
+    payload = _recover_trace_payload(
+        document_trace_id,
+        expected_model=expected_model,
+        allowed_prompt_refs=RECOVERABLE_PROMPT_REFS,
+    )
+    if payload is None:
         return None
-
-    response = result.get("response")
-    result_model = result.get("model")
-    finish_reason = result.get("finish_reason")
-    prompt_ref = result.get("prompt_ref")
-    cost_value = result.get("cost")
-    if not isinstance(response, str) or not response.strip():
-        raise ValueError(f"recovered trace has no terminal response: {document_trace_id}")
-    if result_model != expected_model:
-        raise ValueError(
-            f"recovered trace model mismatch for {document.manifest.document_id}: "
-            f"expected {expected_model}, found {result_model!r}"
-        )
-    if finish_reason != "stop":
-        raise ValueError(
-            f"recovered trace did not finish with stop: {document_trace_id}"
-        )
-    if prompt_ref not in RECOVERABLE_PROMPT_REFS:
-        raise ValueError(
-            f"recovered trace prompt mismatch for {document.manifest.document_id}: "
-            f"{prompt_ref!r}"
-        )
-    if (
-        isinstance(cost_value, bool)
-        or not isinstance(cost_value, (int, float))
-        or not math.isfinite(float(cost_value))
-        or float(cost_value) < 0
-    ):
-        raise ValueError(f"recovered trace has invalid cost: {document_trace_id}")
-
-    receipt = diagnose_runtime_selected_attempt_receipt_for_trace(document_trace_id)
-    if receipt.trace_id != document_trace_id:
-        raise ValueError(f"selected-attempt receipt trace mismatch: {document_trace_id}")
-    if receipt.resolved_model != expected_model:
-        raise ValueError(
-            f"selected-attempt receipt model mismatch: {document_trace_id}"
-        )
+    response, prompt_ref, cost_value, receipt = payload
 
     try:
         extraction = DocumentExtraction.model_validate_json(response)
@@ -1565,9 +1660,48 @@ def recover_extraction_from_trace(
         response_sha256=hashlib.sha256(response.encode("utf-8")).hexdigest(),
         model=expected_model,
         prompt_ref=prompt_ref,
-        observed_cost_usd=float(cost_value),
+        observed_cost_usd=cost_value,
     )
     return extraction, recovered, recovery_rejections
+
+
+def recover_relationship_extraction_from_trace(
+    document: LoadedDocument,
+    *,
+    root_trace_id: str,
+    expected_model: str,
+) -> tuple[ProviderRelationshipExtraction, RecoveredExtractionReceipt] | None:
+    """Recover one successful relationship-refinement response and its receipt."""
+
+    document_trace_id = (
+        f"{root_trace_id}/relationship-refinement/documents/"
+        f"{safe_token(document.manifest.document_id)}"
+    )
+    payload = _recover_trace_payload(
+        document_trace_id,
+        expected_model=expected_model,
+        allowed_prompt_refs=frozenset({RELATIONSHIP_PROMPT_REF}),
+    )
+    if payload is None:
+        return None
+    response, prompt_ref, cost_value, receipt = payload
+    extraction = ProviderRelationshipExtraction.model_validate_json(response)
+    recovered = RecoveredExtractionReceipt(
+        stage="relationship_refinement",
+        document_id=document.manifest.document_id,
+        trace_id=document_trace_id,
+        call_id=receipt.call_id,
+        logical_call_id=receipt.logical_call_id,
+        selected_attempt_ordinal=receipt.selected_attempt_ordinal,
+        schema_hash=receipt.schema_hash,
+        raw_sha256=receipt.raw_sha256,
+        selected_attempt_receipt_digest=receipt.receipt_digest,
+        response_sha256=hashlib.sha256(response.encode("utf-8")).hexdigest(),
+        model=expected_model,
+        prompt_ref=prompt_ref,
+        observed_cost_usd=cost_value,
+    )
+    return extraction, recovered
 
 
 def run_extraction(
@@ -1580,6 +1714,7 @@ def run_extraction(
     trace_id: str,
     max_budget_usd: float,
     resume_trace_ids: list[str] | None = None,
+    resume_relationship_trace_ids: list[str] | None = None,
     prior_observed_cost_usd: float = 0.0,
     unattributed_cost_reserve_usd: float = 0.0,
     max_output_tokens: int = 3_500,
@@ -1614,6 +1749,10 @@ def run_extraction(
         relationship_model_justification = model_justification
     if relationship_model_override and not refine_relationships:
         raise ValueError("--relationship-model requires --refine-relationships")
+    if resume_relationship_trace_ids and not refine_relationships:
+        raise ValueError(
+            "relationship resume traces require --refine-relationships"
+        )
     if not math.isfinite(prior_observed_cost_usd) or prior_observed_cost_usd < 0:
         raise ValueError("prior observed cost must be a finite nonnegative value")
     if (
@@ -1631,6 +1770,15 @@ def run_extraction(
         raise ValueError("resume trace IDs must be nonblank")
     if trace_id in resume_roots:
         raise ValueError("the new trace ID must differ from every resume trace ID")
+    relationship_resume_roots = list(
+        dict.fromkeys(resume_relationship_trace_ids or [])
+    )
+    if any(not root.strip() for root in relationship_resume_roots):
+        raise ValueError("relationship resume trace IDs must be nonblank")
+    if trace_id in relationship_resume_roots:
+        raise ValueError(
+            "the new trace ID must differ from every relationship resume trace ID"
+        )
 
     recovered_by_document: dict[
         str,
@@ -1651,11 +1799,36 @@ def run_extraction(
                 recovered_by_document[document.manifest.document_id] = recovered
                 break
 
+    recovered_relationships_by_document: dict[
+        str,
+        tuple[ProviderRelationshipExtraction, RecoveredExtractionReceipt],
+    ] = {}
+    if refine_relationships:
+        for document in documents:
+            for resume_root in reversed(relationship_resume_roots):
+                recovered_relationship = (
+                    recover_relationship_extraction_from_trace(
+                        document,
+                        root_trace_id=resume_root,
+                        expected_model=relationship_model,
+                    )
+                )
+                if recovered_relationship is not None:
+                    recovered_relationships_by_document[
+                        document.manifest.document_id
+                    ] = recovered_relationship
+                    break
+
     recovered_receipts = [
         recovered_by_document[document.manifest.document_id][1]
         for document in documents
         if document.manifest.document_id in recovered_by_document
     ]
+    recovered_receipts.extend(
+        recovered_relationships_by_document[document.manifest.document_id][1]
+        for document in documents
+        if document.manifest.document_id in recovered_relationships_by_document
+    )
     recovered_cost = sum(receipt.observed_cost_usd for receipt in recovered_receipts)
     authorized_new_call_budget = (
         max_budget_usd
@@ -1664,8 +1837,15 @@ def run_extraction(
         - recovered_cost
     )
     missing_document_count = len(documents) - len(recovered_by_document)
-    if (missing_document_count or refine_relationships) and authorized_new_call_budget <= 0:
-        raise ValueError("no authorized budget remains for unrecovered documents")
+    missing_relationship_count = (
+        len(documents) - len(recovered_relationships_by_document)
+        if refine_relationships
+        else 0
+    )
+    if (
+        missing_document_count or missing_relationship_count
+    ) and authorized_new_call_budget <= 0:
+        raise ValueError("no authorized budget remains for new model calls")
 
     extractions: list[DocumentExtraction] = []
     rejections: list[ExtractionRejection] = []
@@ -1725,41 +1905,48 @@ def run_extraction(
             extractions.append(grounded)
             continue
 
-        relationship_messages = render_prompt(
-            RELATIONSHIP_PROMPT_PATH,
-            document_id=document.manifest.document_id,
-            eligible_entities_json=json.dumps(
-                [
-                    {
-                        "local_id": entity.local_id,
-                        "name": entity.name,
-                        "type": entity.entity_type.value,
-                    }
-                    for entity in grounded.entities
-                ],
-                ensure_ascii=False,
-                sort_keys=True,
-            ),
-            numbered_body_text=render_numbered_source(document),
+        recovered_relationship = recovered_relationships_by_document.get(
+            document.manifest.document_id
         )
-        provider_relationships, relationship_result = call_llm_structured(
-            relationship_model,
-            relationship_messages,
-            response_model=ProviderRelationshipExtraction,
-            task="crest_kg.relationship_refinement",
-            trace_id=(
-                f"{trace_id}/relationship-refinement/documents/"
-                f"{safe_token(document.manifest.document_id)}"
-            ),
-            budget_scope_trace_id=trace_id,
-            max_budget=authorized_new_call_budget,
-            max_tokens=relationship_max_output_tokens,
-            num_retries=0,
-            reasoning_effort=reasoning_effort,
-            model_policy="enforce_allowlist",
-            model_justification=relationship_model_justification,
-            prompt_ref=RELATIONSHIP_PROMPT_REF,
-        )
+        if recovered_relationship is not None:
+            provider_relationships = recovered_relationship[0]
+            relationship_result = None
+        else:
+            relationship_messages = render_prompt(
+                RELATIONSHIP_PROMPT_PATH,
+                document_id=document.manifest.document_id,
+                eligible_entities_json=json.dumps(
+                    [
+                        {
+                            "local_id": entity.local_id,
+                            "name": entity.name,
+                            "type": entity.entity_type.value,
+                        }
+                        for entity in grounded.entities
+                    ],
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                numbered_body_text=render_numbered_source(document),
+            )
+            provider_relationships, relationship_result = call_llm_structured(
+                relationship_model,
+                relationship_messages,
+                response_model=ProviderRelationshipExtraction,
+                task="crest_kg.relationship_refinement",
+                trace_id=(
+                    f"{trace_id}/relationship-refinement/documents/"
+                    f"{safe_token(document.manifest.document_id)}"
+                ),
+                budget_scope_trace_id=trace_id,
+                max_budget=authorized_new_call_budget,
+                max_tokens=relationship_max_output_tokens,
+                num_retries=0,
+                reasoning_effort=reasoning_effort,
+                model_policy="enforce_allowlist",
+                model_justification=relationship_model_justification,
+                prompt_ref=RELATIONSHIP_PROMPT_REF,
+            )
         refined, refinement_schema_rejections = (
             validate_provider_relationship_extraction(
                 document.manifest.document_id,
@@ -1773,7 +1960,8 @@ def run_extraction(
         extractions.append(refined_grounded)
         rejections.extend(refinement_schema_rejections)
         rejections.extend(refinement_grounding_rejections)
-        observed_cost += float(relationship_result.cost or 0.0)
+        if relationship_result is not None:
+            observed_cost += float(relationship_result.cost or 0.0)
 
     return build_graph(
         documents,
@@ -1894,6 +2082,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Prior root trace to search for reusable successful document calls; repeatable.",
     )
     extract_parser.add_argument(
+        "--resume-relationship-trace-id",
+        action="append",
+        default=[],
+        help="Prior root trace to search for reusable relationship-stage calls; repeatable.",
+    )
+    extract_parser.add_argument(
         "--prior-observed-cost-usd",
         type=_nonnegative_float,
         default=0.0,
@@ -1966,6 +2160,7 @@ def main(argv: list[str] | None = None) -> int:
                 trace_id=args.trace_id or _default_trace_id(),
                 max_budget_usd=args.max_budget_usd,
                 resume_trace_ids=args.resume_trace_id,
+                resume_relationship_trace_ids=args.resume_relationship_trace_id,
                 prior_observed_cost_usd=args.prior_observed_cost_usd,
                 unattributed_cost_reserve_usd=args.unattributed_cost_reserve_usd,
                 max_output_tokens=args.max_output_tokens,
