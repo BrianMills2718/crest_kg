@@ -32,3 +32,4 @@ search_results.html
 lib/
 
 # Answerability verdicts are cached artifacts; regenerate with the eval harness.
+worktrees/
