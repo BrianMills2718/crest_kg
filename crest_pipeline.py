@@ -260,6 +260,44 @@ class RelationshipCandidate(StrictModel):
         return value
 
 
+class ProviderEvidenceCandidate(StrictModel):
+    """Compact provider-facing evidence schema with the critical direct bound."""
+
+    line_start: int = Field(ge=1)
+    line_count: int = Field(ge=1, le=MAX_EVIDENCE_LINES)
+
+
+class ProviderEntityCandidate(StrictModel):
+    """Compact provider-facing entity shape; strict semantics are applied locally."""
+
+    local_id: str
+    name: str
+    entity_type: EntityKind = Field(alias="type")
+    attributes: dict[str, str] = Field(default_factory=dict)
+    evidence: ProviderEvidenceCandidate
+
+
+class ProviderRelationshipCandidate(StrictModel):
+    """Compact provider-facing relationship shape; strict semantics are applied locally."""
+
+    source_entity_id: str
+    target_entity_id: str
+    relationship_type: str = Field(alias="type")
+    source_mention: str
+    relation_phrase: str
+    target_mention: str
+    support_reasoning: str
+    attributes: dict[str, str] = Field(default_factory=dict)
+    evidence: ProviderEvidenceCandidate
+
+
+class ProviderDocumentExtraction(StrictModel):
+    """Portable structured-response envelope intentionally small enough for Gemini."""
+
+    entities: list[ProviderEntityCandidate]
+    relationships: list[ProviderRelationshipCandidate]
+
+
 class DocumentExtraction(StrictModel):
     """Validated structured model output for one source document."""
 
@@ -343,6 +381,145 @@ class ExtractionRejection(StrictModel):
         min_length=1,
         description="Deterministic boundary failure that caused rejection.",
     )
+
+
+def validate_provider_extraction(
+    document_id: str,
+    response: ProviderDocumentExtraction,
+) -> tuple[DocumentExtraction, list[ExtractionRejection]]:
+    """Convert a compact provider response into strict candidates item by item."""
+
+    entities: list[EntityCandidate] = []
+    known_entity_ids: set[str] = set()
+    rejections: list[ExtractionRejection] = []
+    for index, provider_entity in enumerate(response.entities):
+        candidate_ref = provider_entity.local_id.strip() or f"entity:{index}"
+        if index >= MAX_ENTITIES_PER_DOCUMENT:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="entity",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=(
+                        "candidate exceeds per-document entity limit of "
+                        f"{MAX_ENTITIES_PER_DOCUMENT}"
+                    ),
+                )
+            )
+            continue
+        try:
+            entity = EntityCandidate.model_validate(
+                provider_entity.model_dump(by_alias=True)
+            )
+        except ValidationError as exc:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="entity",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=f"strict entity validation failed: {exc}",
+                )
+            )
+            continue
+        if entity.local_id in known_entity_ids:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="entity",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason="duplicate entity local_id within the document",
+                )
+            )
+            continue
+        entities.append(entity)
+        known_entity_ids.add(entity.local_id)
+
+    relationships: list[RelationshipCandidate] = []
+    seen_relationships: set[tuple[str, str, str, int, int]] = set()
+    for index, provider_relationship in enumerate(response.relationships):
+        candidate_ref = (
+            f"{provider_relationship.source_entity_id}:"
+            f"{safe_predicate(provider_relationship.relationship_type)}:"
+            f"{provider_relationship.target_entity_id}"
+        )
+        if index >= MAX_RELATIONSHIPS_PER_DOCUMENT:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="relationship",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=(
+                        "candidate exceeds per-document relationship limit of "
+                        f"{MAX_RELATIONSHIPS_PER_DOCUMENT}"
+                    ),
+                )
+            )
+            continue
+        try:
+            relationship = RelationshipCandidate.model_validate(
+                provider_relationship.model_dump(by_alias=True)
+            )
+        except ValidationError as exc:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="relationship",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=f"strict relationship validation failed: {exc}",
+                )
+            )
+            continue
+        missing_endpoints = sorted(
+            {
+                relationship.source_entity_id,
+                relationship.target_entity_id,
+            }
+            - known_entity_ids
+        )
+        if missing_endpoints:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="relationship",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason=(
+                        "relationship endpoint is undeclared after strict entity "
+                        f"validation: {missing_endpoints}"
+                    ),
+                )
+            )
+            continue
+        key = (
+            relationship.source_entity_id,
+            relationship.target_entity_id,
+            normalize_text(relationship.relationship_type),
+            relationship.evidence.line_start,
+            relationship.evidence.line_end,
+        )
+        if key in seen_relationships:
+            rejections.append(
+                ExtractionRejection(
+                    document_id=document_id,
+                    item_kind="relationship",
+                    item_index=index,
+                    candidate_ref=candidate_ref,
+                    reason="duplicate relationship assertion within the document",
+                )
+            )
+            continue
+        seen_relationships.add(key)
+        relationships.append(relationship)
+
+    return DocumentExtraction(
+        entities=entities,
+        relationships=relationships,
+    ), rejections
 
 
 class RecoveredExtractionReceipt(StrictModel):
@@ -1393,7 +1570,10 @@ def run_extraction(
     for document in documents:
         recovered = recovered_by_document.get(document.manifest.document_id)
         if recovered is not None:
-            extraction = recovered[0]
+            validated = DocumentExtraction.model_validate(
+                recovered[0].model_dump(by_alias=True)
+            )
+            schema_rejections: list[ExtractionRejection] = []
             result = None
         else:
             messages = render_prompt(
@@ -1406,10 +1586,10 @@ def run_extraction(
                 ),
                 numbered_body_text=render_numbered_source(document),
             )
-            extraction, result = call_llm_structured(
+            provider_extraction, result = call_llm_structured(
                 model,
                 messages,
-                response_model=DocumentExtraction,
+                response_model=ProviderDocumentExtraction,
                 task="crest_kg.entity_relationship_extraction",
                 trace_id=(
                     f"{trace_id}/documents/"
@@ -1424,14 +1604,16 @@ def run_extraction(
                 model_justification=model_justification,
                 prompt_ref=PROMPT_REF,
             )
-        # Re-validate explicitly at the project boundary even though llm_client
-        # already returns the declared Pydantic type.
-        validated = DocumentExtraction.model_validate(extraction.model_dump())
+            validated, schema_rejections = validate_provider_extraction(
+                document.manifest.document_id,
+                provider_extraction,
+            )
         grounded, document_rejections = partition_extraction_grounding(
             document,
             validated,
         )
         extractions.append(grounded)
+        rejections.extend(schema_rejections)
         rejections.extend(document_rejections)
         if result is not None:
             observed_cost += float(result.cost or 0.0)

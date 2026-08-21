@@ -12,6 +12,10 @@ from crest_pipeline import (
     EntityCandidate,
     EntityKind,
     EvidenceCandidate,
+    ProviderDocumentExtraction,
+    ProviderEntityCandidate,
+    ProviderEvidenceCandidate,
+    ProviderRelationshipCandidate,
     RelationshipCandidate,
     build_graph,
     load_corpus,
@@ -19,6 +23,7 @@ from crest_pipeline import (
     recover_extraction_from_trace,
     validate_extraction_grounding,
     validate_graph_file,
+    validate_provider_extraction,
     write_graph,
 )
 
@@ -115,11 +120,53 @@ def test_document_extraction_rejects_dangling_relationships() -> None:
 
 
 def test_evidence_line_count_is_enforced_in_the_provider_schema() -> None:
-    schema = EvidenceCandidate.model_json_schema()
+    schema = ProviderEvidenceCandidate.model_json_schema()
 
     assert schema["properties"]["line_count"]["maximum"] == 5
     with pytest.raises(ValidationError, match="less than or equal to 5"):
         EvidenceCandidate(line_start=1, line_count=6)
+
+
+def test_provider_conversion_rejects_invalid_items_without_losing_valid_ones() -> None:
+    response = ProviderDocumentExtraction(
+        entities=[
+            ProviderEntityCandidate(
+                local_id="bad id",
+                name="Bad",
+                type=EntityKind.PERSON,
+                evidence=ProviderEvidenceCandidate(line_start=1, line_count=1),
+            ),
+            ProviderEntityCandidate(
+                local_id="archive",
+                name="Archive",
+                type=EntityKind.ORGANIZATION,
+                evidence=ProviderEvidenceCandidate(line_start=1, line_count=1),
+            ),
+        ],
+        relationships=[
+            ProviderRelationshipCandidate(
+                source_entity_id="bad id",
+                target_entity_id="archive",
+                type="described",
+                source_mention="Bad",
+                relation_phrase="described",
+                target_mention="Archive",
+                support_reasoning="The named source described the named target.",
+                evidence=ProviderEvidenceCandidate(line_start=1, line_count=1),
+            )
+        ],
+    )
+
+    extraction, rejections = validate_provider_extraction("doc-1", response)
+
+    assert [entity.local_id for entity in extraction.entities] == ["archive"]
+    assert extraction.relationships == []
+    assert [rejection.item_kind for rejection in rejections] == [
+        "entity",
+        "relationship",
+    ]
+    assert "strict entity validation failed" in rejections[0].reason
+    assert "undeclared after strict entity validation" in rejections[1].reason
 
 
 def test_grounding_rejects_lines_outside_supplied_document(tmp_path: Path) -> None:
