@@ -1,0 +1,45 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v13",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T09:12:00Z",
+  "claim_scope": "Exact anchored-name-variant failure from the independent v12 sign-off plus no-anchor and same-location safety controls. Synthetic regression only; not human gold or real-world recall.",
+  "decision_rule": "The anchored Lantner/Lantern query must retrieve the Vesper passage first; the same misspelling without an exact independent anchor and the absent Nimbus subject must return []; all offsets must be exact. A fresh independent verifier remains required.",
+  "documents": [
+    {
+      "document_id": "fresh-vesper",
+      "title": "Vesper Committee Record",
+      "body_text": "The Vesper Committee convened Project Lantern in Dakar. The demonstration started on 7 April. Glass equipment tracked wind."
+    },
+    {
+      "document_id": "fresh-onyx",
+      "title": "Onyx Agency Dakar file",
+      "body_text": "The Onyx Agency coordinated Project Talon in Dakar. The rehearsal began on 9 July. Brass instruments measured heat."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "anchored-name-variant",
+      "split": "regression",
+      "query": "Who convened Project Lantner in Dakar?",
+      "expected_document_ids": ["fresh-vesper"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "name-variant-without-exact-anchor",
+      "split": "negative",
+      "query": "Who convened Project Lantner?",
+      "expected_document_ids": [],
+      "top_k": 2,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "absent-subject-with-real-location",
+      "split": "negative",
+      "query": "Who convened Project Nimbus in Dakar?",
+      "expected_document_ids": [],
+      "top_k": 2,
+      "exclude_from_top_two": []
+    }
+  ]
+}
