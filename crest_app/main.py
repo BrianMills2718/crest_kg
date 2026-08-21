@@ -25,6 +25,8 @@ from .models import (
     ConnectorProbe,
     ConnectorStatus,
     DocumentDetail,
+    EvidencePreview,
+    EvidenceQueryRequest,
     GraphBuildRequest,
     GraphJob,
     GraphJobList,
@@ -238,6 +240,29 @@ def create_app(
             action="Connector probing",
         )
         return resolved_catalog.cia_connector.probe()
+
+    @app.post("/api/evidence/preview", response_model=EvidencePreview)
+    def preview_evidence(
+        payload: EvidenceQueryRequest,
+        authorization: str | None = Header(default=None),
+        tailscale_login: str | None = Header(default=None, alias="Tailscale-User-Login"),
+    ) -> EvidencePreview:
+        require_operator(
+            authorization,
+            tailscale_login,
+            action="Collection evidence retrieval",
+        )
+        collection = require_collection(payload.collection_id)
+        return EvidencePreview(
+            collection_id=collection.id,
+            question=payload.question,
+            evidence=resolved_catalog.rank_collection_evidence(
+                payload.question,
+                document_ids=collection.document_ids,
+                limit=payload.evidence_limit,
+                max_chars_per_document=payload.max_chars_per_document,
+            ),
+        )
 
     @app.post(
         "/api/collections",

@@ -360,6 +360,55 @@ def test_batch_upload_reports_partial_success_and_adds_collection_members(
     assert len(client.get("/api/uploads", headers=auth).json()["documents"]) == 2
 
 
+def test_private_evidence_preview_is_collection_scoped_and_exact(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("CREST_UPLOAD_ENABLED", "1")
+    monkeypatch.setenv("CREST_OPERATOR_TOKEN", "test-operator-token")
+    client = TestClient(create_app(data_dir=tmp_path))
+    auth = {"Authorization": "Bearer test-operator-token"}
+    collection_id = client.post(
+        "/api/collections",
+        json={"title": "Project Meridian"},
+        headers=auth,
+    ).json()["id"]
+    bodies = [
+        b"The Harbor Institute organized the Vienna field exercise on 14 May 1987.",
+        b"The Vienna demonstration began on 16 May 1987, not 14 May.",
+        b"The Lisbon media brief did not concern the Vienna field demonstration.",
+    ]
+    document_ids = []
+    for index, body in enumerate(bodies):
+        receipt = client.post(
+            "/api/uploads",
+            files={"file": (f"meridian-{index}.txt", body, "text/plain")},
+            headers=auth,
+        )
+        document_ids.append(receipt.json()["document_id"])
+    client.put(
+        f"/api/collections/{collection_id}/documents",
+        json={"document_ids": document_ids[:2]},
+        headers=auth,
+    )
+    request = {
+        "collection_id": collection_id,
+        "question": "Who organized the Vienna demonstration and what date disagreement exists?",
+        "evidence_limit": 4,
+    }
+
+    assert client.post("/api/evidence/preview", json=request).status_code == 403
+    preview = client.post("/api/evidence/preview", json=request, headers=auth)
+    assert preview.status_code == 200
+    evidence = preview.json()["evidence"]
+    assert {item["document_id"] for item in evidence} == set(document_ids[:2])
+    assert document_ids[2] not in {item["document_id"] for item in evidence}
+    for item in evidence:
+        detail = client.get(f"/api/documents/{item['document_id']}", headers=auth).json()
+        assert item["text"] == detail["body_preview"][
+            item["start_char"] : item["end_char"]
+        ]
+
+
 def test_job_history_survives_restart_and_marks_interrupted_work_failed(
     tmp_path: Path, monkeypatch
 ) -> None:

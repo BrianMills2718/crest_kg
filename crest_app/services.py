@@ -44,6 +44,7 @@ from .models import (
     UploadedDocumentReceipt,
     UploadedDocumentRecord,
 )
+from .retrieval import RetrievalDocument, rank_evidence
 
 
 ROOT = Path(__file__).parents[1]
@@ -478,6 +479,38 @@ class CorpusCatalog:
             document_ids=document_ids,
             max_chars=max_chars,
             corpus_label="crest-workbench-catalog",
+        )
+
+    def rank_collection_evidence(
+        self,
+        question: str,
+        *,
+        document_ids: list[str],
+        limit: int,
+        max_chars_per_document: int,
+    ):
+        """Rank exact chunks from the durable members of one collection."""
+
+        documents: list[RetrievalDocument] = []
+        for document_id in document_ids:
+            connector_id = self.connector_for(document_id)
+            if connector_id == "cia-reading-room-live":
+                raw = self.cia_connector.raw_document(document_id)
+            else:
+                raw = self.by_id[document_id]
+            documents.append(
+                RetrievalDocument(
+                    document_id=document_id,
+                    connector_id=connector_id,
+                    title=raw.title,
+                    body_text=raw.body_text,
+                )
+            )
+        return rank_evidence(
+            question,
+            documents,
+            limit=limit,
+            max_chars_per_document=max_chars_per_document,
         )
 
 

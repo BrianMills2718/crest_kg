@@ -217,6 +217,9 @@ class GraphBuildRequest(ApiModel):
     collection_id: str | None = Field(
         default=None, pattern=r"^collection-[0-9a-f]{16}$"
     )
+    inquiry_id: str | None = Field(
+        default=None, pattern=r"^inquiry-[0-9a-f]{32}$"
+    )
     max_chars_per_document: int = Field(default=12_000, ge=1_000, le=20_000)
     max_budget_usd: float = Field(default=0.10, gt=0, le=5.0)
     refine_relationships: bool = False
@@ -249,6 +252,126 @@ class GraphJob(ApiModel):
 
 class GraphJobList(ApiModel):
     jobs: list[GraphJob]
+
+
+class EvidenceQueryRequest(ApiModel):
+    collection_id: str = Field(pattern=r"^collection-[0-9a-f]{16}$")
+    question: str = Field(min_length=3, max_length=500)
+    evidence_limit: int = Field(default=6, ge=2, le=10)
+    max_chars_per_document: int = Field(default=50_000, ge=1_000, le=100_000)
+
+    @field_validator("question")
+    @classmethod
+    def normalize_question(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if len(normalized) < 3:
+            raise ValueError("question must contain meaningful text")
+        return normalized
+
+
+class EvidenceInquiryRequest(EvidenceQueryRequest):
+    max_budget_usd: float = Field(default=0.06, gt=0, le=1.0)
+    max_output_tokens: int = Field(default=1_800, ge=500, le=3_000)
+
+
+class EvidenceScore(ApiModel):
+    bm25: float = Field(ge=0)
+    coverage: float = Field(ge=0, le=1)
+    fuzzy: float = Field(ge=0, le=1)
+    phrase: float = Field(ge=0)
+    title: float = Field(ge=0)
+
+
+class EvidenceChunk(ApiModel):
+    id: str = Field(pattern=r"^evidence-[0-9a-f]{20}$")
+    document_id: str
+    connector_id: Literal[
+        "bundled-crest", "user-uploads", "cia-reading-room-live"
+    ]
+    title: str
+    start_char: int = Field(ge=0)
+    end_char: int = Field(gt=0)
+    text: str = Field(min_length=1)
+    rank: int = Field(ge=1)
+    score: float = Field(gt=0)
+    score_components: EvidenceScore
+    matched_terms: list[str]
+
+    @field_validator("matched_terms")
+    @classmethod
+    def unique_matched_terms(cls, value: list[str]) -> list[str]:
+        return list(dict.fromkeys(value))
+
+
+class EvidencePreview(ApiModel):
+    collection_id: str = Field(pattern=r"^collection-[0-9a-f]{16}$")
+    question: str
+    evidence: list[EvidenceChunk]
+
+
+FindingClassification = Literal["support", "contradiction", "uncertainty"]
+AnswerStatus = Literal["answered", "partial", "insufficient"]
+
+
+class BriefFinding(ApiModel):
+    statement: str = Field(min_length=1, max_length=1_000)
+    classification: FindingClassification
+    citation_ids: list[str] = Field(min_length=1, max_length=6)
+
+    @field_validator("citation_ids")
+    @classmethod
+    def unique_citations(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value]
+        if any(not item for item in cleaned):
+            raise ValueError("citation IDs must be nonblank")
+        if len(cleaned) != len(set(cleaned)):
+            raise ValueError("citation IDs must be unique within a finding")
+        return cleaned
+
+
+class ProviderEvidenceBrief(ApiModel):
+    answer_status: AnswerStatus
+    synthesis: str = Field(min_length=1, max_length=2_000)
+    synthesis_citation_ids: list[str] = Field(default_factory=list, max_length=6)
+    findings: list[BriefFinding] = Field(default_factory=list, max_length=8)
+    unresolved_questions: list[str] = Field(default_factory=list, max_length=6)
+
+    @field_validator("synthesis_citation_ids")
+    @classmethod
+    def unique_synthesis_citations(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value]
+        if any(not item for item in cleaned):
+            raise ValueError("synthesis citation IDs must be nonblank")
+        if len(cleaned) != len(set(cleaned)):
+            raise ValueError("synthesis citation IDs must be unique")
+        return cleaned
+
+
+class EvidenceBrief(ProviderEvidenceBrief):
+    model: str
+    trace_id: str
+    observed_cost_usd: float = Field(ge=0)
+
+
+InquiryState = Literal["queued", "running", "completed", "failed"]
+
+
+class EvidenceInquiry(ApiModel):
+    id: str = Field(pattern=r"^inquiry-[0-9a-f]{32}$")
+    state: InquiryState
+    request: EvidenceInquiryRequest
+    collection_title: str
+    evidence: list[EvidenceChunk]
+    created_at: datetime
+    updated_at: datetime
+    trace_id: str | None = None
+    brief: EvidenceBrief | None = None
+    error: str | None = None
+    progress_detail: str
+
+
+class EvidenceInquiryList(ApiModel):
+    inquiries: list[EvidenceInquiry]
 
 
 class GraphSummary(ApiModel):
