@@ -57,7 +57,7 @@ def test_evidence_chunks_preserve_exact_offsets_and_stable_ids() -> None:
     )
 
 
-def test_chunking_prefers_exact_paragraph_boundaries() -> None:
+def test_chunking_prefers_strongest_exact_boundaries() -> None:
     paragraph = (
         "Project Telltale ledger states the Bronze Wren Office coordinated the "
         "harbor rehearsal on 4 April 1996. Evidence remains archived in bay seven."
@@ -81,6 +81,28 @@ def test_chunking_prefers_exact_paragraph_boundaries() -> None:
     assert all(
         document.body_text[item.start_char : item.end_char] == item.text
         for item in chunks
+    )
+
+    sentence_body = "A" * 120 + ". " + "B" * 50 + " " + "C" * 80
+    sentence_document = RetrievalDocument(
+        document_id="doc-sentence-boundary",
+        connector_id="bundled-crest",
+        title="Sentence boundary probe",
+        body_text=sentence_body,
+    )
+    sentence_chunks = chunk_document(
+        sentence_document,
+        max_chunk_chars=200,
+        overlap_chars=0,
+    )
+    assert (sentence_chunks[0].start_char, sentence_chunks[0].end_char) == (
+        0,
+        121,
+    )
+    assert sentence_chunks[0].text.endswith(".")
+    assert all(
+        sentence_body[item.start_char : item.end_char] == item.text
+        for item in sentence_chunks
     )
 
 

@@ -665,20 +665,19 @@ def chunk_document(
         end = hard_end
         if hard_end < len(body):
             floor = start + max_chunk_chars // 2
-            candidates = (
-                body.rfind("\n\n", floor, hard_end),
-                body.rfind(". ", floor, hard_end),
-                body.rfind(" ", floor, hard_end),
-            )
+            paragraph_boundary = body.rfind("\n\n", floor, hard_end)
+            sentence_boundary = body.rfind(". ", floor, hard_end)
+            word_boundary = body.rfind(" ", floor, hard_end)
             # Preserve the strongest available semantic boundary rather than
             # allowing a later ordinary space to outrank a paragraph or
-            # sentence break.
-            boundary = next(
-                (candidate for candidate in candidates if candidate > start),
-                -1,
-            )
-            if boundary > start:
-                end = boundary + (1 if body[boundary] == " " else 0)
+            # sentence break. Sentence punctuation belongs to the preceding
+            # chunk; paragraph separators and word-boundary whitespace do not.
+            if paragraph_boundary > start:
+                end = paragraph_boundary
+            elif sentence_boundary > start:
+                end = sentence_boundary + 1
+            elif word_boundary > start:
+                end = word_boundary + 1
         exact_start, exact_end, text = _trimmed_window(body, start, end)
         if text:
             chunks.append(
