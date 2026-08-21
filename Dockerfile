@@ -32,11 +32,25 @@ RUN apt-get update \
     && rm -rf /wheels
 
 COPY crest_app /app/crest_app
+
 COPY crest_pipeline.py /app/crest_pipeline.py
 COPY prompts /app/prompts
 COPY web /app/web
 COPY cia_documents/disinformation_complete_20250517_002848.json /app/cia_documents/disinformation_complete_20250517_002848.json
 COPY cia_kg_output/validated_5_documents_relationship_binding_v2.json /app/cia_kg_output/validated_5_documents_relationship_binding_v2.json
+
+# Bake the sentence-embedding model into the image. Ranking calls the embedding
+# model on every query, so a runtime download would make the first query depend
+# on the network and on HuggingFace being reachable. Imported through
+# crest_app.semantic_index so the model name has exactly one definition and
+# cannot drift from the application. This must run after every source COPY,
+# because importing crest_app loads the whole package.
+ENV HF_HOME=/opt/hf-cache
+RUN python -c "from crest_app.semantic_index import _model; _model()" \
+    && chmod -R a+rX /opt/hf-cache
+# Fail loudly if the bake above ever stops working, instead of silently
+# reaching for the network mid-query.
+ENV HF_HUB_OFFLINE=1
 
 RUN useradd --create-home --uid 10001 crest \
     && mkdir -p /data/workbench /data/llm-client \
