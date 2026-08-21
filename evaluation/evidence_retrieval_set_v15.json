@@ -1,0 +1,61 @@
+{
+  "schema_version": "crest-evidence-retrieval-eval/v15",
+  "frozen_before_repair": true,
+  "created_at": "2026-08-21T10:11:00Z",
+  "claim_scope": "Exact raw-surface substitution, generic-head anchor, and auxiliary-determiner failures from the independent v14 sign-off, with edit-shape and absent-detail controls. Synthetic regression only; not human gold or real-world recall.",
+  "decision_rule": "The exact Project Telltale query and exact Sundial absent-detail query must retrieve their context; an anchored unstemmed deletion must retrieve Sundial; the same-length substitution and unanchored deletion must return []; all returned offsets must be exact. A fresh independent verifier remains required.",
+  "documents": [
+    {
+      "document_id": "doc-sundial",
+      "title": "Project Sundial harbor dispatch",
+      "body_text": "The Coppermeadowlark Committee coordinated Project Sundial in Valparaiso. The harbor rehearsal began on 8 September 1994. The dispatch catalogued indigo markers beside the north gate. Silverbell Office filed the logistics note for Project Sundial. Juniper Agency reviewed the note before the rehearsal."
+    },
+    {
+      "document_id": "doc-telltale",
+      "title": "Project Telltale harbor ledger",
+      "body_text": "Project Telltale ledger states the Bronze Wren Office coordinated the harbor rehearsal on 4 April 1996. Evidence remains archived in bay seven.\n\nProject Telltale ledger states the Bronze Wren Office coordinated the harbor rehearsal on 4 April 1996. Evidence remains archived in bay seven.\n\nProject Telltale ledger states the Bronze Wren Office coordinated the harbor rehearsal on 4 April 1996. Evidence remains archived in bay seven."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "auxiliary-determiner-exact-subject",
+      "split": "regression",
+      "query": "What does each Project Telltale ledger say about the harbor rehearsal?",
+      "expected_document_ids": ["doc-telltale"],
+      "top_k": 3,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "exact-subject-absent-details",
+      "split": "regression",
+      "query": "Which ultraviolet badge, insurance carrier, and radio channel were assigned under Sundial?",
+      "expected_document_ids": ["doc-sundial"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "anchored-one-deletion",
+      "split": "regression",
+      "query": "Did Silverbel Office file Project Sundial's logistics note?",
+      "expected_document_ids": ["doc-sundial"],
+      "top_k": 1,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "anchored-same-length-substitution",
+      "split": "negative",
+      "query": "Did Coppermeadowlars Committee coordinate Project Sundial?",
+      "expected_document_ids": [],
+      "top_k": 2,
+      "exclude_from_top_two": []
+    },
+    {
+      "case_id": "unanchored-deletion-with-generic-head",
+      "split": "negative",
+      "query": "Did Silverbel Office file the logistics note?",
+      "expected_document_ids": [],
+      "top_k": 2,
+      "exclude_from_top_two": []
+    }
+  ]
+}
