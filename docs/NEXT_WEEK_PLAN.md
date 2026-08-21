@@ -1,6 +1,6 @@
 # CREST seven-day daily research workbench increment
 
-Status: active implementation plan  
+Status: complete
 Owner: Brian Mills (product) / repository automation (implementation)  
 Window: 2026-08-20 through 2026-08-27  
 Stage: internal product  
@@ -165,3 +165,25 @@ observed result changes a downstream contract. Switch tactics when two
 consecutive increments do not improve the Project Aster workflow. Stop only for
 a materially different product scope, new publication/authority boundary, or
 provider spend beyond the existing bounded real canary.
+
+## Completion evidence
+
+All five slices completed on 2026-08-20 and were promoted to the canonical Mac
+mini surface from Git revision
+`8263c1e26ae23922e4a21e883efdceeb069a0a17` (`crest-kg:8263c1e`). The final
+repository suite passed 43 tests.
+
+The canonical Project Aster observation produced graph/job
+`b640860308a245afb476f32ddeeef083` through trace
+`crest_kg/workbench/b640860308a245afb476f32ddeeef083`: 2 documents, 12 entities,
+5 relationships, and 0 rejected candidates at an observed cost of
+`$0.00126448`. A fresh 1440 x 1000 browser context then restored the active
+collection across refresh, found exactly two collection-scoped results,
+reopened the completed graph from Recent activity, inspected exact evidence,
+and exported validated JSON with no failed API responses or browser-console
+errors.
+
+The immutable deployment evidence, preserved-route checks, privacy-negative
+checks, exact image/container identity, screenshot hash, and rollback procedure
+are recorded in
+[`docs/deployments/2026-08-20-mac-mini-crest-collections.md`](deployments/2026-08-20-mac-mini-crest-collections.md).
