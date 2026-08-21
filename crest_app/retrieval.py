@@ -88,6 +88,7 @@ STOP_WORDS = frozenset(
         "there",
         "this",
         "to",
+        "together",
         "two",
         "versu",
         "was",
@@ -123,10 +124,20 @@ _RAW_CONCEPT_GROUPS = (
         "entity",
         "organizer",
         "role",
+        "host",
     ),
     ("organize", "coordinate", "convene", "arrange"),
     ("lead", "led", "direct", "operate", "manage", "supervise"),
-    ("demonstration", "pilot", "exercise", "trial", "test", "undertaking"),
+    (
+        "demonstration",
+        "pilot",
+        "exercise",
+        "trial",
+        "test",
+        "undertaking",
+        "event",
+        "gathering",
+    ),
     (
         "date",
         "day",
@@ -145,6 +156,9 @@ _RAW_CONCEPT_GROUPS = (
         "observe",
         "observed",
         "supposed",
+        "timetable",
+        "timing",
+        "debut",
     ),
     (
         "disagreement",
@@ -199,6 +213,8 @@ def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
     if re.search(r"\bwhen\b", normalized):
         query_terms.append(_stem("date"))
     if re.search(r"\bput\s+on\b", normalized):
+        query_terms.append(_stem("organize"))
+    if re.search(r"\bput\b.+\btogether\b", normalized):
         query_terms.append(_stem("organize"))
     for term in query_terms:
         alternatives = CONCEPT_BY_TERM.get(term, frozenset({term}))
@@ -276,7 +292,11 @@ def _best_fuzzy(term: str, candidate_terms: tuple[str, ...]) -> float:
     if len(term) < 5:
         return 0.0
     return max(
-        (SequenceMatcher(None, term, candidate).ratio() for candidate in candidate_terms if len(candidate) >= 5),
+        (
+            SequenceMatcher(None, term, candidate).ratio()
+            for candidate in candidate_terms
+            if len(candidate) >= 5 and abs(len(term) - len(candidate)) <= 1
+        ),
         default=0.0,
     )
 
