@@ -10,6 +10,8 @@
     capabilities: null, results: [], selectedDocuments: new Map(), graph: null,
     graphId: "example-fixed-v2", entitiesById: new Map(), selectedItem: null,
     collections: [], collectionId: null, jobs: [], polling: null,
+    inquiries: [], inquiryPreview: null, activeInquiry: null,
+    inquiryPolling: null, inquiryId: null,
   };
   const $ = (selector) => document.querySelector(selector);
 
@@ -76,6 +78,8 @@
       searchConnector.querySelector('option[value="user-uploads"]').disabled = !state.capabilities.document_upload_authorized;
       const live = state.capabilities.connectors.find((item) => item.id === "cia-reading-room-live");
       searchConnector.querySelector('option[value="cia-reading-room-live"]').disabled = !state.capabilities.graph_build_authorized || live?.state !== "available";
+      $("[data-inquiry-budget]").max = String(state.capabilities.max_evidence_budget_usd);
+      updateInquiryEntry();
       updateBuildControls();
     } catch (error) {
       $("[data-connectors]").innerHTML = `<div class="inline-error">Capability request failed: ${escapeHtml(error.message)}</div>`;
@@ -101,6 +105,21 @@
       summary.innerHTML = `<span><strong>${escapeHtml(active.title)}</strong> · ${active.document_ids.length} source${active.document_ids.length === 1 ? "" : "s"}${active.description ? ` · ${escapeHtml(active.description)}` : ""}</span><button class="text-button danger" type="button" data-collection-delete>Delete collection</button>`;
       summary.querySelector("[data-collection-delete]").addEventListener("click", deleteActiveCollection);
     }
+    updateInquiryEntry();
+  }
+
+  function updateInquiryEntry() {
+    const button = $("[data-inquiry-open]");
+    if (!button) return;
+    const capabilities = state.capabilities;
+    const active = activeCollection();
+    const authorized = capabilities?.evidence_brief_enabled && capabilities?.evidence_brief_authorized;
+    button.disabled = !active || !active.document_ids.length || !authorized;
+    if (!active) button.title = "Choose a research collection first.";
+    else if (!active.document_ids.length) button.title = "Add at least one source to this collection.";
+    else if (!capabilities?.evidence_brief_enabled) button.title = "Evidence briefs are disabled on this server.";
+    else if (!capabilities?.evidence_brief_authorized) button.title = "Open through the tailnet or enter the operator token.";
+    else button.title = `Ask an evidence-grounded question across ${active.document_ids.length} source${active.document_ids.length === 1 ? "" : "s"}.`;
   }
 
   async function loadCollections(preferredId = state.collectionId || rememberedCollectionId()) {
@@ -141,6 +160,7 @@
       await loadCollections(collection.id);
       rememberCollection(collection.id);
       state.selectedDocuments.clear();
+      state.inquiryId = null;
       $("[data-collection-scope]").checked = true;
       $("[data-collection-dialog]").close();
       await runSearch($("#query").value);
@@ -174,6 +194,7 @@
     try {
       await replaceCollectionDocuments(nextIds);
       if (isMember) state.selectedDocuments.delete(documentId);
+      state.inquiryId = null;
       renderResults();
       updateBuildControls();
       toast(`${isMember ? "Removed from" : "Added to"} ${active.title}.`);
@@ -190,6 +211,7 @@
       state.collectionId = null;
       rememberCollection(null);
       state.selectedDocuments.clear();
+      state.inquiryId = null;
       await loadCollections();
       await runSearch($("#query").value);
       updateBuildControls();
@@ -258,6 +280,7 @@
       renderResults();
       return;
     }
+    state.inquiryId = null;
     if (shouldSelect) state.selectedDocuments.set(documentId, result);
     else state.selectedDocuments.delete(documentId);
     renderResults();
@@ -339,6 +362,7 @@
     try {
       await api(`uploads/${encodeURIComponent(documentId)}`, { method: "DELETE", operator: true });
       state.selectedDocuments.delete(documentId);
+      state.inquiryId = null;
       $("[data-document-dialog]").close();
       toast("Private source deleted. Existing restricted graphs were retained.");
       await loadCapabilities();
@@ -350,11 +374,243 @@
     }
   }
 
+  function renderInquiryEvidence(evidence) {
+    const container = $("[data-inquiry-evidence]");
+    $("[data-inquiry-evidence-count]").textContent = evidence.length ? `${evidence.length} passage${evidence.length === 1 ? "" : "s"}` : "No matches";
+    if (!evidence.length) {
+      container.innerHTML = '<div class="empty-state compact"><strong>No supported passage found</strong><p>You can still create a zero-cost insufficient-evidence brief, or refine the question.</p></div>';
+      return;
+    }
+    container.innerHTML = evidence.map((item) => `<article class="evidence-card">
+      <div class="evidence-card-heading"><span class="evidence-rank">${item.rank}</span><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.document_id)} · score ${Number(item.score).toFixed(2)}</span></div></div>
+      <blockquote>${escapeHtml(item.text)}</blockquote>
+      <div class="evidence-card-footer"><span>Exact characters ${item.start_char.toLocaleString()}–${item.end_char.toLocaleString()} · ${escapeHtml(item.matched_terms.join(", ") || "semantic match")}</span><button class="text-button" type="button" data-evidence-source="${escapeHtml(item.document_id)}">Open full source</button></div>
+    </article>`).join("");
+    container.querySelectorAll("[data-evidence-source]").forEach((button) => button.addEventListener("click", () => inspectDocument(button.dataset.evidenceSource)));
+  }
+
+  function citationTitles(citationIds, evidenceById) {
+    return citationIds.map((id) => {
+      const item = evidenceById.get(id);
+      return item ? `<span class="citation-chip" title="${escapeHtml(id)}">${item.rank}. ${escapeHtml(item.title)}</span>` : "";
+    }).join("");
+  }
+
+  function citedDocumentIds(inquiry) {
+    if (!inquiry?.brief) return [];
+    const cited = new Set([
+      ...inquiry.brief.synthesis_citation_ids,
+      ...inquiry.brief.findings.flatMap((finding) => finding.citation_ids),
+    ]);
+    return inquiry.evidence.filter((item) => cited.has(item.id))
+      .map((item) => item.document_id).filter((id, index, ids) => ids.indexOf(id) === index);
+  }
+
+  function renderInquiryBrief(inquiry) {
+    const container = $("[data-inquiry-brief]");
+    const stateLabel = $("[data-inquiry-brief-state]");
+    if (!inquiry) {
+      stateLabel.textContent = "Preview first";
+      container.innerHTML = '<div class="empty-state compact">The brief will preserve support, contradiction, and uncertainty with source citations.</div>';
+      return;
+    }
+    stateLabel.textContent = humanize(inquiry.state);
+    if (["queued", "running"].includes(inquiry.state)) {
+      container.innerHTML = `<div class="brief-progress"><i></i><strong>${escapeHtml(humanize(inquiry.state))}</strong><span>${escapeHtml(inquiry.progress_detail)}</span><small>The shared provider lane serializes this brief with graph extraction.</small></div>`;
+      return;
+    }
+    if (inquiry.state === "failed") {
+      container.innerHTML = `<div class="inline-error"><strong>Brief generation failed.</strong><br>${escapeHtml(inquiry.error || inquiry.progress_detail)}</div><p class="recovery-note">The ranked evidence remains available at left and this failure is preserved in Recent activity.</p>`;
+      return;
+    }
+    const brief = inquiry.brief;
+    const evidenceById = new Map(inquiry.evidence.map((item) => [item.id, item]));
+    const citedDocuments = citedDocumentIds(inquiry);
+    const canHandoff = Boolean(state.collections.find((item) => item.id === inquiry.request.collection_id)) && citedDocuments.length > 0;
+    container.innerHTML = `<article class="brief-answer ${escapeHtml(brief.answer_status)}">
+      <div class="brief-answer-heading"><span>${escapeHtml(humanize(brief.answer_status))}</span><small>$${Number(brief.observed_cost_usd).toFixed(4)} · ${escapeHtml(brief.model)}</small></div>
+      <p>${escapeHtml(brief.synthesis)}</p>
+      <div class="citation-row">${citationTitles(brief.synthesis_citation_ids, evidenceById)}</div>
+    </article>
+    <div class="brief-findings">${brief.findings.map((finding) => `<article class="brief-finding ${escapeHtml(finding.classification)}"><span>${escapeHtml(humanize(finding.classification))}</span><p>${escapeHtml(finding.statement)}</p><div class="citation-row">${citationTitles(finding.citation_ids, evidenceById)}</div></article>`).join("") || '<p class="recovery-note">No supported findings were returned.</p>'}</div>
+    ${brief.unresolved_questions.length ? `<div class="unresolved"><strong>Still unresolved</strong><ul>${brief.unresolved_questions.map((question) => `<li>${escapeHtml(question)}</li>`).join("")}</ul></div>` : ""}
+    <div class="brief-handoff"><button class="button primary" type="button" data-inquiry-handoff ${canHandoff ? "" : "disabled"}>Use cited sources for a focused graph</button><span>${canHandoff ? `${citedDocuments.length} cited source${citedDocuments.length === 1 ? "" : "s"} will be selected; graph extraction has its own stated ceiling.` : "The original collection or cited source is no longer available for a graph build."}</span></div>`;
+    container.querySelector("[data-inquiry-handoff]")?.addEventListener("click", () => handoffInquiryToGraph(inquiry));
+  }
+
+  function renderInquiry() {
+    const inquiry = state.activeInquiry;
+    const preview = state.inquiryPreview;
+    const evidence = inquiry?.evidence || preview?.evidence || [];
+    renderInquiryEvidence(evidence);
+    renderInquiryBrief(inquiry);
+    const status = $("[data-inquiry-status]");
+    const generate = $("[data-inquiry-generate]");
+    if (inquiry) {
+      status.textContent = inquiry.state === "completed" ? `Completed · trace ${inquiry.trace_id}` : inquiry.progress_detail;
+      generate.disabled = true;
+    } else if (preview) {
+      status.textContent = evidence.length
+        ? "Evidence ranked deterministically · no model spend yet."
+        : "No passage matched · an insufficient-evidence brief costs $0.";
+      generate.disabled = !state.capabilities?.evidence_brief_authorized;
+    } else {
+      status.textContent = "Preview ranked passages before authorizing a brief.";
+      generate.disabled = true;
+    }
+  }
+
+  function openInquiryDialog(inquiry = null) {
+    const active = activeCollection();
+    if (!inquiry && !active) return;
+    window.clearTimeout(state.inquiryPolling);
+    state.activeInquiry = inquiry;
+    state.inquiryPreview = inquiry ? { collection_id: inquiry.request.collection_id, question: inquiry.request.question, evidence: inquiry.evidence } : null;
+    $("[data-inquiry-form]").reset();
+    $("[data-inquiry-question]").value = inquiry?.request.question || "";
+    $("[data-inquiry-question]").disabled = Boolean(inquiry);
+    $("[data-inquiry-preview]").disabled = Boolean(inquiry);
+    const ceiling = Math.min(0.06, Number(state.capabilities?.max_evidence_budget_usd || 0.06));
+    $("[data-inquiry-budget]").value = String(inquiry?.request.max_budget_usd || ceiling);
+    $("[data-inquiry-budget]").disabled = Boolean(inquiry);
+    $("[data-inquiry-title]").textContent = inquiry ? inquiry.collection_title : `Ask ${active.title}`;
+    renderInquiry();
+    $("[data-inquiry-dialog]").showModal();
+    if (!inquiry) $("[data-inquiry-question]").focus();
+    else if (["queued", "running"].includes(inquiry.state)) pollInquiry(inquiry.id);
+  }
+
+  async function previewInquiry(event) {
+    event.preventDefault();
+    const active = activeCollection();
+    const question = $("[data-inquiry-question]").value.trim();
+    if (!active || question.length < 3) return;
+    $("[data-inquiry-preview]").disabled = true;
+    $("[data-inquiry-generate]").disabled = true;
+    $("[data-inquiry-status]").textContent = "Ranking exact collection passages…";
+    try {
+      state.activeInquiry = null;
+      state.inquiryPreview = await api("evidence/preview", {
+        method: "POST", operator: true,
+        body: JSON.stringify({ collection_id: active.id, question, evidence_limit: 6 }),
+      });
+      renderInquiry();
+    } catch (error) {
+      state.inquiryPreview = null;
+      renderInquiry();
+      $("[data-inquiry-status]").textContent = `Evidence preview failed: ${error.message}`;
+    } finally {
+      $("[data-inquiry-preview]").disabled = false;
+    }
+  }
+
+  async function submitInquiry() {
+    const preview = state.inquiryPreview;
+    if (!preview || state.activeInquiry) return;
+    const generate = $("[data-inquiry-generate]");
+    generate.disabled = true;
+    $("[data-inquiry-status]").textContent = "Persisting evidence and requesting one traced brief…";
+    try {
+      state.activeInquiry = await api("inquiries", {
+        method: "POST", operator: true,
+        body: JSON.stringify({
+          collection_id: preview.collection_id,
+          question: preview.question,
+          evidence_limit: 6,
+          max_budget_usd: Number($("[data-inquiry-budget]").value),
+        }),
+      });
+      renderInquiry();
+      await loadInquiries();
+      pollInquiry(state.activeInquiry.id);
+    } catch (error) {
+      $("[data-inquiry-status]").textContent = `Brief request rejected: ${error.message}`;
+      generate.disabled = false;
+    }
+  }
+
+  async function pollInquiry(inquiryId) {
+    window.clearTimeout(state.inquiryPolling);
+    try {
+      const inquiry = await api(`inquiries/${encodeURIComponent(inquiryId)}`, { operator: true });
+      state.activeInquiry = inquiry;
+      renderInquiry();
+      await loadInquiries();
+      if (["queued", "running"].includes(inquiry.state)) {
+        state.inquiryPolling = window.setTimeout(() => pollInquiry(inquiryId), 1400);
+      } else if (inquiry.state === "completed") toast("Evidence brief completed with inspectable citations.");
+    } catch (error) {
+      $("[data-inquiry-status]").textContent = `Inquiry status failed: ${error.message}`;
+    }
+  }
+
+  async function handoffInquiryToGraph(inquiry) {
+    const collection = state.collections.find((item) => item.id === inquiry.request.collection_id);
+    if (!collection) { toast("The original collection is no longer available for graph handoff."); return; }
+    const citedIds = citedDocumentIds(inquiry);
+    const selectedIds = citedIds.slice(0, 3);
+    state.collectionId = collection.id;
+    rememberCollection(collection.id);
+    state.selectedDocuments = new Map(selectedIds.map((documentId) => {
+      const evidence = inquiry.evidence.find((item) => item.document_id === documentId);
+      return [documentId, { document_id: documentId, title: evidence?.title || documentId }];
+    }));
+    state.inquiryId = inquiry.id;
+    $("[data-collection-scope]").checked = true;
+    renderCollectionControls();
+    await runSearch(inquiry.request.question);
+    updateBuildControls();
+    $("[data-inquiry-dialog]").close();
+    $("[data-history-dialog]").close();
+    $("[data-build-button]").scrollIntoView({ behavior: "smooth", block: "center" });
+    toast(citedIds.length > 3 ? "The three highest-ranked cited sources are ready for the focused graph." : `${selectedIds.length} cited source${selectedIds.length === 1 ? " is" : "s are"} ready for the focused graph.`);
+  }
+
+  function renderInquiries() {
+    const container = $("[data-inquiry-history]");
+    if (!state.capabilities?.evidence_brief_authorized) {
+      container.innerHTML = '<div class="empty-state compact">Evidence inquiries are private. Open through the tailnet or enter the operator token.</div>';
+      return;
+    }
+    if (!state.inquiries.length) {
+      container.innerHTML = '<div class="empty-state compact">No evidence inquiries have been submitted yet.</div>';
+      return;
+    }
+    container.innerHTML = state.inquiries.map((inquiry) => `<article class="job-card ${escapeHtml(inquiry.state)}">
+      <div class="job-card-heading"><strong>${escapeHtml(inquiry.collection_title)}</strong><time>${escapeHtml(new Date(inquiry.updated_at).toLocaleString())}</time></div>
+      <p>${escapeHtml(truncate(inquiry.request.question, 150))}</p>
+      <span>${escapeHtml(inquiry.error || inquiry.progress_detail)} · ${inquiry.evidence.length} retained passage${inquiry.evidence.length === 1 ? "" : "s"}</span>
+      <button class="button ghost small" type="button" data-open-inquiry="${escapeHtml(inquiry.id)}">Open ${inquiry.state === "completed" ? "evidence brief" : "inquiry"}</button>
+    </article>`).join("");
+    container.querySelectorAll("[data-open-inquiry]").forEach((button) => button.addEventListener("click", () => {
+      const inquiry = state.inquiries.find((item) => item.id === button.dataset.openInquiry);
+      if (!inquiry) return;
+      $("[data-history-dialog]").close();
+      openInquiryDialog(inquiry);
+    }));
+  }
+
+  async function loadInquiries() {
+    if (!state.capabilities?.evidence_brief_authorized) {
+      state.inquiries = [];
+      renderInquiries();
+      return;
+    }
+    try {
+      state.inquiries = (await api("inquiries", { operator: true })).inquiries;
+      renderInquiries();
+    } catch (error) {
+      $("[data-inquiry-history]").innerHTML = `<div class="inline-error">Inquiry history failed: ${escapeHtml(error.message)}</div>`;
+    }
+  }
+
   function updateBuildControls() {
     const count = state.selectedDocuments.size;
     $("[data-selected-count]").textContent = count;
     const labels = [...state.selectedDocuments.values()].map((item) => item.title);
-    $("[data-selected-labels]").textContent = labels.length ? labels.join(" · ") : "Choose up to three search results.";
+    $("[data-selected-labels]").textContent = labels.length
+      ? `${state.inquiryId ? "Cited evidence handoff · " : ""}${labels.join(" · ")}`
+      : "Choose up to three search results.";
     const button = $("[data-build-button]");
     const status = $("[data-build-status]");
     const capabilities = state.capabilities;
@@ -365,7 +621,9 @@
     else if (!capabilities?.graph_build_enabled) status.textContent = "Graph building is disabled on this server.";
     else if (!capabilities.graph_build_authorized) status.textContent = "Open through the tailnet or enter the operator token.";
     else if (outsideCollection) status.textContent = `Add every selected source to ${collection.title} before building.`;
-    else status.textContent = "Authorized · one traced build will use the stated ceiling.";
+    else status.textContent = state.inquiryId
+      ? "Cited sources only · the graph will retain the evidence-inquiry provenance."
+      : "Authorized · one traced build will use the stated ceiling.";
   }
 
   async function startBuild() {
@@ -379,6 +637,7 @@
         body: JSON.stringify({
           document_ids: [...state.selectedDocuments.keys()],
           collection_id: state.collectionId,
+          inquiry_id: state.inquiryId,
           max_chars_per_document: Number($("[data-max-chars]").value),
           max_budget_usd: Number($("[data-budget]").value),
           refine_relationships: false,
@@ -634,6 +893,7 @@
       state.collectionId = event.target.value || null;
       rememberCollection(state.collectionId);
       state.selectedDocuments.clear();
+      state.inquiryId = null;
       $("[data-collection-scope]").checked = Boolean(state.collectionId);
       renderCollectionControls();
       await runSearch($("#query").value);
@@ -648,6 +908,13 @@
     });
     $("[data-collection-close]").addEventListener("click", () => $("[data-collection-dialog]").close());
     $("[data-collection-form]").addEventListener("submit", createCollection);
+    $("[data-inquiry-open]").addEventListener("click", () => openInquiryDialog());
+    $("[data-inquiry-close]").addEventListener("click", () => {
+      window.clearTimeout(state.inquiryPolling);
+      $("[data-inquiry-dialog]").close();
+    });
+    $("[data-inquiry-form]").addEventListener("submit", previewInquiry);
+    $("[data-inquiry-generate]").addEventListener("click", submitInquiry);
     $("[data-build-button]").addEventListener("click", startBuild);
     $("[data-token]").value = window.sessionStorage.getItem("crestOperatorToken") || "";
     $("[data-token]").addEventListener("change", async (event) => {
@@ -656,7 +923,7 @@
       await loadCapabilities();
       await loadCollections();
       await loadGraphList();
-      await loadJobs();
+      await Promise.all([loadInquiries(), loadJobs()]);
       await runSearch($("#query").value);
     });
     $("[data-export-link]").addEventListener("click", downloadCurrentGraph);
@@ -676,7 +943,7 @@
     $("[data-help-close]").addEventListener("click", () => $("[data-help-dialog]").close());
     $("[data-history-open]").addEventListener("click", async () => {
       $("[data-history-dialog]").showModal();
-      await loadJobs();
+      await Promise.all([loadInquiries(), loadJobs()]);
     });
     $("[data-history-close]").addEventListener("click", () => $("[data-history-dialog]").close());
   }
@@ -685,7 +952,7 @@
     wireEvents();
     await loadCapabilities();
     await loadCollections();
-    await Promise.all([loadGraphList(), loadJobs(), runSearch("disinformation")]);
+    await Promise.all([loadGraphList(), loadInquiries(), loadJobs(), runSearch("disinformation")]);
     await loadGraph("example-fixed-v2");
   }
   initialize().catch((error) => { $("[data-graph-empty]").textContent = `Workbench initialization failed: ${error.message}`; });

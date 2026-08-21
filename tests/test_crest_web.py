@@ -15,6 +15,10 @@ def test_workbench_leads_with_the_search_to_graph_workflow() -> None:
     assert "Add document" in html
     assert "Turn documents into searchable evidence" in html
     assert "Research collection" in html
+    assert "Ask this collection" in html
+    assert "Preview ranked evidence" in html
+    assert "support, contradiction, and uncertainty" in html
+    assert "Use cited sources for a focused graph" not in html
     assert "Recent activity" in html
     assert "Build knowledge graph" in html
     assert "Evidence" in html
@@ -33,6 +37,9 @@ def test_workbench_actions_have_api_counterparts_and_fail_visible() -> None:
         'api("uploads/batch"',
         "api(`uploads/",
         'api("collections"',
+        'api("evidence/preview"',
+        'api("inquiries"',
+        "api(`inquiries/",
         "api(`collections/",
         'api("connectors/cia-reading-room-live/probe"',
         "api(`documents/",
@@ -46,6 +53,10 @@ def test_workbench_actions_have_api_counterparts_and_fail_visible() -> None:
     assert "Build failed:" in javascript
     assert "Graph request failed:" in javascript
     assert "Upload failed:" in javascript
+    assert "Evidence preview failed:" in javascript
+    assert "Brief request rejected:" in javascript
+    assert "Use cited sources for a focused graph" in javascript
+    assert "inquiry_id: state.inquiryId" in javascript
     assert 'localStorage.setItem("crestActiveCollection"' in javascript
     assert 'localStorage.getItem("crestActiveCollection"' in javascript
     assert "relationship.groundings" in javascript
