@@ -510,8 +510,9 @@ def test_recover_extraction_revalidates_trace_and_records_receipt(
     )
 
     assert recovered is not None
-    extraction, receipt = recovered
+    extraction, receipt, rejections = recovered
     assert extraction == _extraction(1)
+    assert rejections == []
     assert receipt.document_id == "doc-1"
     assert receipt.trace_id == trace_id
     assert receipt.call_id == 7

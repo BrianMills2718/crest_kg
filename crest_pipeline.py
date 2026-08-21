@@ -35,7 +35,11 @@ from pydantic import (
 
 PIPELINE_VERSION: Literal["crest-kg-v2"] = "crest-kg-v2"
 PROMPT_PATH = Path(__file__).with_name("prompts") / "crest_extraction.yaml"
+RELATIONSHIP_PROMPT_PATH = (
+    Path(__file__).with_name("prompts") / "crest_relationship_refinement.yaml"
+)
 PROMPT_REF = "crest_kg.crest_extraction@4"
+RELATIONSHIP_PROMPT_REF = "crest_kg.crest_relationship_refinement@1"
 RECOVERABLE_PROMPT_REFS = frozenset(
     {
         "crest_kg.crest_extraction@2",
@@ -45,6 +49,7 @@ RECOVERABLE_PROMPT_REFS = frozenset(
 MAX_EVIDENCE_LINES = 5
 MAX_ENTITIES_PER_DOCUMENT = 20
 MAX_RELATIONSHIPS_PER_DOCUMENT = 8
+MAX_RELATIONSHIP_CANDIDATES_PER_DOCUMENT = 30
 DOCUMENT_NUMBER_KEYS = (
     "Document Number (FOIA) /ESDN (CREST)",
     "Document Number",
@@ -296,6 +301,12 @@ class ProviderDocumentExtraction(StrictModel):
     relationships: list[ProviderRelationshipCandidate]
 
 
+class ProviderRelationshipExtraction(StrictModel):
+    """Compact second-stage envelope over an already declared entity set."""
+
+    relationships: list[ProviderRelationshipCandidate]
+
+
 class DocumentExtraction(StrictModel):
     """Validated structured model output for one source document."""
 
@@ -304,7 +315,7 @@ class DocumentExtraction(StrictModel):
         description="Entities supported by exact quotes in this document. Use an empty list when none qualify."
     )
     relationships: list[RelationshipCandidate] = Field(
-        max_length=MAX_RELATIONSHIPS_PER_DOCUMENT,
+        max_length=MAX_RELATIONSHIP_CANDIDATES_PER_DOCUMENT,
         description="Directed relationships whose endpoints are declared entities. Use an empty list when none qualify."
     )
 
@@ -443,7 +454,7 @@ def validate_provider_extraction(
             f"{safe_predicate(provider_relationship.relationship_type)}:"
             f"{provider_relationship.target_entity_id}"
         )
-        if index >= MAX_RELATIONSHIPS_PER_DOCUMENT:
+        if index >= MAX_RELATIONSHIP_CANDIDATES_PER_DOCUMENT:
             rejections.append(
                 ExtractionRejection(
                     document_id=document_id,
@@ -452,7 +463,7 @@ def validate_provider_extraction(
                     candidate_ref=candidate_ref,
                     reason=(
                         "candidate exceeds per-document relationship limit of "
-                        f"{MAX_RELATIONSHIPS_PER_DOCUMENT}"
+                        f"{MAX_RELATIONSHIP_CANDIDATES_PER_DOCUMENT}"
                     ),
                 )
             )
@@ -517,6 +528,38 @@ def validate_provider_extraction(
     return DocumentExtraction(
         entities=entities,
         relationships=relationships,
+    ), rejections
+
+
+def validate_provider_relationship_extraction(
+    document_id: str,
+    response: ProviderRelationshipExtraction,
+    entities: list[EntityCandidate],
+) -> tuple[DocumentExtraction, list[ExtractionRejection]]:
+    """Apply the same item-level strict conversion to a relationship-only response."""
+
+    provider_entities = [
+        ProviderEntityCandidate(
+            local_id=entity.local_id,
+            name=entity.name,
+            type=entity.entity_type,
+            evidence=ProviderEvidenceCandidate(
+                line_start=entity.evidence.line_start,
+                line_count=entity.evidence.line_count,
+            ),
+        )
+        for entity in entities
+    ]
+    extraction, rejections = validate_provider_extraction(
+        document_id,
+        ProviderDocumentExtraction(
+            entities=provider_entities,
+            relationships=response.relationships,
+        ),
+    )
+    return DocumentExtraction(
+        entities=entities,
+        relationships=extraction.relationships,
     ), rejections
 
 
@@ -657,6 +700,10 @@ class GraphArtifact(StrictModel):
     prompt_ref: str | None = Field(
         default=None,
         description="Current extraction prompt contract; absent only on legacy v1 artifacts.",
+    )
+    relationship_prompt_ref: str | None = Field(
+        default=None,
+        description="Optional dedicated relationship-refinement prompt contract.",
     )
     trace_id: str = Field(min_length=1, description="Root llm_client observability trace.")
     max_budget_usd: float = Field(gt=0, description="User-authorized run budget ceiling.")
@@ -1254,7 +1301,21 @@ def partition_extraction_grounding(
                 )
             )
         else:
-            accepted_relationships.append(grounded_relationship)
+            if len(accepted_relationships) >= MAX_RELATIONSHIPS_PER_DOCUMENT:
+                rejections.append(
+                    ExtractionRejection(
+                        document_id=document.manifest.document_id,
+                        item_kind="relationship",
+                        item_index=index,
+                        candidate_ref=candidate_ref,
+                        reason=(
+                            "grounded candidate exceeds emitted relationship limit of "
+                            f"{MAX_RELATIONSHIPS_PER_DOCUMENT}"
+                        ),
+                    )
+                )
+            else:
+                accepted_relationships.append(grounded_relationship)
 
     return (
         DocumentExtraction(
@@ -1321,6 +1382,7 @@ def build_graph(
     *,
     model: str,
     prompt_ref: str = PROMPT_REF,
+    relationship_prompt_ref: str | None = None,
     trace_id: str,
     max_budget_usd: float,
     observed_cost_usd: float,
@@ -1398,6 +1460,7 @@ def build_graph(
         generated_at=datetime.now(timezone.utc),
         model=model,
         prompt_ref=prompt_ref,
+        relationship_prompt_ref=relationship_prompt_ref,
         trace_id=trace_id,
         max_budget_usd=max_budget_usd,
         observed_cost_usd=observed_cost_usd,
@@ -1418,7 +1481,11 @@ def recover_extraction_from_trace(
     *,
     root_trace_id: str,
     expected_model: str,
-) -> tuple[DocumentExtraction, RecoveredExtractionReceipt] | None:
+) -> tuple[
+    DocumentExtraction,
+    RecoveredExtractionReceipt,
+    list[ExtractionRejection],
+] | None:
     """Recover and revalidate one exact successful prior document extraction."""
 
     from llm_client import (
@@ -1470,7 +1537,16 @@ def recover_extraction_from_trace(
             f"selected-attempt receipt model mismatch: {document_trace_id}"
         )
 
-    extraction = DocumentExtraction.model_validate_json(response)
+    try:
+        extraction = DocumentExtraction.model_validate_json(response)
+    except ValidationError:
+        provider_extraction = ProviderDocumentExtraction.model_validate_json(response)
+        extraction, recovery_rejections = validate_provider_extraction(
+            document.manifest.document_id,
+            provider_extraction,
+        )
+    else:
+        recovery_rejections = []
     recovered = RecoveredExtractionReceipt(
         document_id=document.manifest.document_id,
         trace_id=document_trace_id,
@@ -1485,7 +1561,7 @@ def recover_extraction_from_trace(
         prompt_ref=prompt_ref,
         observed_cost_usd=float(cost_value),
     )
-    return extraction, recovered
+    return extraction, recovered, recovery_rejections
 
 
 def run_extraction(
@@ -1499,6 +1575,8 @@ def run_extraction(
     prior_observed_cost_usd: float = 0.0,
     unattributed_cost_reserve_usd: float = 0.0,
     max_output_tokens: int = 3_500,
+    refine_relationships: bool = False,
+    relationship_max_output_tokens: int = 2_000,
     reasoning_effort: str | None = None,
 ) -> GraphArtifact:
     """Execute one fully traced structured extraction per selected document."""
@@ -1524,6 +1602,8 @@ def run_extraction(
         raise ValueError("unattributed cost reserve must be a finite nonnegative value")
     if max_output_tokens <= 0:
         raise ValueError("max output tokens must be greater than zero")
+    if relationship_max_output_tokens <= 0:
+        raise ValueError("relationship max output tokens must be greater than zero")
 
     resume_roots = list(dict.fromkeys(resume_trace_ids or []))
     if any(not root.strip() for root in resume_roots):
@@ -1532,7 +1612,12 @@ def run_extraction(
         raise ValueError("the new trace ID must differ from every resume trace ID")
 
     recovered_by_document: dict[
-        str, tuple[DocumentExtraction, RecoveredExtractionReceipt]
+        str,
+        tuple[
+            DocumentExtraction,
+            RecoveredExtractionReceipt,
+            list[ExtractionRejection],
+        ],
     ] = {}
     for document in documents:
         for resume_root in reversed(resume_roots):
@@ -1558,7 +1643,7 @@ def run_extraction(
         - recovered_cost
     )
     missing_document_count = len(documents) - len(recovered_by_document)
-    if missing_document_count and authorized_new_call_budget <= 0:
+    if (missing_document_count or refine_relationships) and authorized_new_call_budget <= 0:
         raise ValueError("no authorized budget remains for unrecovered documents")
 
     extractions: list[DocumentExtraction] = []
@@ -1571,7 +1656,7 @@ def run_extraction(
             validated = DocumentExtraction.model_validate(
                 recovered[0].model_dump(by_alias=True)
             )
-            schema_rejections: list[ExtractionRejection] = []
+            schema_rejections = recovered[2]
             result = None
         else:
             messages = render_prompt(
@@ -1610,16 +1695,72 @@ def run_extraction(
             document,
             validated,
         )
-        extractions.append(grounded)
         rejections.extend(schema_rejections)
         rejections.extend(document_rejections)
         if result is not None:
             observed_cost += float(result.cost or 0.0)
 
+        if not refine_relationships or not grounded.entities:
+            extractions.append(grounded)
+            continue
+
+        relationship_messages = render_prompt(
+            RELATIONSHIP_PROMPT_PATH,
+            document_id=document.manifest.document_id,
+            eligible_entities_json=json.dumps(
+                [
+                    {
+                        "local_id": entity.local_id,
+                        "name": entity.name,
+                        "type": entity.entity_type.value,
+                    }
+                    for entity in grounded.entities
+                ],
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+            numbered_body_text=render_numbered_source(document),
+        )
+        provider_relationships, relationship_result = call_llm_structured(
+            model,
+            relationship_messages,
+            response_model=ProviderRelationshipExtraction,
+            task="crest_kg.relationship_refinement",
+            trace_id=(
+                f"{trace_id}/relationship-refinement/documents/"
+                f"{safe_token(document.manifest.document_id)}"
+            ),
+            budget_scope_trace_id=trace_id,
+            max_budget=authorized_new_call_budget,
+            max_tokens=relationship_max_output_tokens,
+            num_retries=0,
+            reasoning_effort=reasoning_effort,
+            model_policy="enforce_allowlist",
+            model_justification=model_justification,
+            prompt_ref=RELATIONSHIP_PROMPT_REF,
+        )
+        refined, refinement_schema_rejections = (
+            validate_provider_relationship_extraction(
+                document.manifest.document_id,
+                provider_relationships,
+                grounded.entities,
+            )
+        )
+        refined_grounded, refinement_grounding_rejections = (
+            partition_extraction_grounding(document, refined)
+        )
+        extractions.append(refined_grounded)
+        rejections.extend(refinement_schema_rejections)
+        rejections.extend(refinement_grounding_rejections)
+        observed_cost += float(relationship_result.cost or 0.0)
+
     return build_graph(
         documents,
         extractions,
         model=model,
+        relationship_prompt_ref=(
+            RELATIONSHIP_PROMPT_REF if refine_relationships else None
+        ),
         trace_id=trace_id,
         max_budget_usd=max_budget_usd,
         observed_cost_usd=observed_cost,
@@ -1741,6 +1882,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Per-document structured response token ceiling.",
     )
     extract_parser.add_argument(
+        "--refine-relationships",
+        action="store_true",
+        help="Run a dedicated relationship-only pass over the extracted entity set.",
+    )
+    extract_parser.add_argument(
+        "--relationship-max-output-tokens",
+        type=_positive_int,
+        default=2_000,
+        help="Per-document token ceiling for the optional relationship-only pass.",
+    )
+    extract_parser.add_argument(
         "--reasoning-effort",
         help="Explicit llm_client reasoning setting when the selected model requires one.",
     )
@@ -1783,6 +1935,8 @@ def main(argv: list[str] | None = None) -> int:
                 prior_observed_cost_usd=args.prior_observed_cost_usd,
                 unattributed_cost_reserve_usd=args.unattributed_cost_reserve_usd,
                 max_output_tokens=args.max_output_tokens,
+                refine_relationships=args.refine_relationships,
+                relationship_max_output_tokens=args.relationship_max_output_tokens,
                 reasoning_effort=args.reasoning_effort,
             )
             write_graph(graph, args.output, force=args.force)
