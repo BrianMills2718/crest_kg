@@ -17,6 +17,9 @@ workbench.
   text, and `llm_client` traces
 - Build authorization: `CREST_BUILD_ENABLED=1`, the server budget ceiling, and
   either a Tailscale identity header or operator token
+- Evidence-brief authorization: `CREST_BRIEF_ENABLED=1`,
+  `CREST_MAX_BRIEF_BUDGET_USD`, and the same operator boundary; deterministic
+  evidence preview and every inquiry read remain private
 - Upload authorization: `CREST_UPLOAD_ENABLED=1`, byte/page/extracted-text
   ceilings, and the same operator boundary; the image contains local Tesseract
   OCR and never sends source files to an OCR service
@@ -50,15 +53,19 @@ docker build \
    candidate volume. Verify `/health`, `/`, bundled search, private text and
    scanned-image upload, OCR receipt, private search/detail/original download,
    unauthorized upload/private-read rejection, example graph rendering,
-   export, unauthorized-build rejection, and one authorized traced private
-   document build before changing Funnel.
+   export, unauthorized-build rejection, frozen evidence-retrieval gates, one
+   authorized traced evidence brief, its cited-source graph handoff, and one
+   authorized traced private document build before changing Funnel.
 5. Retain the currently verified container or image as a named rollback.
 6. Promote only `crest-kg`, bound to `127.0.0.1:8798`.
 7. Append the `/crest` Funnel path; never reset the shared Funnel router.
 8. Verify the canonical public URL, browser console, failed requests, upload,
    OCR, private/bundled search, document selection, build authorization, job
    completion, graph counts, source evidence, private export, and external
-   denial of private-source and spend-bearing actions.
+   denial of private-source and spend-bearing actions. For an evidence-synthesis
+   promotion, also verify ranked passage preview, brief citations and
+   contradiction/uncertainty labels, inquiry recovery, graph provenance, and
+   anonymous denial of every inquiry route.
 9. Record the exact deployed revision and evidence under `docs/deployments/`.
 
 ## Rollback

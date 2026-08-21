@@ -4,8 +4,9 @@ CREST is an evidence-first research workbench for CIA Reading Room material.
 It lets a researcher search an available CREST corpus, inspect and select
 source documents, privately upload PDFs, scans, and text files, run local OCR,
 organize partial-success batches into persistent research collections, build a
-collection-scoped budget-bounded evidence graph, recover recent jobs after a
-refresh or restart, and export the complete
+collection-scoped evidence brief from exact ranked passages, hand its cited
+sources into a budget-bounded evidence graph, recover recent inquiries and jobs
+after a refresh or restart, and export the complete
 provenance-preserving artifact.
 
 `crest_app` owns the executable web/API surface and `crest_pipeline.py` remains
@@ -39,12 +40,14 @@ Image and scanned-PDF OCR also requires the local `tesseract` executable. The
 Docker image installs it; text PDFs and UTF-8 text formats do not invoke OCR.
 
 Search, document inspection, saved graphs, and export are read-only. Provider
-spend is disabled unless `CREST_BUILD_ENABLED=1`; uploads are disabled unless
-`CREST_UPLOAD_ENABLED=1`. Both writes require a trusted
+spend is disabled unless `CREST_BUILD_ENABLED=1` for graphs or
+`CREST_BRIEF_ENABLED=1` for evidence briefs; uploads are disabled unless
+`CREST_UPLOAD_ENABLED=1`. All writes require a trusted
 Tailscale identity or `CREST_OPERATOR_TOKEN`, and cannot exceed
 their server bounds. Graph builds cannot exceed `CREST_MAX_BUILD_BUDGET_USD`
-(default `$0.25`); uploads default to 15 MiB, 50 pages, and one million
-extracted characters. The UI uses the same typed API documented at `/api/docs`.
+(default `$0.25`), briefs cannot exceed `CREST_MAX_BRIEF_BUDGET_USD` (default
+`$0.15`), and uploads default to 15 MiB, 50 pages, and one million extracted
+characters. The UI uses the same typed API documented at `/api/docs`.
 
 Authorized operators can create private collections, add or remove durable
 bundled/uploaded members, scope search and graph builds to a collection, and
@@ -54,6 +57,14 @@ invalid collection is rejected before any file is persisted. The current
 repository-local extension seams are the strict `ExtractedUpload` result and
 the `SourceConnector` protocol in `crest_app`; shared-package extraction waits
 for a real second maintained consumer.
+
+An authorized operator can also preview deterministic chunk-level evidence for
+a collection question, authorize one persistent citation-validated brief, and
+select only its cited documents for a focused graph. Preview never calls a
+model. Brief and graph jobs share one serial provider lane, and a failed or
+restart-interrupted brief retains its exact ranked evidence. The agent-authored
+Project Meridian fixture is a narrow regression gate, not a human gold set or a
+claim about arbitrary-corpus recall.
 
 ## What the canonical path guarantees
 
@@ -124,7 +135,8 @@ python crest_pipeline.py validate \
 The browser workbench is hosted at
 <https://brian-mac-mini.tail9c321e.ts.net/crest/>. Its default graph is the
 audited relationship-binding v2 checkpoint, but the primary surface is the
-upload/search, source-selection, build, exploration, and export workflow.
+upload/search, question-to-evidence, cited-source graph handoff, exploration,
+and export workflow.
 
 The workbench retains the evaluation boundary: neither its tracked archive nor
 its five-document example is a complete CREST map, and corpus recall remains

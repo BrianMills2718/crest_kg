@@ -88,6 +88,7 @@ _RAW_CONCEPT_GROUPS = (
         "organization",
         "body",
         "institute",
+        "institution",
         "committee",
         "agency",
         "team",
@@ -129,6 +130,32 @@ CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
 }
 
+_FOCUS_BOUNDARIES = frozenset(
+    _stem(token)
+    for token in (
+        "arranged",
+        "behind",
+        "convened",
+        "coordinated",
+        "did",
+        "do",
+        "does",
+        "had",
+        "has",
+        "have",
+        "is",
+        "organized",
+        "powered",
+        "protected",
+        "put",
+        "responsible",
+        "transported",
+        "was",
+        "were",
+        "will",
+    )
+)
+
 
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(
@@ -156,6 +183,44 @@ def _query_concepts(question: str) -> tuple[tuple[str, frozenset[str]], ...]:
         seen.add(alternatives)
         concepts.append((term, alternatives))
     return tuple(concepts)
+
+
+def _query_focus_concepts(
+    question: str,
+) -> tuple[tuple[str, frozenset[str]], ...]:
+    """Extract an explicit requested subject from common question forms.
+
+    Context overlap can rank a supported answer, but it cannot establish that a
+    source discusses the requested airline, algorithm, vehicle, or other head
+    subject. This deliberately small grammar is transparent and fails back to
+    the broader retrieval rule when a question has no explicit focus phrase.
+    """
+
+    raw_terms = re.findall(r"[A-Za-z0-9]+", question.casefold())
+    if not raw_terms:
+        return ()
+    start: int | None = None
+    if raw_terms[0] in {"which", "what"}:
+        start = 1
+    elif len(raw_terms) > 2 and raw_terms[:2] in (["how", "many"], ["how", "much"]):
+        start = 2
+    elif raw_terms[0] in {"identify", "name"}:
+        start = 1
+    if start is None:
+        return ()
+    focus: list[tuple[str, frozenset[str]]] = []
+    seen: set[frozenset[str]] = set()
+    for raw_term in raw_terms[start:]:
+        term = _stem(raw_term)
+        if term in _FOCUS_BOUNDARIES:
+            break
+        if not term or term in STOP_WORDS:
+            continue
+        alternatives = CONCEPT_BY_TERM.get(term, frozenset({term}))
+        if alternatives not in seen:
+            focus.append((term, alternatives))
+            seen.add(alternatives)
+    return tuple(focus)
 
 
 def _trimmed_window(body: str, start: int, end: int) -> tuple[int, int, str]:
@@ -243,6 +308,7 @@ def rank_evidence(
 
     normalized_question = " ".join(question.casefold().split())
     concepts = _query_concepts(question)
+    focus_concepts = _query_focus_concepts(question)
     if not concepts or limit <= 0:
         return []
     candidates = [
@@ -273,6 +339,12 @@ def rank_evidence(
     average_length = sum(len(candidate.terms) for candidate in candidates) / len(candidates)
     scored: list[tuple[float, _ChunkCandidate, EvidenceScore, list[str]]] = []
     for candidate in candidates:
+        if focus_concepts and not any(
+            _concept_frequency(candidate.terms, alternatives) > 0
+            or _best_fuzzy(query_term, candidate.terms) >= 0.86
+            for query_term, alternatives in focus_concepts
+        ):
+            continue
         bm25 = 0.0
         exact_matches = 0
         fuzzy_values: list[float] = []

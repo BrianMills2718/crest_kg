@@ -6,8 +6,9 @@ CREST is an evidence-first document-to-knowledge-graph workbench. A researcher
 can search tracked CIA Reading Room material, privately add PDFs, scans, and
 text files in partial-success batches, organize sources into persistent research
 collections, inspect and select sources, run a collection-scoped budget-bounded
-LLM extraction, recover prior jobs after refresh or restart, explore the
-resulting graph, and export its provenance-preserving artifact.
+evidence brief over exact ranked passages, hand cited sources into the existing
+LLM graph extraction, recover prior inquiries and jobs after refresh or restart,
+explore the resulting graph, and export its provenance-preserving artifact.
 
 The public product entry point is the workbench at `/crest/`. A fixed graph or
 evaluation artifact is supporting evidence, not the product front door.
@@ -18,12 +19,13 @@ evaluation artifact is supporting evidence, not the product front door.
 2. Batch-add private sources or search an available connector with ordinary keywords.
 3. Observe native extraction, OCR, duplicate, unsupported, or failed state for every file.
 4. Add tracked sources to the collection and search only its current membership.
-5. Inspect result metadata and source text before selecting one to three documents.
-6. Explicitly authorize a dollar ceiling and start one traced, collection-guarded graph job.
-7. Observe queued, running, failed, interrupted, or completed state without silent fallback.
-8. Refresh or restart and reopen the persisted job and completed graph from recent activity.
-9. Explore entities, relationships, exact source quotes, and grounding spans.
-10. Download the validated `crest-kg-v2` JSON artifact.
+5. Ask a natural-language question and preview exact ranked collection passages without a model call.
+6. Authorize one brief ceiling; inspect support, contradiction, uncertainty, citations, unresolved questions, trace, and cost.
+7. Hand at most three cited sources into the existing collection-guarded graph builder and authorize its separate ceiling.
+8. Observe queued, running, failed, interrupted, or completed state without silent fallback.
+9. Refresh or restart and reopen the persisted inquiry, job, and completed graph from recent activity.
+10. Explore entities, relationships, exact source quotes, and grounding spans.
+11. Download the validated `crest-kg-v2` JSON artifact.
 
 The stable acquisition example is uploading a short field memorandum, finding
 it by title or body text, selecting it, building its graph, and opening an
@@ -69,6 +71,14 @@ Jobs are persisted newest-first and private. A service restart changes queued or
 running records to explicit failed state; it never pretends an interrupted model
 call completed. Completed job records link back to their persisted graph.
 
+Evidence inquiries are likewise operator-private persistent records. Retrieval
+chunks current collection members deterministically, retains exact character
+offsets and score components, and calls no model. A brief may cite only its
+retained chunk IDs; malformed or unknown citations fail the inquiry while its
+evidence remains inspectable. Completed briefs label support, contradiction,
+and uncertainty without claiming semantic entailment. A focused graph handoff
+may select only cited documents that remain in the inquiry's collection.
+
 ## Execution and trust boundary
 
 Bundled search, bundled document inspection, public graph exploration, and
@@ -85,6 +95,10 @@ following:
 - a request budget no greater than the configured server ceiling; and
 - an operator identity supplied by a trusted Tailscale header or an operator
   token.
+
+Evidence-brief generation has the parallel `CREST_BRIEF_ENABLED` and
+`CREST_MAX_BRIEF_BUDGET_USD` gates. Briefs and graph builds share one serial
+provider lane, preventing concurrent browser actions from spending in parallel.
 
 The server uses the repository's canonical `crest_pipeline.py` and the shared
 `llm_client`; it does not maintain a second extractor. Jobs and generated graph
@@ -123,6 +137,13 @@ example checkpoint.
   identity, metadata, and text snippets.
 - Selection and build controls are functional and have matching public API
   actions.
+- Project Meridian's regression paraphrases rank the Vienna coordination and
+  observer passages ahead of the Lisbon distractor, while contextual
+  absent-subject controls return no evidence.
+- An authorized operator can preview passages without model spend, persist a
+  citation-valid brief that preserves the 14/16 May contradiction and role
+  ambiguity, reopen it after refresh, and hand only cited documents to a graph.
+- Anonymous inquiry preview, history, detail, and creation requests fail closed.
 - Unauthorized build attempts fail visibly without calling a model.
 - One authorized search-to-graph run completes through `llm_client`, records a
   trace and observed cost, renders in the workbench, and exports as validated
