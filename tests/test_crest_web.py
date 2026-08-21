@@ -56,3 +56,4 @@ def test_hosted_viewer_is_self_contained_and_fails_visible() -> None:
     assert "validated_5_documents_relationship_binding_v2.json" in dockerfile
     assert "127.0.0.1:8080/health" in dockerfile
     assert '"service":"crest-kg-viewer"' in nginx
+    assert "try_files $uri $uri/ =404;" in nginx
