@@ -33,6 +33,7 @@ def test_hosted_viewer_exposes_evidence_and_limitations() -> None:
     assert "corpus recall is unknown" in html
     assert "Trace a claim back to its source" in html
     assert 'href="./data/graph.json"' in html
+    assert 'rel="icon" href="data:image/svg+xml' in html
     assert 'role="img"' in html
     assert 'aria-live="polite"' in html
     assert "relationship.groundings" in javascript
