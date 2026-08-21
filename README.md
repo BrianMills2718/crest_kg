@@ -75,6 +75,19 @@ python crest_pipeline.py validate \
   --graph cia_kg_output/validated_5_documents.json
 ```
 
+## Hosted evidence viewer
+
+The audited relationship-binding v2 checkpoint has a read-only browser surface
+at <https://brian-mac-mini.tail9c321e.ts.net/crest/>. It defaults to the five
+entities connected by the three accepted relationships, exposes all 82
+extracted entities separately, and lets every accepted edge step down to its
+exact source quote and grounding spans.
+
+The viewer deliberately retains the evaluation boundary: it is an exploratory
+five-document checkpoint with unknown corpus recall, not a complete CREST map.
+Its container and Mac mini promotion/rollback contract are documented in
+[`docs/MAC_MINI_DEPLOYMENT.md`](docs/MAC_MINI_DEPLOYMENT.md).
+
 ## Verified vertical
 
 The canonical path was exercised against the explicit five-document selection

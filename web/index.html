@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Evidence-first explorer for the audited CREST relationship-binding v2 knowledge graph.">
+    <title>CREST Knowledge Graph</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to the graph</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="CREST Knowledge Graph home">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span>
+          <strong>CREST Knowledge Graph</strong>
+          <small>Evidence-first archival prototype</small>
+        </span>
+      </a>
+      <a class="source-link" href="https://github.com/BrianMills2718/crest_kg" rel="noreferrer">Source code</a>
+    </header>
+
+    <main id="main-content">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">CIA CREST · five-document checkpoint</p>
+          <h1 id="page-title">What relationships survived exact-source review?</h1>
+          <p class="lede">Explore the small set of relationships that passed strict endpoint, predicate, direction, and source-grounding checks. Select any edge to inspect the exact CIA Reading Room quote behind it.</p>
+        </div>
+        <aside class="checkpoint-note" aria-label="Checkpoint limitation">
+          <strong>Exploratory checkpoint</strong>
+          <p>This is a reproducible research prototype—not a complete map of CREST. Only two of five documents emitted accepted relationships, and corpus recall is unknown.</p>
+        </aside>
+        <dl class="metrics" aria-label="Graph summary">
+          <div><dt>Documents</dt><dd data-metric="documents">—</dd></div>
+          <div><dt>Entities</dt><dd data-metric="entities">—</dd></div>
+          <div><dt>Supported edges</dt><dd data-metric="relationships">—</dd></div>
+          <div><dt>Rejected candidates</dt><dd data-metric="rejections">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="explorer" aria-labelledby="explorer-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Audited output</p>
+            <h2 id="explorer-title">Trace a claim back to its source</h2>
+          </div>
+          <nav class="view-tabs" aria-label="Explorer views">
+            <button type="button" class="view-tab is-active" data-view-button="relationships" aria-pressed="true">Relationships</button>
+            <button type="button" class="view-tab" data-view-button="entities" aria-pressed="false">All entities</button>
+            <button type="button" class="view-tab" data-view-button="documents" aria-pressed="false">Documents</button>
+            <button type="button" class="view-tab" data-view-button="method" aria-pressed="false">How to read this</button>
+          </nav>
+        </div>
+
+        <div id="load-error" class="error-state" role="alert" hidden>
+          <strong>The graph could not be loaded.</strong>
+          <p data-error-message></p>
+        </div>
+
+        <div class="explorer-grid">
+          <div class="view-stack">
+            <section class="view-panel" data-view-panel="relationships" aria-labelledby="relationship-view-title">
+              <div class="panel-intro">
+                <div>
+                  <h3 id="relationship-view-title">Connected evidence graph</h3>
+                  <p>The canvas shows only the five entities participating in accepted relationships. The other extracted entities remain available in <strong>All entities</strong>.</p>
+                </div>
+                <button type="button" class="secondary-button" id="fit-graph">Fit graph</button>
+              </div>
+              <div class="graph-frame">
+                <svg id="relationship-graph" role="img" aria-labelledby="graph-title graph-description" viewBox="0 0 760 460">
+                  <title id="graph-title">Accepted CREST relationships</title>
+                  <desc id="graph-description">A directed graph of the entities connected by the three relationships that survived source review.</desc>
+                  <defs>
+                    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+                      <path d="M0,0 L8,4 L0,8 Z" class="arrowhead"></path>
+                    </marker>
+                  </defs>
+                  <g data-graph-layer></g>
+                </svg>
+              </div>
+              <div class="relationship-list" aria-label="Accepted relationships" data-relationship-list></div>
+            </section>
+
+            <section class="view-panel" data-view-panel="entities" aria-labelledby="entity-view-title" hidden>
+              <div class="panel-intro">
+                <div>
+                  <h3 id="entity-view-title">All extracted entities</h3>
+                  <p>Search every typed entity, including those without an accepted relationship. Selecting an entity opens its exact source evidence.</p>
+                </div>
+              </div>
+              <form class="entity-controls" role="search" onsubmit="return false">
+                <label>
+                  <span>Search entities</span>
+                  <input id="entity-search" type="search" placeholder="Try CIA, Navrozov, disinformation…" autocomplete="off">
+                </label>
+                <label>
+                  <span>Entity type</span>
+                  <select id="entity-type-filter"><option value="">All types</option></select>
+                </label>
+              </form>
+              <p class="result-count" aria-live="polite" data-entity-result-count></p>
+              <div class="entity-list" data-entity-list></div>
+            </section>
+
+            <section class="view-panel" data-view-panel="documents" aria-labelledby="document-view-title" hidden>
+              <div class="panel-intro">
+                <div>
+                  <h3 id="document-view-title">Source documents</h3>
+                  <p>Each graph assertion is bound to a document digest, exact character offsets, and a bounded line range.</p>
+                </div>
+              </div>
+              <div class="document-list" data-document-list></div>
+            </section>
+
+            <section class="view-panel method-panel" data-view-panel="method" aria-labelledby="method-view-title" hidden>
+              <p class="eyebrow">Interpretation guide</p>
+              <h3 id="method-view-title">A precise graph, not an exhaustive one</h3>
+              <div class="method-grid">
+                <article>
+                  <span class="method-number">01</span>
+                  <h4>Entities came from five documents</h4>
+                  <p>The extractor identified people, organizations, places, events, concepts, and works in fixed source windows.</p>
+                </article>
+                <article>
+                  <span class="method-number">02</span>
+                  <h4>Edges faced stricter review</h4>
+                  <p>Endpoints and the predicate must appear faithfully in one exact quote. Invalid candidates remain visible in the rejection ledger.</p>
+                </article>
+                <article>
+                  <span class="method-number">03</span>
+                  <h4>Three edges survived</h4>
+                  <p>All three were source-replayed and adjudicated as supported, but the same output helped shape the guard. This is descriptive evidence, not a generalization test.</p>
+                </article>
+                <article>
+                  <span class="method-number">04</span>
+                  <h4>Absence is not evidence</h4>
+                  <p>An isolated entity may still participate in real relationships. It only means this checkpoint did not accept an edge for it.</p>
+                </article>
+              </div>
+              <a class="inline-link" href="https://github.com/BrianMills2718/crest_kg/blob/main/evaluation/eval_decision_signoff_v2.md" rel="noreferrer">Read the independent evaluation sign-off</a>
+            </section>
+          </div>
+
+          <aside class="detail-panel" aria-labelledby="detail-title" aria-live="polite">
+            <p class="eyebrow">Evidence inspector</p>
+            <h3 id="detail-title">Select a relationship</h3>
+            <div data-detail-content>
+              <p>Choose an edge or entity to inspect its source-bound evidence.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div>
+        <strong>CREST relationship-binding v2</strong>
+        <span data-build-revision>Loading build revision…</span>
+      </div>
+      <div class="footer-links">
+        <a href="./data/graph.json">Graph JSON</a>
+        <a href="https://www.cia.gov/readingroom/" rel="noreferrer">CIA Reading Room</a>
+      </div>
+    </footer>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
