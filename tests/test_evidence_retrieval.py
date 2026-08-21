@@ -23,6 +23,7 @@ def test_frozen_evidence_retrieval_fixtures_pass() -> None:
         "v10": {"regression", "negative"},
         "v11": {"regression", "negative"},
         "v12": {"regression", "negative"},
+        "v13": {"regression", "negative"},
     }
     for version, splits in expected_splits.items():
         result = evaluate_retrieval_fixture(

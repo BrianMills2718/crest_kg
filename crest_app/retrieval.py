@@ -411,6 +411,10 @@ CONCEPT_BY_TERM = {
     term: group for group in CONCEPT_GROUPS for term in group
 }
 SUBJECT_HEAD_TERMS = frozenset(_stem(term) for term in _RAW_SUBJECT_HEAD_TERMS)
+# Fuzzy matches never admit a passage alone, and a fuzzy structural name also
+# requires a separate exact named anchor. The 0.85 boundary retains common
+# seven-character name permutations without weakening those two safeguards.
+FUZZY_MATCH_THRESHOLD = 0.85
 
 
 def _tokens(value: str) -> tuple[str, ...]:
@@ -796,10 +800,14 @@ def rank_evidence(
                 continue
             fuzzy = _best_fuzzy(query_term, candidate.terms)
             fuzzy_values.append(fuzzy)
-            if fuzzy >= 0.86:
+            if fuzzy >= FUZZY_MATCH_THRESHOLD:
                 matched_indexes.add(index)
                 matched_terms.append(query_term)
-        fuzzy_match_count = sum(1 for value in fuzzy_values if 0.86 <= value < 1.0)
+        fuzzy_match_count = sum(
+            1
+            for value in fuzzy_values
+            if FUZZY_MATCH_THRESHOLD <= value < 1.0
+        )
         match_count = exact_matches + fuzzy_match_count
         minimum_matches = 1 if len(concepts) <= 2 else 2
         coverage = match_count / len(concepts)
@@ -850,7 +858,10 @@ def rank_evidence(
                 _stem(surface),
                 tuple(sorted(candidate_named_stems)),
             )
-            if fuzzy_named < 0.86 or not (exact_named_anchor_indexes - {index}):
+            if (
+                fuzzy_named < FUZZY_MATCH_THRESHOLD
+                or not (exact_named_anchor_indexes - {index})
+            ):
                 subject_failed = True
                 break
         if subject_failed:
@@ -862,7 +873,11 @@ def rank_evidence(
             if _concept_frequency(candidate.title_terms, alternatives)
         )
         title_score = min(2.0, title_matches * 0.5)
-        fuzzy_score = sum(value for value in fuzzy_values if 0.86 <= value < 1.0) / len(concepts)
+        fuzzy_score = sum(
+            value
+            for value in fuzzy_values
+            if FUZZY_MATCH_THRESHOLD <= value < 1.0
+        ) / len(concepts)
         components = EvidenceScore(
             bm25=bm25,
             coverage=coverage,
