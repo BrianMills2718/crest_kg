@@ -78,3 +78,24 @@ def test_workbench_is_self_contained_and_declares_dynamic_service() -> None:
     assert "LLM_CLIENT_DATA_ROOT=/data/llm-client" in dockerfile
     assert "COPY --from=llm_client" in dockerfile
     assert "127.0.0.1:8080/health" in dockerfile
+
+
+def test_page_assets_resolve_under_a_mount_prefix_without_a_trailing_slash() -> None:
+    """The served page must not depend on the URL's trailing slash.
+
+    Every asset and API call in index.html is written relative. Without a
+    <base>, requesting the app at ``/crest`` makes the browser resolve
+    ``./app.js`` against the site root, so the page loads no JavaScript and
+    whatever unrelated stylesheet the parent host serves at ``/styles.css``.
+    It renders as broken unstyled markup, while ``/crest/`` works -- a
+    one-character difference that is easy to hand someone by accident.
+    """
+
+    from fastapi.testclient import TestClient
+
+    from crest_app.main import create_app
+
+    for root_path, expected in (("", '<base href="/" />'), ("/crest", '<base href="/crest/" />')):
+        response = TestClient(create_app(), root_path=root_path).get("/")
+        assert response.status_code == 200
+        assert expected in response.text, f"missing base for root_path={root_path!r}"

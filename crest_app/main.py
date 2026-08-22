@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 from .acquisition import (
     AcquisitionError,
@@ -54,6 +54,26 @@ from .services import (
 
 ROOT = Path(__file__).parents[1]
 WEB_ROOT = ROOT / "web"
+
+
+def _index_html(root_path: str) -> str:
+    """Serve index.html with an explicit <base>, so relative URLs always resolve.
+
+    Every asset and API call in the page is written relative (``./app.js``,
+    ``./api/search``). A browser resolves those against the current directory,
+    which is the wrong place whenever the app is mounted under a prefix and the
+    URL has no trailing slash: at ``/crest`` the page asks for ``/app.js``
+    rather than ``/crest/app.js``, gets a 404 for its JavaScript and whatever
+    unrelated stylesheet the parent host happens to serve, and renders as
+    unstyled broken markup. One character -- ``/crest/`` -- behaves correctly,
+    which makes the failure easy to miss and easy to hand someone by accident.
+
+    A <base> pins resolution to the mount point, so both spellings work.
+    """
+
+    markup = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
+    prefix = f"{root_path.rstrip('/')}/" if root_path.strip("/") else "/"
+    return markup.replace("<head>", f'<head>\n    <base href="{prefix}" />', 1)
 
 
 def create_app(
@@ -724,9 +744,9 @@ def create_app(
             },
         )
 
-    @app.get("/")
-    def index() -> FileResponse:
-        return FileResponse(WEB_ROOT / "index.html")
+    @app.get("/", response_class=HTMLResponse)
+    def index(request: Request) -> HTMLResponse:
+        return HTMLResponse(_index_html(request.scope.get("root_path", "")))
 
     @app.get("/styles.css")
     def styles() -> FileResponse:
