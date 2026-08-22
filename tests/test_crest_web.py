@@ -212,3 +212,25 @@ def test_every_metric_the_script_writes_exists_in_the_document() -> None:
         written = set(re.findall(r'"([^"]+)"', match.group(1)))
         missing = written - present
         assert not missing, f"app.js writes metrics absent from the page: {sorted(missing)}"
+
+
+def test_setup_and_status_are_collapsed_out_of_the_primary_journey() -> None:
+    """Configuration must not outweigh the one action a newcomer needs.
+
+    The first screen carried 20 interactive controls, 7 of them disabled. The
+    Sources panel sat above Search with eight controls -- every one of them
+    disabled on a deployment without an operator token -- so the densest block
+    on the page was also the deadest, and it came first.
+    """
+
+    html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
+
+    search_at = html.index('class="panel-section search-section"')
+    sources_at = html.index('class="panel-section source-section"')
+    assert search_at < sources_at, "search must precede sources in the panel"
+
+    assert '<details class="panel-section source-section">' in html
+    assert '<details class="build-settings-wrap">' in html
+    for block in ('class="panel-section source-section"', 'class="build-settings-wrap"'):
+        opening = html[html.index(block) - 40 : html.index(block)]
+        assert " open" not in opening, f"{block} must start collapsed"

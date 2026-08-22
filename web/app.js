@@ -63,6 +63,13 @@
   async function loadCapabilities() {
     try {
       state.capabilities = await api("capabilities", { operator: true });
+      const summary = $("[data-source-summary]");
+      if (summary) {
+        const searchable = state.capabilities.connectors
+          .filter((connector) => connector.state === "available" && connector.document_count)
+          .reduce((total, connector) => total + connector.document_count, 0);
+        summary.textContent = searchable ? `${searchable.toLocaleString()} documents searchable` : "no sources available";
+      }
       $("[data-connectors]").innerHTML = state.capabilities.connectors.map((connector) => `
         <div class="connector ${connector.state}"><i class="connector-dot"></i><div>
           <strong>${escapeHtml(connector.label)}${connector.document_count ? ` · ${connector.document_count}` : ""}</strong>

@@ -338,3 +338,32 @@ dialog::backdrop { background: rgba(23,38,33,.48); backdrop-filter: blur(3px); }
   display: block;
   max-width: 68ch;
 }
+
+/* Collapsed setup. Sources and the build options are configuration and status,
+   not the primary journey; every Sources control is disabled on a deployment
+   without an operator token, so eight dead controls used to sit above the one
+   live one. Both stay one click away rather than competing on first view. */
+.source-section > summary,
+.build-settings-wrap > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.source-section > summary::-webkit-details-marker,
+.build-settings-wrap > summary::-webkit-details-marker { display: none; }
+.source-section > summary::after,
+.build-settings-wrap > summary::after {
+  content: "▸";
+  margin-left: 0.4em;
+  font-size: 0.85em;
+  opacity: 0.55;
+}
+.source-section[open] > summary::after,
+.build-settings-wrap[open] > summary::after { content: "▾"; }
+.source-section > summary { display: flex; align-items: baseline; gap: 0.6rem; }
+.summary-hint { font-size: 0.8rem; opacity: 0.7; }
+.build-settings-wrap > summary {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  padding: 0.2rem 0;
+}
+.build-settings-wrap[open] .build-settings { margin-top: 0.5rem; }

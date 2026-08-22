@@ -33,30 +33,6 @@
 
     <main class="workbench">
       <aside class="research-panel" aria-label="Search and select CREST documents">
-        <section class="panel-section source-section">
-          <div class="section-heading">
-            <div class="eyebrow">Sources</div>
-            <button class="button ghost small" type="button" data-upload-open>Add document</button>
-          </div>
-          <div class="collection-control">
-            <div class="collection-row">
-              <label for="collection-picker">Research collection</label>
-              <button class="text-button" type="button" data-collection-new>New collection</button>
-            </div>
-            <select id="collection-picker" data-collection-picker aria-label="Active research collection">
-              <option value="">All documents</option>
-            </select>
-            <label class="collection-scope" data-collection-scope-wrap hidden>
-              <input type="checkbox" data-collection-scope checked /> Search only this collection
-            </label>
-            <div class="collection-summary" data-collection-summary>Choose or create a collection to organize a research thread.</div>
-            <button class="button evidence-entry" type="button" data-inquiry-open disabled>Ask this collection</button>
-          </div>
-          <div data-connectors class="connector-list" aria-live="polite">
-            <div class="skeleton line"></div>
-            <div class="skeleton line"></div>
-          </div>
-        </section>
 
         <section class="panel-section search-section">
           <div class="eyebrow">01 · Search</div>
@@ -86,6 +62,35 @@
             <div class="empty-state compact">Run a search to choose source documents.</div>
           </div>
         </section>
+
+        <details class="panel-section source-section">
+          <summary class="section-heading">
+            <span class="eyebrow">Sources &amp; collections</span>
+            <span class="summary-hint" data-source-summary>40 documents</span>
+          </summary>
+          <div class="section-heading">
+            <div class="eyebrow">Manage</div>
+            <button class="button ghost small" type="button" data-upload-open>Add document</button>
+          </div>
+          <div class="collection-control">
+            <div class="collection-row">
+              <label for="collection-picker">Research collection</label>
+              <button class="text-button" type="button" data-collection-new>New collection</button>
+            </div>
+            <select id="collection-picker" data-collection-picker aria-label="Active research collection">
+              <option value="">All documents</option>
+            </select>
+            <label class="collection-scope" data-collection-scope-wrap hidden>
+              <input type="checkbox" data-collection-scope checked /> Search only this collection
+            </label>
+            <div class="collection-summary" data-collection-summary>Choose or create a collection to organize a research thread.</div>
+            <button class="button evidence-entry" type="button" data-inquiry-open disabled>Ask this collection</button>
+          </div>
+          <div data-connectors class="connector-list" aria-live="polite">
+            <div class="skeleton line"></div>
+            <div class="skeleton line"></div>
+          </div>
+        </details>
       </aside>
 
       <section class="graph-workspace" aria-label="Knowledge graph explorer">
@@ -149,11 +154,14 @@
           <span data-selected-labels>Tick up to three search results, then build.</span>
         </div>
       </div>
-      <div class="build-settings">
-        <label>Budget ceiling <span>$</span><input data-budget type="number" min="0.01" max="0.25" step="0.01" value="0.10" /></label>
-        <label>Chars / document <input data-max-chars type="number" min="1000" max="20000" step="1000" value="12000" /></label>
-        <label class="token-field">Operator token <input data-token type="password" autocomplete="off" placeholder="only if needed" /></label>
-      </div>
+      <details class="build-settings-wrap">
+        <summary>Options</summary>
+        <div class="build-settings">
+          <label>Budget ceiling <span>$</span><input data-budget type="number" min="0.01" max="0.25" step="0.01" value="0.10" /></label>
+          <label>Chars / document <input data-max-chars type="number" min="1000" max="20000" step="1000" value="12000" /></label>
+          <label class="token-field">Operator token <input data-token type="password" autocomplete="off" placeholder="only if needed" /></label>
+        </div>
+      </details>
       <div class="build-action">
         <button class="button primary" type="button" data-build-button disabled>Build knowledge graph</button>
         <span data-build-status>Search and select a document to begin.</span>
