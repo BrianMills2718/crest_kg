@@ -102,3 +102,67 @@ with `--build-arg SOURCE_REVISION=<sha>` and redeployed.
   collection` — is disabled without an operator token, so an unauthenticated
   visitor sees a mostly dead panel with no explanation of how to authenticate
   beyond one line of small grey text.
+
+---
+
+## Update — usability pass, and the deployment's real gap
+
+The owner's verdict on the working page was that he had no idea how to use it
+and the interface was incredibly busy. A cold-start comprehension audit found
+20 interactive controls on the first screen, 7 of them disabled, and 13
+separate instruction texts — but the reason the journey was unreadable was
+structural, not density.
+
+**The stage numbers contradicted their own order.** Panels read 01 Sources, 02
+Search, 03 Explore, 04 Evidence, with the select-and-build dock numbered 05.
+Building is what creates the graph Explore and Evidence display, so 05 had to
+happen before 03 and 04. Step 01 — the one the numbering told a newcomer to
+start on — had all four of its controls disabled on this deployment. The
+sequence now reads 01 Search, 02 select and build, 03 Explore, 04 Evidence,
+with Sources demoted to a collapsed status panel below Search.
+
+**The primary action was switched off.** `CREST_BUILD_ENABLED` was unset, so
+`Build knowledge graph` could never enable: the hosted instance could search
+and read but not do the one thing it exists for, and the landing page's own
+orientation line promised it. `CREST_BUILD_ENABLED`, `CREST_BRIEF_ENABLED`, and
+`CREST_UPLOAD_ENABLED` are now `1`. All three remain operator-token gated and
+keep the server budget ceilings ($0.25 build, $0.15 brief), so only an
+authenticated operator can spend.
+
+Other changes: the identity and primary journey moved out of the `?` dialog
+onto the page; rejected candidates moved from the headline metrics to the
+provenance line; the graph frames its own content instead of a fixed viewBox;
+the workbench fits the window rather than clipping under the sticky dock; build
+options collapse behind `Options`; and the operator-token field, now one click
+deeper, has a visible route in from the build status.
+
+## Verification — browser, at 1440x900 and 900x800
+
+- Landing view renders with zero console errors; whole workbench fits the
+  window at desktop width with no clipping
+- Search returns 40 matches; ticking a result updates the dock to `1 document
+  selected` and names it
+- Clicking a graph node populates the Inspector with the entity, its type, the
+  grounded reference count, and an exact source quote with document ID and line
+  numbers (`Document 05259030 · lines 54–54`)
+- Unauthenticated: `Build knowledge graph` stays disabled and the status offers
+  `Enter operator token to build`, which opens Options and focuses the field
+- A deliberately wrong token leaves the button disabled
+- With the correct token, `GET /api/capabilities` returns
+  `graph_build_authorized: true`
+
+**Not verified:** no graph build was executed. Running one spends against the
+OpenRouter key, which is the owner's call, so the build path is proven up to
+authorization and not beyond.
+
+## Still open
+
+- `/crest` remains on Tailscale **Funnel** (public internet). Turning Funnel off
+  is not scoped to this app — the root host also serves 16 other paths — so it
+  needs its own decision rather than a side effect of this work.
+- `CREST_TRUST_TAILSCALE_HEADERS` stays off deliberately. It would let the
+  proxy's identity header authorize an operator, which is unsafe while the same
+  container answers on a public Funnel route.
+- The operator token lives in `sessionStorage`, so it is re-entered per browser
+  session.
+- Below 1121px the dock stacks to two rows and the graph scrolls under it.

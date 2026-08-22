@@ -614,6 +614,7 @@
   function updateBuildControls() {
     const count = state.selectedDocuments.size;
     $("[data-selected-count]").textContent = count;
+    $("[data-selected-noun]").textContent = count === 1 ? "document" : "documents";
     const labels = [...state.selectedDocuments.values()].map((item) => item.title);
     $("[data-selected-labels]").textContent = labels.length
       ? `${state.inquiryId ? "Cited evidence handoff · " : ""}${labels.join(" · ")}`
