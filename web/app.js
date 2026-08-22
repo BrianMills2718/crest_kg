@@ -760,7 +760,7 @@
     $("[data-graph-title]").textContent = example
       ? "Example graph · five-document evidence checkpoint"
       : `${graph.documents.length}-document generated graph`;
-    for (const field of ["documents", "entities", "relationships", "rejections"]) {
+    for (const field of ["documents", "entities", "relationships"]) {
       $(`[data-metric="${field}"]`).textContent = graph[field].length.toLocaleString();
     }
     // Rejected candidates belong with provenance, not in the headline metrics:

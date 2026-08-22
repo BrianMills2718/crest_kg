@@ -179,3 +179,36 @@ def test_identity_and_primary_journey_do_not_require_the_help_dialog() -> None:
     intro = orientation[1][: orientation[1].index("</p>")]
     assert "declassified" in intro and "CIA" in intro, "never says what the corpus is"
     assert "build" in intro.lower(), "never names the primary action"
+
+
+def test_every_metric_the_script_writes_exists_in_the_document() -> None:
+    """A script writing to a removed element takes the whole render down.
+
+    renderGraphHeader() loops over metric names and assigns textContent
+    unguarded, so deleting one <strong data-metric> from index.html without
+    editing that loop throws "Cannot set properties of null" and the graph
+    never draws -- observed live after the rejected-candidates metric was
+    removed from the strip. The two lists have to agree.
+    """
+
+    import re
+
+    html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
+    script = (WEB_ROOT / "app.js").read_text(encoding="utf-8")
+
+    present = set(re.findall(r'data-metric="([^"]+)"', html))
+
+    # Every loop whose body writes data-metric, not just the first one found:
+    # app.js has an unrelated validation loop with the same shape earlier in
+    # the file, and matching only the first one checked the wrong list.
+    loops = [
+        match
+        for match in re.finditer(r'for \(const field of \[([^\]]+)\]\)\s*\{(.*?)\n    \}', script, re.S)
+        if "data-metric" in match.group(2)
+    ]
+    assert loops, "no metric-writing loop found in app.js"
+
+    for match in loops:
+        written = set(re.findall(r'"([^"]+)"', match.group(1)))
+        missing = written - present
+        assert not missing, f"app.js writes metrics absent from the page: {sorted(missing)}"
