@@ -626,7 +626,22 @@
     button.disabled = !count || !capabilities || !capabilities.graph_build_enabled || !capabilities.graph_build_authorized || outsideCollection;
     if (!count) status.textContent = "Search and select a document to begin.";
     else if (!capabilities?.graph_build_enabled) status.textContent = "Graph building is disabled on this server.";
-    else if (!capabilities.graph_build_authorized) status.textContent = "Open through the tailnet or enter the operator token.";
+    else if (!capabilities.graph_build_authorized) {
+      // The token field lives inside the collapsed Options panel, so the one
+      // way to unlock the primary action was hidden one click deeper with
+      // nothing pointing at it. Make the status the route in.
+      status.textContent = "";
+      const unlock = document.createElement("button");
+      unlock.type = "button";
+      unlock.className = "text-button unlock";
+      unlock.textContent = "Enter operator token to build";
+      unlock.addEventListener("click", () => {
+        const options = $(".build-settings-wrap");
+        if (options) options.open = true;
+        $("[data-token]").focus();
+      });
+      status.appendChild(unlock);
+    }
     else if (outsideCollection) status.textContent = `Add every selected source to ${collection.title} before building.`;
     else status.textContent = state.inquiryId
       ? "Cited sources only · the graph will retain the evidence-inquiry provenance."
