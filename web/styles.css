@@ -388,3 +388,28 @@ dialog::backdrop { background: rgba(23,38,33,.48); backdrop-filter: blur(3px); }
   box-shadow: 0 -10px 26px rgba(23, 38, 33, 0.28);
   z-index: 20;
 }
+
+/* Fit the workbench to the window. The grid's height was a hardcoded
+   calc(100vh - 158px) that predated the orientation line, so the extra ~78px
+   pushed the graph under the sticky build dock and cut the bottom nodes off
+   with no indication they were there. Making the page a column that flexes
+   keeps every panel on screen whatever the chrome above it costs, and lets the
+   individual panels scroll rather than the document. */
+@media (min-width: 1121px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  .workbench {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+  .research-panel,
+  .inspector-panel { overflow-y: auto; }
+  .graph-workspace { min-height: 0; }
+  .graph-stage { min-height: 0; }
+}
