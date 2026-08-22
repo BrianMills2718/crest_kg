@@ -367,3 +367,24 @@ dialog::backdrop { background: rgba(23,38,33,.48); backdrop-filter: blur(3px); }
   padding: 0.2rem 0;
 }
 .build-settings-wrap[open] .build-settings { margin-top: 0.5rem; }
+
+/* Keep the dock one row. Wrapping the settings in <details> made the collapsed
+   summary a grid item of its own, pushing the primary action onto a second
+   line and doubling the dock's height. The panel floats above the row when
+   opened instead of displacing it. */
+.build-settings-wrap { position: relative; justify-self: end; }
+.build-settings-wrap > summary {
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+.build-settings-wrap[open] > .build-settings {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  background: rgba(29, 52, 47, 0.99);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 -10px 26px rgba(23, 38, 33, 0.28);
+  z-index: 20;
+}
