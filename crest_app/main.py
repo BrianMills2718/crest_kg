@@ -746,7 +746,16 @@ def create_app(
 
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request) -> HTMLResponse:
-        return HTMLResponse(_index_html(request.scope.get("root_path", "")))
+        # Must revalidate. The document names the exact asset versions the page
+        # needs, so a browser holding a stale copy runs the wrong front end --
+        # or, if that copy predates a path fix, no front end at all, leaving a
+        # hardcoded loading message on screen forever with no way for the
+        # viewer to tell it apart from a slow server. Assets stay cacheable;
+        # they are versioned in the URL.
+        return HTMLResponse(
+            _index_html(request.scope.get("root_path", "")),
+            headers={"cache-control": "no-cache, must-revalidate"},
+        )
 
     @app.get("/styles.css")
     def styles() -> FileResponse:
