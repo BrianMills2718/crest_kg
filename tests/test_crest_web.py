@@ -143,3 +143,39 @@ def test_asset_urls_advance_with_the_build_so_a_deploy_actually_ships() -> None:
     assert "__ASSET_VERSION__" not in text, "placeholder was left unstamped"
     for asset in ("styles.css", "app.js"):
         assert f"{asset}?v=0123456789ab" in text, f"{asset} did not carry the build token"
+
+
+def test_stage_numbers_follow_the_actual_task_order() -> None:
+    """Numbered stages must not contradict the order they have to happen in.
+
+    The panels were numbered 01 Sources, 02 Search, 03 Explore, 04 Evidence,
+    with the select-and-build dock numbered 05 -- but building is what creates
+    the graph that Explore and Evidence display, so 05 had to happen before 03
+    and 04. A reader following the numbers was told to start on a panel whose
+    every control is disabled, and to build last.
+    """
+
+    html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
+
+    assert '<div class="eyebrow">01 · Search</div>' in html
+    assert '<div class="step-number">02</div>' in html
+    assert '<div class="eyebrow">03 · Explore</div>' in html
+    assert '<div class="eyebrow">04 · Evidence</div>' in html
+    assert "01 · Sources" not in html, "a fully disabled panel must not be step one"
+    assert '<div class="step-number">05</div>' not in html
+
+
+def test_identity_and_primary_journey_do_not_require_the_help_dialog() -> None:
+    """What this is and what to do must be on the page, not behind "?".
+
+    "CREST" is an unexplained acronym and the product's output was never named
+    in the landing view; both lived only in the About dialog.
+    """
+
+    html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
+    orientation = html.split('class="orientation"', 1)
+
+    assert len(orientation) == 2, "no orientation line on the page"
+    intro = orientation[1][: orientation[1].index("</p>")]
+    assert "declassified" in intro and "CIA" in intro, "never says what the corpus is"
+    assert "build" in intro.lower(), "never names the primary action"

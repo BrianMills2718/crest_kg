@@ -722,7 +722,7 @@
 
   function requireGraph(payload) {
     if (!payload || payload.schema_version !== "crest-kg-v2") throw new Error("Expected a crest-kg-v2 graph artifact.");
-    for (const field of ["documents", "entities", "relationships", "rejections"]) {
+    for (const field of ["documents", "entities", "relationships"]) {
       if (!Array.isArray(payload[field])) throw new Error(`Graph field ${field} is missing or invalid.`);
     }
     const ids = new Set(payload.entities.map((entity) => entity.id));
@@ -763,9 +763,12 @@
     for (const field of ["documents", "entities", "relationships", "rejections"]) {
       $(`[data-metric="${field}"]`).textContent = graph[field].length.toLocaleString();
     }
+    // Rejected candidates belong with provenance, not in the headline metrics:
+    // they are what the extractor discarded, not something the reader can act on.
+    const discarded = `${graph.rejections.length.toLocaleString()} candidates discarded`;
     $("[data-graph-provenance]").textContent = example
-      ? "Labeled example · fixed artifact · corpus recall remains unknown."
-      : `Generated ${new Date(graph.generated_at).toLocaleString()} · trace ${graph.trace_id}`;
+      ? `Labeled example · fixed artifact · ${discarded} · corpus recall remains unknown.`
+      : `Generated ${new Date(graph.generated_at).toLocaleString()} · ${discarded} · trace ${graph.trace_id}`;
     $("[data-graph-cost]").textContent = `Observed model cost $${Number(graph.observed_cost_usd).toFixed(4)}`;
   }
 
