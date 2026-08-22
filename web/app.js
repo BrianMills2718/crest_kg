@@ -754,7 +754,12 @@
   function renderGraphHeader() {
     const graph = state.graph;
     const example = state.graphId === "example-fixed-v2";
-    $("[data-graph-title]").textContent = example ? "Five-document evidence checkpoint" : `${graph.documents.length}-document generated graph`;
+    // Name the example as an example in the page's largest text. It was titled
+    // like saved work, so it read as the viewer's own graph on a panel they
+    // never asked to fill -- the landing view is step 03 of a five-step tool.
+    $("[data-graph-title]").textContent = example
+      ? "Example graph · five-document evidence checkpoint"
+      : `${graph.documents.length}-document generated graph`;
     for (const field of ["documents", "entities", "relationships", "rejections"]) {
       $(`[data-metric="${field}"]`).textContent = graph[field].length.toLocaleString();
     }

@@ -99,3 +99,19 @@ def test_page_assets_resolve_under_a_mount_prefix_without_a_trailing_slash() -> 
         response = TestClient(create_app(), root_path=root_path).get("/")
         assert response.status_code == 200
         assert expected in response.text, f"missing base for root_path={root_path!r}"
+
+
+def test_landing_headline_does_not_claim_to_be_loading() -> None:
+    """The page's largest text must not be a status message it cannot retract.
+
+    ``<h1 data-graph-title>`` ships in the static HTML and is only rewritten
+    once app.js runs. When it read "Loading evidence graph…", any viewer whose
+    JavaScript failed to load saw a permanent loading claim that no server-side
+    state backed -- indistinguishable from a slow response, with nothing to act
+    on. The static default has to describe what the panel is for instead.
+    """
+
+    html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
+
+    assert "Loading evidence graph" not in html
+    assert "Search documents to build a graph" in html
