@@ -52,6 +52,11 @@ RUN python -c "from crest_app.semantic_index import _model; _model()" \
 # reaching for the network mid-query.
 ENV HF_HUB_OFFLINE=1
 
+# The answerability judge caches verdicts on disk. Its default lives beside the
+# evaluation fixtures, which is correct for a checkout but read-only in the
+# image, so point it at the writable data volume instead.
+ENV CREST_ANSWERABILITY_CACHE=/data/workbench/answerability_cache
+
 RUN useradd --create-home --uid 10001 crest \
     && mkdir -p /data/workbench /data/llm-client \
     && chown -R crest:crest /data
