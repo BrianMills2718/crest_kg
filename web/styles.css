@@ -330,5 +330,11 @@ dialog::backdrop { background: rgba(23,38,33,.48); backdrop-filter: blur(3px); }
   border-bottom: 1px solid var(--rule, #d8d2c4);
   font-size: 0.95rem;
   line-height: 1.45;
+}
+
+/* Measure the line, not the rule: max-width on the <p> itself cropped the
+   border-bottom to the text column, which read as a half-drawn divider. */
+.orientation > span {
+  display: block;
   max-width: 68ch;
 }

@@ -751,6 +751,29 @@
     }
   }
 
+  function fitGraphToContent() {
+    // Frame what was actually drawn. The viewBox was a fixed 900x620 while the
+    // layout places nodes wherever the graph is small, so a five-node example
+    // sat in the lower third of a canvas three times its height and read as a
+    // rendering failure. Called after every render so the default view is the
+    // fitted one rather than something the viewer must know to correct.
+    const canvas = $("#knowledge-graph");
+    const content = $("[data-node-layer]");
+    if (!canvas || !content || !content.childNodes.length) return;
+    let box;
+    try {
+      box = content.getBBox();
+    } catch (error) {
+      return; // not laid out yet (hidden or detached); keep the current frame
+    }
+    if (!box.width || !box.height) return;
+    const pad = Math.max(40, Math.max(box.width, box.height) * 0.12);
+    canvas.setAttribute(
+      "viewBox",
+      `${box.x - pad} ${box.y - pad} ${box.width + pad * 2} ${box.height + pad * 2}`,
+    );
+  }
+
   function renderGraphHeader() {
     const graph = state.graph;
     const example = state.graphId === "example-fixed-v2";
@@ -832,6 +855,7 @@
     });
     const types = [...new Set(selection.entities.map((entity) => entity.type))].sort();
     $("[data-legend]").innerHTML = types.map((type) => `<span><i style="background:${TYPE_COLORS[type] || TYPE_COLORS.other}"></i>${escapeHtml(type)}</span>`).join("");
+    fitGraphToContent();
   }
 
   function selectEntity(id) { state.selectedItem = { kind: "entity", id }; renderGraph(); renderInspector(); }
@@ -937,7 +961,7 @@
     $("[data-export-link]").addEventListener("click", downloadCurrentGraph);
     $("[data-graph-picker]").addEventListener("change", (event) => loadGraph(event.target.value));
     $("[data-connected-only]").addEventListener("change", renderGraph);
-    $("[data-fit-button]").addEventListener("click", () => { $("#knowledge-graph").setAttribute("viewBox", "0 0 900 620"); toast("Graph fitted to the available canvas."); });
+    $("[data-fit-button]").addEventListener("click", () => { fitGraphToContent(); toast("Graph fitted to the available canvas."); });
     $("[data-dialog-close]").addEventListener("click", () => $("[data-document-dialog]").close());
     $("[data-upload-open]").addEventListener("click", () => $("[data-upload-dialog]").showModal());
     $("[data-upload-close]").addEventListener("click", () => $("[data-upload-dialog]").close());
