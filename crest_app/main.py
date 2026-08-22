@@ -73,7 +73,32 @@ def _index_html(root_path: str) -> str:
 
     markup = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
     prefix = f"{root_path.rstrip('/')}/" if root_path.strip("/") else "/"
-    return markup.replace("<head>", f'<head>\n    <base href="{prefix}" />', 1)
+    markup = markup.replace("<head>", f'<head>\n    <base href="{prefix}" />', 1)
+    return markup.replace("__ASSET_VERSION__", _asset_version(), 1 + markup.count("__ASSET_VERSION__"))
+
+
+def _asset_version() -> str:
+    """Cache-busting token for the page's own CSS and JS.
+
+    These were pinned to a hand-written date string. Shipping a change to
+    app.js without remembering to edit that string leaves every browser on the
+    previous file, so the deploy silently does nothing -- which is how a fixed
+    headline stayed wrong after it was fixed. Tying the token to the build's
+    revision means it advances whenever the assets can have changed, and
+    nobody has to remember.
+    """
+
+    revision = os.getenv("SOURCE_REVISION", "").strip()
+    if revision and revision not in {"unknown", "development"}:
+        return revision[:12]
+    # No stamped build: fall back to the assets' own mtimes so local
+    # development still reloads, rather than pinning everyone to one token.
+    stamps = [
+        int((WEB_ROOT / name).stat().st_mtime)
+        for name in ("app.js", "styles.css")
+        if (WEB_ROOT / name).exists()
+    ]
+    return str(max(stamps)) if stamps else "dev"
 
 
 def create_app(

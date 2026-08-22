@@ -115,3 +115,31 @@ def test_landing_headline_does_not_claim_to_be_loading() -> None:
 
     assert "Loading evidence graph" not in html
     assert "Search documents to build a graph" in html
+
+
+def test_asset_urls_advance_with_the_build_so_a_deploy_actually_ships() -> None:
+    """A changed app.js must reach browsers without a hand-edited version string.
+
+    The CSS and JS URLs carried a hardcoded date token. Shipping a change to
+    either file without also remembering to edit that token leaves every
+    browser on the cached previous copy, so the deploy silently changes
+    nothing -- observed live, where a corrected headline stayed wrong after it
+    had been corrected and redeployed. The token is now derived from the
+    build, so it advances whenever the assets can have.
+    """
+
+    import os
+
+    from fastapi.testclient import TestClient
+
+    from crest_app.main import create_app
+
+    os.environ["SOURCE_REVISION"] = "0123456789abcdef0123456789abcdef01234567"
+    try:
+        text = TestClient(create_app()).get("/").text
+    finally:
+        os.environ.pop("SOURCE_REVISION", None)
+
+    assert "__ASSET_VERSION__" not in text, "placeholder was left unstamped"
+    for asset in ("styles.css", "app.js"):
+        assert f"{asset}?v=0123456789ab" in text, f"{asset} did not carry the build token"
