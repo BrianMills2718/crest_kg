@@ -1,0 +1,23 @@
+version: 1
+project: crest_kg
+publish:
+  - path: README.md
+    type: ProjectOverview
+    title: Crest Kg Overview
+    tags: [portfolio, knowledge-graph, osint]
+  - path: docs/MAC_MINI_DEPLOYMENT.md
+    type: PortfolioGuide
+    title: Crest Kg Mac Mini Deployment
+    tags: [portfolio, knowledge-graph, osint]
+  - path: docs/NEXT_WEEK_EVIDENCE_SYNTHESIS_PLAN.md
+    type: PortfolioGuide
+    title: Crest Kg Next Week Evidence Synthesis Plan
+    tags: [portfolio, knowledge-graph, osint]
+  - path: docs/NEXT_WEEK_PLAN.md
+    type: PortfolioGuide
+    title: Crest Kg Next Week Plan
+    tags: [portfolio, knowledge-graph, osint]
+  - path: docs/WORKBENCH_PRODUCT.md
+    type: PortfolioGuide
+    title: Crest Kg Workbench Product
+    tags: [portfolio, knowledge-graph, osint]
