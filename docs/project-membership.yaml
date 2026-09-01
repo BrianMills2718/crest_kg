@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+project_id: project-crest-research-workbench
+display_name: CREST Research Workbench
+context_epoch: 1
+revision_policy:
+  development: moving_checkout
+  evidence: exact_revision
+repositories:
+  - repository_id: crest_kg
+    role: primary
+    workspace: default
+    authority_entrypoints:
+      - README.md
+      - docs/WORKBENCH_PRODUCT.md
+    contract_seams: []
