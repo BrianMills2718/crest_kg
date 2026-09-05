@@ -425,3 +425,20 @@ dialog::backdrop { background: rgba(23,38,33,.48); backdrop-filter: blur(3px); }
   border: 0;
   cursor: pointer;
 }
+
+/* Spotlight tour. Policy: spotlight-tour-default. Engine copied unchanged from
+   forecast-league-mvp/public/tour.js; steps are inline in index.html. */
+#tourLayer{position:fixed;inset:0;z-index:120}
+#tourSpot{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(20,32,29,.58);transition:top .16s,left .16s,width .16s,height .16s;pointer-events:none}
+#tourPop{position:fixed;background:#fffdf8;color:#1d342f;border-radius:14px;padding:16px 34px 16px 16px;box-shadow:0 18px 40px rgba(20,32,29,.3);outline:none;max-width:320px}
+#tourPop strong{display:block;font-size:15px;letter-spacing:-.01em}
+#tourPop p{margin:6px 0 14px;font-size:13.5px;line-height:1.55;color:#5c6b64}
+.tour-step{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#df734c;margin-bottom:6px}
+.tour-actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tour-nav{display:flex;gap:8px}
+#tourPop .btn{min-height:34px;border-radius:10px;border:1px solid #d8cfc0;background:#fffdf8;color:#1d342f;font-weight:700;padding:0 12px;font-size:13px;cursor:pointer}
+#tourPop .btn.primary{background:#1d342f;border-color:#1d342f;color:#fffdf8}
+#tourPop .btn:disabled{opacity:.5;cursor:not-allowed}
+.tour-skip{color:#5c6b64}
+.tour-x{position:absolute;top:8px;right:8px;width:26px;height:26px;min-height:0;padding:0;border:0;border-radius:8px;background:transparent;color:#5c6b64;font-size:19px;line-height:1;cursor:pointer}
+.tour-x:hover{background:#efe9dd;color:#1d342f}
