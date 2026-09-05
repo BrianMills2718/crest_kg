@@ -95,7 +95,7 @@ def _asset_version() -> str:
     # development still reloads, rather than pinning everyone to one token.
     stamps = [
         int((WEB_ROOT / name).stat().st_mtime)
-        for name in ("app.js", "styles.css")
+        for name in ("app.js", "styles.css", "tour.js")
         if (WEB_ROOT / name).exists()
     ]
     return str(max(stamps)) if stamps else "dev"
@@ -789,6 +789,10 @@ def create_app(
     @app.get("/app.js")
     def javascript() -> FileResponse:
         return FileResponse(WEB_ROOT / "app.js", media_type="text/javascript")
+
+    @app.get("/tour.js")
+    def tour_javascript() -> FileResponse:
+        return FileResponse(WEB_ROOT / "tour.js", media_type="text/javascript")
 
     return app
 

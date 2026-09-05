@@ -21,6 +21,7 @@
         </label>
         <button class="button ghost" type="button" data-history-open>Recent activity</button>
         <a class="button ghost" data-export-link href="./api/graphs/example-fixed-v2/export.json">Export JSON</a>
+        <button class="button ghost" type="button" data-tour-start>Show me around</button>
         <button class="icon-button" type="button" data-help-button aria-label="About this workbench">?</button>
       </div>
     </header>
@@ -265,5 +266,25 @@
 
     <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
     <script src="./app.js?v=__ASSET_VERSION__" defer></script>
+    <script src="./tour.js?v=__ASSET_VERSION__" defer></script>
+    <script>
+      window.TOURS = {
+        crest: [
+          {sel:".orientation", title:"What this workbench does", body:"Search a fixed archive of declassified documents, pick a few, and build a graph of what they connect."},
+          {sel:"[data-search-form]", title:"Start by searching", body:"Search runs over the bundled 40-document archive, not the open web. Results are passages, not pages."},
+          {sel:".source-section", title:"Choose the documents", body:"Pick up to three. The graph is built from these and nothing else, which is why it stays checkable."},
+          {sel:"[data-build-button]", title:"Then build the graph", body:"Extraction runs over your chosen documents. It takes a moment and reports progress as it goes."},
+          {sel:".graph-stage", title:"Every link is traceable", body:"Selecting an edge opens the exact sentence it came from. If a claim has no sentence behind it, it is not here."},
+          {sel:"[data-graph-picker]", title:"Saved graphs", body:"Reopen an earlier graph, including the fixed example, without rebuilding it."},
+          {sel:"[data-export-link]", title:"And take it away", body:"Export the whole graph as JSON, sources and provenance included."}
+        ]
+      };
+      window.addEventListener("DOMContentLoaded", function () {
+        var b = document.querySelector("[data-tour-start]");
+        if (b) b.addEventListener("click", function () { startTour("crest"); });
+        if (typeof maybeStartTour === "function") maybeStartTour("crest");
+      });
+    </script>
+
   </body>
 </html>

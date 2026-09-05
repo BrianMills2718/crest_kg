@@ -1,0 +1,30 @@
+schema_version: ui-registry/v1
+project_id: crest_kg
+ui_status: active
+
+surfaces:
+  - id: crest-research-workbench
+    lifecycle: canonical
+    source_path: web
+    entrypoint: https://brianmills.dev/crest/
+    preserved_entrypoint: https://brian-mac-mini.tail9c321e.ts.net/crest/
+    hosting: >-
+      Docker container crest-kg on the Mac mini, container port 8080 bound to
+      host loopback 8798. Promotion contract is docs/MAC_MINI_DEPLOYMENT.md.
+    purpose: >-
+      Search a fixed archive of declassified documents, select a few, and build
+      a graph of what they connect, where every edge opens the sentence it came
+      from.
+    users: >-
+      A researcher arriving on a public link with no prior context, who has to
+      work out what the archive is, what a graph here means, and why the links
+      are trustworthy.
+    notes: >-
+      Registered 2026-09-05. The repository had no ui/registry.yaml despite
+      running a public surface; this records what already exists rather than
+      declaring anything new.
+    tours:
+      engine: web/tour.js
+      steps: inline at the foot of web/index.html
+      screens: [crest]
+      policy: spotlight-tour-default
