@@ -1,7 +1,12 @@
 # Build context is the repo root (Dockerfile at root, no compose).
-# The image only needs: requirements.txt, crest_app/, crest_pipeline.py,
-# prompts/, web/ -- see the COPY lines in Dockerfile. Everything below is
-# either never copied or must never be copied.
+#
+# The image needs only: requirements.txt, crest_app/, crest_pipeline.py,
+# prompts/, web/, and two named corpus files -- see the COPY lines in
+# Dockerfile. Everything else here is corpus or generated output.
+#
+# Patterns stay anchored to the cia_/ufo_ prefixes rather than using a broad
+# *.html or *.png, because web/ ships an html file and a broad rule risks
+# excluding something the image needs.
 
 .git
 .gitattributes
@@ -18,25 +23,31 @@ __pycache__/
 .venv/
 venv/
 
-# Corpus and generated output are large and regenerable, but the Dockerfile
-# copies exactly two files out of them, so exclude the CONTENTS and re-include
-# those two by name. Excluding the directories themselves would make the
-# re-includes unreachable and break the build.
-cia_documents/*
-cia_kg_output/*
+# Corpus and generated output. Directory CONTENTS are excluded, never the
+# directories themselves: the Dockerfile copies two files out of these trees,
+# and excluding a directory outright makes its re-include unreachable.
+cia_documents/**
+cia_kg_output/**
+cia_ufo_output/**
+cia_ufo_pdfs/**
+cia_ufo_documents/**
+
+# Generated artifacts at the context root
 cia_kg_*.json
-cia_knowledge_graph.html
+cia_knowledge_graph*.html
+cia_knowledge_graph*.png
+ufo_knowledge_graph*.html
 *.ipynb
 
 # local secrets never belong in a build context
 .env
 .env.*
-!.env.example
 
 # sanctioned worktrees are checkouts of this same repo
 worktrees/
 
-# Re-includes go last so they win regardless of matcher semantics: the two
-# files below are named in COPY lines and must reach the build context.
+# Re-includes go last so they win regardless of matcher semantics: both files
+# below appear in COPY lines and must reach the build context.
+!.env.example
 !cia_documents/disinformation_complete_20250517_002848.json
 !cia_kg_output/validated_5_documents_relationship_binding_v2.json
