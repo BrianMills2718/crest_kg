@@ -1,0 +1,42 @@
+# Build context is the repo root (Dockerfile at root, no compose).
+# The image only needs: requirements.txt, crest_app/, crest_pipeline.py,
+# prompts/, web/ -- see the COPY lines in Dockerfile. Everything below is
+# either never copied or must never be copied.
+
+.git
+.gitattributes
+.gitignore
+
+# caches and local environments
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Corpus and generated output are large and regenerable, but the Dockerfile
+# copies exactly two files out of them, so exclude the CONTENTS and re-include
+# those two by name. Excluding the directories themselves would make the
+# re-includes unreachable and break the build.
+cia_documents/*
+cia_kg_output/*
+cia_kg_*.json
+cia_knowledge_graph.html
+*.ipynb
+
+# local secrets never belong in a build context
+.env
+.env.*
+!.env.example
+
+# sanctioned worktrees are checkouts of this same repo
+worktrees/
+
+# Re-includes go last so they win regardless of matcher semantics: the two
+# files below are named in COPY lines and must reach the build context.
+!cia_documents/disinformation_complete_20250517_002848.json
+!cia_kg_output/validated_5_documents_relationship_binding_v2.json
