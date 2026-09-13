@@ -1,4 +1,5 @@
 # Python and test caches
+node_modules/
 __pycache__/
 *.py[cod]
 .pytest_cache/

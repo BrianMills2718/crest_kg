@@ -133,14 +133,15 @@ python crest_pipeline.py validate \
 ## Hosted research workbench
 
 The browser workbench is hosted at
-<https://brian-mac-mini.tail9c321e.ts.net/crest/>. Its default graph is the
+<https://brianmills.dev/crest/> on Cloudflare. Its default graph is the
 audited relationship-binding v2 checkpoint, but the primary surface is the
-upload/search, question-to-evidence, cited-source graph handoff, exploration,
-and export workflow.
+bundled search, audited example graph, source inspection, and export workflow.
+The public recovery is deliberately read-only: upload, graph building, and
+evidence briefs are disabled.
 
 The workbench retains the evaluation boundary: neither its tracked archive nor
 its five-document example is a complete CREST map, and corpus recall remains
-unknown. Its container and Mac mini promotion/rollback contract are documented in
+unknown. Its Cloudflare deployment and historical Mac promotion contract are documented in
 [`docs/MAC_MINI_DEPLOYMENT.md`](docs/MAC_MINI_DEPLOYMENT.md).
 
 ## Verified evidence-synthesis vertical
