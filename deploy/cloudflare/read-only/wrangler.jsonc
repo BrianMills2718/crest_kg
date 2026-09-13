@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "crest-review",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "routes": [
+    {"pattern": "brianmills.dev/crest*", "zone_name": "brianmills.dev"}
+  ],
+  "triggers": {"crons": ["*/5 * * * *"]},
+  "observability": {"enabled": true},
+  "containers": [
+    {
+      "class_name": "CrestReviewContainer",
+      "image": "registry.cloudflare.com/8edd43859e873330b3b07bada17d183b/crest-review:5f58607",
+      "instance_type": "basic",
+      "max_instances": 2
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {"name": "CREST_REVIEW_CONTAINER", "class_name": "CrestReviewContainer"}
+    ]
+  },
+  "migrations": [
+    {"tag": "v1", "new_sqlite_classes": ["CrestReviewContainer"]}
+  ],
+  "upload_source_maps": true
+}
