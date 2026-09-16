@@ -1,74 +1,83 @@
-import { Container, getContainer } from "@cloudflare/containers";
+/** Public edge for the full CREST workbench on Brian's personal VPS. */
 
-export class CrestReviewContainer extends Container<Env> {
-  defaultPort = 8080;
-  requiredPorts = [8080];
-  sleepAfter = "15m";
-  enableInternet = false;
-  envVars = {
-    CREST_ROOT_PATH: "/crest",
-    CREST_BUILD_ENABLED: "0",
-    CREST_BRIEF_ENABLED: "0",
-    CREST_UPLOAD_ENABLED: "0",
-  };
-
-  override async fetch(request: Request): Promise<Response> {
-    await this.startAndWaitForPorts({
-      ports: this.defaultPort,
-      cancellationOptions: {
-        instanceGetTimeoutMS: 180_000,
-        portReadyTimeoutMS: 180_000,
-        waitInterval: 500,
-      },
-    });
-    return this.containerFetch(request, this.defaultPort);
-  }
-
-  override onError(error: unknown) {
-    console.error("CREST review container failed", error);
-    throw error;
-  }
+interface Env {
+  CREST_BACKEND_ORIGIN: string;
 }
 
-function containerRequest(request: Request): Request {
-  const incoming = new URL(request.url);
-  const forwardedUrl = new URL(request.url);
-  forwardedUrl.pathname = incoming.pathname.slice("/crest".length) || "/";
-  const headers = new Headers(request.headers);
-  headers.set("X-Forwarded-Host", incoming.host);
-  headers.set("X-Forwarded-Prefix", "/crest");
-  headers.set("X-Forwarded-Proto", "https");
-  return new Request(forwardedUrl, {
-    method: request.method,
-    headers,
-    body: request.body,
-    redirect: "manual",
-  });
+const FALLBACK_STATUSES = new Set([502, 503, 504, 521, 522, 523, 524, 530]);
+
+function unavailablePage(detail: string): Response {
+  return new Response(
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CREST — temporarily unavailable</title></head><body><main><h1>CREST is temporarily unavailable</h1><p>The research server is not answering right now. Saved work is on durable storage and will return with the server.</p><p>${detail}</p></main></body></html>`,
+    {
+      status: 503,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+        "retry-after": "120",
+      },
+    },
+  );
+}
+
+export function backendPath(pathname: string): string | null {
+  if (pathname === "/crest") return "/";
+  if (pathname.startsWith("/crest/")) return pathname.slice("/crest".length);
+  return null;
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const incoming = new URL(request.url);
-    if (incoming.pathname !== "/crest" && !incoming.pathname.startsWith("/crest/")) {
+    const pathname = backendPath(incoming.pathname);
+    if (pathname === null) {
       return new Response("Not found\n", { status: 404 });
     }
-    return getContainer(env.CREST_REVIEW_CONTAINER, "public-review-v2").fetch(
-      containerRequest(request),
-    );
-  },
-  async scheduled(
-    _controller: ScheduledController,
-    env: Env,
-    ctx: ExecutionContext,
-  ): Promise<void> {
-    ctx.waitUntil(
-      getContainer(env.CREST_REVIEW_CONTAINER, "public-review-v2")
-        .fetch(new Request("https://brianmills.dev/health"))
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`CREST keepalive returned ${response.status}`);
-          }
+
+    if (!env.CREST_BACKEND_ORIGIN) {
+      return unavailablePage("CREST_BACKEND_ORIGIN is not configured.");
+    }
+
+    const target = new URL(pathname + incoming.search, env.CREST_BACKEND_ORIGIN);
+    const headers = new Headers(request.headers);
+    headers.set("x-forwarded-host", incoming.host);
+    headers.set("x-forwarded-prefix", "/crest");
+    headers.set("x-forwarded-proto", "https");
+    headers.delete("host");
+
+    let response: Response;
+    try {
+      response = await fetch(
+        new Request(target, {
+          method: request.method,
+          headers,
+          body:
+            request.method === "GET" || request.method === "HEAD"
+              ? undefined
+              : request.body,
+          redirect: "manual",
         }),
-    );
+      );
+    } catch (error) {
+      console.error("CREST backend unreachable", error);
+      return unavailablePage("The backend connection failed.");
+    }
+
+    if (
+      FALLBACK_STATUSES.has(response.status) &&
+      request.method === "GET" &&
+      (request.headers.get("accept") || "").includes("text/html")
+    ) {
+      return unavailablePage(`Backend returned HTTP ${response.status}.`);
+    }
+
+    const outgoing = new Headers(response.headers);
+    outgoing.delete("content-encoding");
+    outgoing.delete("content-length");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: outgoing,
+    });
   },
 };
