@@ -1,0 +1,58 @@
+{
+  "active_slice": {
+    "description": "Add and verify the durable CREST runtime and backup configuration on the personal VPS",
+    "next_action": "Implement and locally validate apps/crest in the claimed personal-vps worktree",
+    "requires_external_action": false,
+    "requires_spend": false,
+    "slice_id": "crest-vps-runtime",
+    "status": "executing",
+    "target_revision": "d017ca1"
+  },
+  "authority": {
+    "external_action_authorized": true,
+    "human_decision": null,
+    "human_decision_required": false,
+    "implementation_authorized": true,
+    "spend_cap_usd": 0.4,
+    "spend_used_usd": 0
+  },
+  "circuit_breakers": {
+    "context_integrity_valid": true,
+    "max_same_boundary_failures": 3,
+    "runtime_integrity_valid": true
+  },
+  "completion": {
+    "evidence_revision": null,
+    "receipt_ref": null,
+    "remaining_ready_work": 3,
+    "requested": false,
+    "verifier_outcome": null
+  },
+  "cursor_id": "crest-full-workbench-vps-20260916",
+  "cursor_revision": 1,
+  "failure_state": {
+    "boundary": null,
+    "last_failure_ref": null,
+    "same_boundary_failures": 0
+  },
+  "goal_ref": "project-meta/docs/plans/2026-09-12-mac-mini-to-cloud-migration.md#phase-4",
+  "lifecycle_state": "active",
+  "observations": [
+    {
+      "boundary": "current-public-runtime",
+      "evidence_ref": "https://brianmills.dev/crest/ returned HTTP 200 before migration",
+      "kind": "supporting_work",
+      "observation_id": "crest-recovery-live",
+      "outcome": "pass"
+    }
+  ],
+  "plan_revision": "project-meta-origin-main-20260916",
+  "ready_alternatives": [],
+  "record_type": "plan_execution_cursor",
+  "schema_version": "1.0",
+  "target": {
+    "branch": "migrate-full-workbench-vps",
+    "repository": "/home/brian/code/crest_kg",
+    "worktree": "/home/brian/code/crest_kg/worktrees/migrate-full-workbench-vps"
+  }
+}
