@@ -1,12 +1,12 @@
 {
   "active_slice": {
-    "description": "Replace the ephemeral Cloudflare Container with the prefix-preserving VPS proxy Worker",
-    "next_action": "Re-run Worker tests, inspect the deployment diff, and commit the proxy change",
-    "requires_external_action": false,
+    "description": "Repair durable bind-mount ownership and restart the exact CREST image",
+    "next_action": "Land the UID 10001 data-directory preparation fix and retry the live container",
+    "requires_external_action": true,
     "requires_spend": false,
-    "slice_id": "crest-proxy-worker",
-    "status": "verifying",
-    "target_revision": "33bfaa5f174c0637b695aeba57cb5680656cd3e4"
+    "slice_id": "crest-vps-runtime-repair",
+    "status": "executing",
+    "target_revision": "364adfa8f51f60267ed5ed2f92aeffecaff489f7"
   },
   "authority": {
     "external_action_authorized": true,
@@ -29,11 +29,11 @@
     "verifier_outcome": null
   },
   "cursor_id": "crest-full-workbench-vps-20260916",
-  "cursor_revision": 2,
+  "cursor_revision": 3,
   "failure_state": {
-    "boundary": null,
-    "last_failure_ref": null,
-    "same_boundary_failures": 0
+    "boundary": "vps-container-startup",
+    "last_failure_ref": "crest-bind-mount-permission",
+    "same_boundary_failures": 1
   },
   "goal_ref": "project-meta/docs/plans/2026-09-12-mac-mini-to-cloud-migration.md#phase-4",
   "lifecycle_state": "active",
@@ -51,6 +51,13 @@
       "kind": "supporting_work",
       "observation_id": "crest-vps-runtime-merged",
       "outcome": "pass"
+    },
+    {
+      "boundary": "vps-container-startup",
+      "evidence_ref": "docker logs: PermissionError [Errno 13] creating /data/workbench because the new bind mount was root-owned",
+      "kind": "verification_failure",
+      "observation_id": "crest-bind-mount-permission",
+      "outcome": "fail"
     }
   ],
   "plan_revision": "project-meta-origin-main-20260916",
