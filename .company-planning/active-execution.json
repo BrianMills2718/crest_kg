@@ -1,12 +1,12 @@
 {
   "active_slice": {
-    "description": "Repair durable bind-mount ownership and restart the exact CREST image",
-    "next_action": "Land the UID 10001 data-directory preparation fix and retry the live container",
+    "description": "Verify durable state across restart and host reboot, backup/restore evidence, and current deployment documentation",
+    "next_action": "Restart CREST, verify the saved collection/inquiry/graph, run and inspect backup, then reboot the VPS and recheck all public services",
     "requires_external_action": true,
     "requires_spend": false,
-    "slice_id": "crest-vps-runtime-repair",
+    "slice_id": "crest-persistence-and-recovery",
     "status": "executing",
-    "target_revision": "364adfa8f51f60267ed5ed2f92aeffecaff489f7"
+    "target_revision": "d7107325a251d29a26665d9ac5e798c6c8ab73a4"
   },
   "authority": {
     "external_action_authorized": true,
@@ -14,7 +14,7 @@
     "human_decision_required": false,
     "implementation_authorized": true,
     "spend_cap_usd": 0.4,
-    "spend_used_usd": 0
+    "spend_used_usd": 0.00959295
   },
   "circuit_breakers": {
     "context_integrity_valid": true,
@@ -24,16 +24,16 @@
   "completion": {
     "evidence_revision": null,
     "receipt_ref": null,
-    "remaining_ready_work": 2,
+    "remaining_ready_work": 1,
     "requested": false,
     "verifier_outcome": null
   },
   "cursor_id": "crest-full-workbench-vps-20260916",
-  "cursor_revision": 3,
+  "cursor_revision": 4,
   "failure_state": {
-    "boundary": "vps-container-startup",
-    "last_failure_ref": "crest-bind-mount-permission",
-    "same_boundary_failures": 1
+    "boundary": null,
+    "last_failure_ref": null,
+    "same_boundary_failures": 0
   },
   "goal_ref": "project-meta/docs/plans/2026-09-12-mac-mini-to-cloud-migration.md#phase-4",
   "lifecycle_state": "active",
@@ -47,17 +47,31 @@
     },
     {
       "boundary": "vps-runtime-config",
-      "evidence_ref": "personal-vps PR #1 merged as e87b75890d2f8831dc671d5882286b05673ec9b9 after bash, shellcheck, and offline compose checks",
+      "evidence_ref": "personal-vps PRs #1 and #2 merged runtime and observed bind-mount ownership repair",
       "kind": "supporting_work",
       "observation_id": "crest-vps-runtime-merged",
       "outcome": "pass"
     },
     {
       "boundary": "vps-container-startup",
-      "evidence_ref": "docker logs: PermissionError [Errno 13] creating /data/workbench because the new bind mount was root-owned",
+      "evidence_ref": "initial docker logs showed PermissionError creating /data/workbench on the root-owned bind mount",
       "kind": "verification_failure",
       "observation_id": "crest-bind-mount-permission",
       "outcome": "fail"
+    },
+    {
+      "boundary": "model-backed-workflows",
+      "evidence_ref": "first inquiry trace failed with LLMConfigurationError because reasoning_effort was omitted for openrouter/openai/gpt-5.6-luna",
+      "kind": "verification_failure",
+      "observation_id": "crest-current-llm-contract",
+      "outcome": "fail"
+    },
+    {
+      "boundary": "public-full-workbench",
+      "evidence_ref": "revision d7107325: upload round trip/delete passed; inquiry inquiry-1cc4dbdc671041ac88df6bfb6b17b166 completed for $0.00106445; graph cb3bb9a749e34eeba956c396ed2fdaf9 completed with 18 entities and 5 relationships for $0.00852850; anonymous writes returned 403",
+      "kind": "authentic_result",
+      "observation_id": "crest-authentic-full-workbench",
+      "outcome": "pass"
     }
   ],
   "plan_revision": "project-meta-origin-main-20260916",
