@@ -1,12 +1,12 @@
 {
   "active_slice": {
-    "description": "Add and verify the durable CREST runtime and backup configuration on the personal VPS",
-    "next_action": "Implement and locally validate apps/crest in the claimed personal-vps worktree",
+    "description": "Replace the ephemeral Cloudflare Container with the prefix-preserving VPS proxy Worker",
+    "next_action": "Re-run Worker tests, inspect the deployment diff, and commit the proxy change",
     "requires_external_action": false,
     "requires_spend": false,
-    "slice_id": "crest-vps-runtime",
-    "status": "executing",
-    "target_revision": "d017ca1"
+    "slice_id": "crest-proxy-worker",
+    "status": "verifying",
+    "target_revision": "33bfaa5f174c0637b695aeba57cb5680656cd3e4"
   },
   "authority": {
     "external_action_authorized": true,
@@ -24,12 +24,12 @@
   "completion": {
     "evidence_revision": null,
     "receipt_ref": null,
-    "remaining_ready_work": 3,
+    "remaining_ready_work": 2,
     "requested": false,
     "verifier_outcome": null
   },
   "cursor_id": "crest-full-workbench-vps-20260916",
-  "cursor_revision": 1,
+  "cursor_revision": 2,
   "failure_state": {
     "boundary": null,
     "last_failure_ref": null,
@@ -43,6 +43,13 @@
       "evidence_ref": "https://brianmills.dev/crest/ returned HTTP 200 before migration",
       "kind": "supporting_work",
       "observation_id": "crest-recovery-live",
+      "outcome": "pass"
+    },
+    {
+      "boundary": "vps-runtime-config",
+      "evidence_ref": "personal-vps PR #1 merged as e87b75890d2f8831dc671d5882286b05673ec9b9 after bash, shellcheck, and offline compose checks",
+      "kind": "supporting_work",
+      "observation_id": "crest-vps-runtime-merged",
       "outcome": "pass"
     }
   ],
