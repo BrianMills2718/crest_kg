@@ -133,15 +133,30 @@ python crest_pipeline.py validate \
 ## Hosted research workbench
 
 The browser workbench is hosted at
-<https://brianmills.dev/crest/> on Cloudflare. Its default graph is the
-audited relationship-binding v2 checkpoint, but the primary surface is the
-bundled search, audited example graph, source inspection, and export workflow.
-The public recovery is deliberately read-only: upload, graph building, and
-evidence briefs are disabled.
+<https://brianmills.dev/crest/>. The `crest-review` Cloudflare Worker preserves
+the public `/crest` path and proxies to the full workbench on Brian's personal
+VPS. Bundled search, source inspection, the audited example graph, and export
+remain anonymous. Uploads, private collections, evidence briefs, and graph
+builds are enabled only for the separate operator bearer token; anonymous
+writes return 403. Durable workbench state and `llm_client` traces live under
+`/srv/apps/crest/data` and are included in the VPS's verified Google Drive
+backup.
+
+The 2026-09-16 cutover runs CREST revision
+`d7107325a251d29a26665d9ac5e798c6c8ab73a4` with `llm_client` revision
+`df1158d935835818d6508d37eaebabefb7c3fff9`. A real evidence brief and
+two-document graph completed through the public route with three traced Luna
+calls and `$0.00959295` total observed spend; the graph contains 18 entities
+and five relationships. The saved collection, inquiry, graph, and traces
+survived a container restart and host reboot. A Drive restore reproduced the
+three workbench artifacts byte-for-byte and its SQLite trace database passed
+`integrity_check`. The prior Mac-only writable volume was unavailable, so the
+new durable volume intentionally started fresh; the tracked 40-document archive
+and audited example graph remain baked into the image.
 
 The workbench retains the evaluation boundary: neither its tracked archive nor
 its five-document example is a complete CREST map, and corpus recall remains
-unknown. Its Cloudflare deployment and historical Mac promotion contract are documented in
+unknown. Current VPS operations and the historical Mac promotion contract are documented in
 [`docs/MAC_MINI_DEPLOYMENT.md`](docs/MAC_MINI_DEPLOYMENT.md).
 
 ## Verified evidence-synthesis vertical
