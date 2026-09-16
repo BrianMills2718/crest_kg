@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import inspect
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -21,11 +22,16 @@ from crest_pipeline import (
     load_corpus,
     partition_extraction_grounding,
     recover_extraction_from_trace,
+    run_extraction,
     validate_extraction_grounding,
     validate_graph_file,
     validate_provider_extraction,
     write_graph,
 )
+
+
+def test_graph_extraction_defaults_to_explicit_reasoning_effort() -> None:
+    assert inspect.signature(run_extraction).parameters["reasoning_effort"].default == "medium"
 
 
 def _write_corpus(path: Path, count: int = 5) -> Path:

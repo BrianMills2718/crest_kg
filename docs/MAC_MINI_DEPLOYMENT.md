@@ -1,45 +1,52 @@
 # CREST deployment operations
 
 This document owns the operational contract for the hosted CREST research
-workbench. Cloudflare is the canonical public host. The Mac Mini procedure is
-retained below only as historical guidance for the private, full-featured
-runtime; it is not the public availability path.
+workbench. The canonical service is a Cloudflare Worker proxy in front of the
+full application on Brian's personal VPS. The Mac Mini procedure is retained
+below only as historical guidance; it is not in the public request path.
 
 ## Canonical public service
 
 - Public entry: `https://brianmills.dev/crest/`
-- Host: Cloudflare Worker `crest-review` and Cloudflare Container application
-  `crest-review-crestreviewcontainer`
-- Worker version: `2d17f736-3f70-4c0e-b136-01fcb899f601`
-- Container application ID: `a03a5128-e488-4b65-89b2-b71f4987a312`
-- Image: `crest-review:5f58607`, digest
-  `sha256:48e22a7307746c0be5ceb777cd694631f14089db279ede7f2e57b29de114fb33`
-- CREST source revision: `5f586075d551265999a5ca00245e70d2ae7d1c88`
+- Edge: Cloudflare Worker `crest-review`, version
+  `27c57253-3a78-440e-b9cc-73b379b9c1cd`
+- Backend route: `crest-api.brianmills.dev` → Cloudflare tunnel
+  `personal-vps` → `http://crest:8080`
+- Runtime: container `crest` on the personal VPS; no host port is published
+- CREST source revision: `d7107325a251d29a26665d9ac5e798c6c8ab73a4`
 - `llm_client` source revision:
-  `54bb657c316b37b13369c251fc8e60c6cecad995`
-- Deployment configuration: `deploy/cloudflare/read-only/`
-- Public capabilities: tracked 40-document archive, semantic search, audited
-  example graph, source inspection, and graph export
-- Disabled public capabilities: graph building, evidence briefs, and uploads
-- Persistence: none; the public recovery does not accept durable writes
-- Secrets: none
+  `df1158d935835818d6508d37eaebabefb7c3fff9`
+- Edge configuration: `deploy/cloudflare/read-only/`
+- VPS configuration: `personal-vps/apps/crest/`
+- Anonymous capabilities: tracked 40-document archive, semantic search,
+  audited example graph, source inspection, and graph export
+- Operator capabilities: uploads, private collections, evidence briefs, and
+  graph builds, all behind `CREST_OPERATOR_TOKEN`
+- Server ceilings: `$0.25` per graph, `$0.15` per brief, and `$20` per month
+  through `llm_client`
+- Persistence: `/srv/apps/crest/data`; included in the nightly Drive backup
+- Secrets: `/srv/apps/crest/.env` (mode 600); the Worker holds no secrets
 
-The basic instance starts slowly. The Worker permits a three-minute cold start
-and sends a scheduled health request every five minutes to keep its single
-instance available. The Mac Mini is not in the public request path.
+The former Cloudflare Container and its ephemeral disk were retired by Worker
+migration `v2`. The Mac Mini is not in the public request path. Its writable
+volume was unavailable during migration, so the VPS volume started fresh while
+the repository's bundled archive and audited graph remained available.
 
-## Cloudflare promotion and rollback
+## Promotion, verification, and rollback
 
-Build and push the image using `deploy/cloudflare/read-only/README.md`, run
-`npm run check`, then deploy from that directory. Verify `/crest/`,
-`/crest/health`, `/crest/api/capabilities`, the bundled graph and export routes,
-and the three browser assets. Confirm in a real browser that the tracked archive
-and audited example graph render.
+Provision and deploy the backend with `personal-vps/apps/crest/`, then run
+`npm test`, `npm run check`, and `npm run deploy` under
+`deploy/cloudflare/read-only/`. Verify `/crest/`, `/crest/health`, anonymous and
+operator `/crest/api/capabilities`, bundled search, an upload round trip,
+collection persistence, one traced brief, one traced graph, anonymous 403s,
+container restart, backup restore, and host reboot before recording a new
+canonical revision.
 
-Rollback by deploying the prior known-good Worker version or by restoring the
-prior image tag in `wrangler.jsonc` and redeploying. Do not alter unrelated
-`brianmills.dev` routes, and do not restore the Mac Funnel as the canonical
-public host.
+For an application rollback, retag the prior verified `crest:<revision>` image
+as `crest:current`, recreate only `/srv/apps/crest`, and recheck the public
+health revision and saved artifacts. The proxy Worker and tunnel route do not
+need to change. Do not alter unrelated `brianmills.dev` routes or restore the
+Mac Funnel as the canonical public host.
 
 ## Legacy Mac full-feature service contract
 

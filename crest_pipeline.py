@@ -1785,7 +1785,7 @@ def run_extraction(
     max_output_tokens: int = 3_500,
     refine_relationships: bool = False,
     relationship_max_output_tokens: int = 2_000,
-    reasoning_effort: str | None = None,
+    reasoning_effort: str | None = "medium",
     structured_retries: int = 0,
 ) -> GraphArtifact:
     """Execute one fully traced structured extraction per selected document."""
@@ -2186,6 +2186,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     extract_parser.add_argument(
         "--reasoning-effort",
+        default="medium",
         help="Explicit llm_client reasoning setting when the selected model requires one.",
     )
     extract_parser.add_argument("--force", action="store_true")

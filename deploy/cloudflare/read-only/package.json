@@ -1,14 +1,14 @@
 {
   "name": "crest-read-only-cloudflare",
   "private": true,
+  "type": "module",
   "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.ts",
     "check": "wrangler types && tsc --noEmit && wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
   },
-  "dependencies": {
-    "@cloudflare/containers": "0.3.7"
-  },
   "devDependencies": {
+    "@types/node": "^22.20.3",
     "typescript": "6.0.3",
     "wrangler": "4.131.1"
   }

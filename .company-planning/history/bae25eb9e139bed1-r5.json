@@ -1,0 +1,93 @@
+{
+  "active_slice": {
+    "description": "Verify durable state across restart and host reboot, backup/restore evidence, and current deployment documentation",
+    "next_action": null,
+    "requires_external_action": true,
+    "requires_spend": false,
+    "slice_id": "crest-persistence-and-recovery",
+    "status": "accepted",
+    "target_revision": "d7107325a251d29a26665d9ac5e798c6c8ab73a4"
+  },
+  "authority": {
+    "external_action_authorized": true,
+    "human_decision": null,
+    "human_decision_required": false,
+    "implementation_authorized": true,
+    "spend_cap_usd": 0.4,
+    "spend_used_usd": 0.00959295
+  },
+  "circuit_breakers": {
+    "context_integrity_valid": true,
+    "max_same_boundary_failures": 3,
+    "runtime_integrity_valid": true
+  },
+  "completion": {
+    "evidence_revision": "d7107325a251d29a26665d9ac5e798c6c8ab73a4",
+    "receipt_ref": "crest-vps-cutover:d7107325a251d29a26665d9ac5e798c6c8ab73a4:worker-27c57253-3a78-440e-b9cc-73b379b9c1cd:backup-2026-09-16",
+    "remaining_ready_work": 0,
+    "requested": true,
+    "verifier_outcome": "pass"
+  },
+  "cursor_id": "crest-full-workbench-vps-20260916",
+  "cursor_revision": 5,
+  "failure_state": {
+    "boundary": null,
+    "last_failure_ref": null,
+    "same_boundary_failures": 0
+  },
+  "goal_ref": "project-meta/docs/plans/2026-09-12-mac-mini-to-cloud-migration.md#phase-4",
+  "lifecycle_state": "complete",
+  "observations": [
+    {
+      "boundary": "current-public-runtime",
+      "evidence_ref": "https://brianmills.dev/crest/ returned HTTP 200 before migration",
+      "kind": "supporting_work",
+      "observation_id": "crest-recovery-live",
+      "outcome": "pass"
+    },
+    {
+      "boundary": "vps-runtime-config",
+      "evidence_ref": "personal-vps PRs #1, #2, and #3 merged runtime, bind-mount repair, and verified status documentation",
+      "kind": "supporting_work",
+      "observation_id": "crest-vps-runtime-merged",
+      "outcome": "pass"
+    },
+    {
+      "boundary": "vps-container-startup",
+      "evidence_ref": "initial docker logs showed PermissionError creating /data/workbench on the root-owned bind mount",
+      "kind": "verification_failure",
+      "observation_id": "crest-bind-mount-permission",
+      "outcome": "fail"
+    },
+    {
+      "boundary": "model-backed-workflows",
+      "evidence_ref": "first inquiry trace failed with LLMConfigurationError because reasoning_effort was omitted for openrouter/openai/gpt-5.6-luna",
+      "kind": "verification_failure",
+      "observation_id": "crest-current-llm-contract",
+      "outcome": "fail"
+    },
+    {
+      "boundary": "public-full-workbench",
+      "evidence_ref": "revision d7107325: upload round trip/delete passed; inquiry inquiry-1cc4dbdc671041ac88df6bfb6b17b166 completed for $0.00106445; graph cb3bb9a749e34eeba956c396ed2fdaf9 completed with 18 entities and 5 relationships for $0.00852850; anonymous writes returned 403",
+      "kind": "authentic_result",
+      "observation_id": "crest-authentic-full-workbench",
+      "outcome": "pass"
+    },
+    {
+      "boundary": "persistence-backup-reboot",
+      "evidence_ref": "saved collection/inquiry/graph survived container restart and VPS reboot; Drive backup had 24 CREST files; restored JSON matched byte-for-byte; restored llm_observability.db integrity_check=ok with 3 traced rows; all six containers healthy after reboot",
+      "kind": "authentic_result",
+      "observation_id": "crest-durability-recovery",
+      "outcome": "pass"
+    }
+  ],
+  "plan_revision": "project-meta-origin-main-20260916",
+  "ready_alternatives": [],
+  "record_type": "plan_execution_cursor",
+  "schema_version": "1.0",
+  "target": {
+    "branch": "migrate-full-workbench-vps",
+    "repository": "/home/brian/code/crest_kg",
+    "worktree": "/home/brian/code/crest_kg/worktrees/migrate-full-workbench-vps"
+  }
+}

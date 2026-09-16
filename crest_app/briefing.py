@@ -97,6 +97,7 @@ def generate_evidence_brief(
         max_budget=max_budget_usd,
         max_tokens=max_output_tokens,
         num_retries=structured_retries,
+        reasoning_effort="medium",
         model_policy="enforce_allowlist",
         model_justification=(
             "Resolved through llm_client get_model('synthesis', "

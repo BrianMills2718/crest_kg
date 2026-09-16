@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+import sys
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -95,6 +97,50 @@ def test_brief_validation_rejects_unknown_citations_and_handles_no_evidence() ->
     assert empty.answer_status == "insufficient"
     assert empty.observed_cost_usd == 0
     assert empty.model == "deterministic-no-evidence"
+
+
+def test_brief_declares_reasoning_effort_for_current_llm_contract(monkeypatch) -> None:
+    captured = {}
+    evidence = _evidence()
+
+    def call_llm_structured(_model, _messages, **kwargs):
+        captured.update(kwargs)
+        return (
+            ProviderEvidenceBrief(
+                answer_status="answered",
+                synthesis="The Institute organized the exercise.",
+                synthesis_citation_ids=[evidence[0].id],
+                findings=[
+                    BriefFinding(
+                        statement="The Institute organized the exercise.",
+                        classification="support",
+                        citation_ids=[evidence[0].id],
+                    )
+                ],
+            ),
+            SimpleNamespace(cost=0.001),
+        )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "llm_client",
+        SimpleNamespace(
+            call_llm_structured=call_llm_structured,
+            get_model=lambda *_args, **_kwargs: "openrouter/openai/gpt-5.6-luna",
+            render_prompt=lambda *_args, **_kwargs: [{"role": "user", "content": "test"}],
+        ),
+    )
+    generated = generate_evidence_brief(
+        question="Who organized the exercise?",
+        collection_title="Project Meridian",
+        evidence=evidence,
+        trace_id="crest_kg/inquiries/reasoning-contract",
+        max_budget_usd=0.03,
+        max_output_tokens=800,
+    )
+
+    assert generated.answer_status == "answered"
+    assert captured["reasoning_effort"] == "medium"
 
 
 def test_inquiry_runner_persists_completion_failure_and_restart(
