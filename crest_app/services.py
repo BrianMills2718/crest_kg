@@ -15,7 +15,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
 
 from crest_pipeline import (
@@ -664,43 +664,59 @@ class WorkbenchStore:
         ]
         return sorted(collections, key=lambda item: item.updated_at, reverse=True)
 
-    def _save_collection(self, collection: ResearchCollection) -> ResearchCollection:
+    def _mutate_collection(
+        self,
+        collection_id: str,
+        mutate: Callable[[ResearchCollection], dict[str, Any] | None],
+    ) -> ResearchCollection:
+        """The only way to change a stored collection: one locked transaction.
+
+        The lock is held across read, mutate, and write so concurrent requests
+        (sync FastAPI handlers run on a thread pool) cannot write a stale copy
+        over each other or resurrect a deleted collection. ``mutate`` receives
+        the current collection and returns field updates, or ``None``/``{}``
+        for no change. This relies on the single-process deployment
+        (``uvicorn --workers 1``); multiple processes would need a file lock.
+        """
+
         with self._lock:
+            collection = self.get_collection(collection_id)
+            changes = mutate(collection)
+            if not changes:
+                return collection
+            updated = collection.model_copy(update={**changes, "updated_at": utc_now()})
             _atomic_json(
-                self.collections_dir / f"{collection.id}.json",
-                collection.model_dump(mode="json"),
+                self.collections_dir / f"{collection_id}.json",
+                updated.model_dump(mode="json"),
             )
-        return collection
+            return updated
 
     def update_collection(
         self, collection_id: str, payload: CollectionUpdate
     ) -> ResearchCollection:
-        collection = self.get_collection(collection_id)
         changes = payload.model_dump(exclude_none=True)
-        if not changes:
-            return collection
-        return self._save_collection(
-            collection.model_copy(update={**changes, "updated_at": utc_now()})
-        )
+        return self._mutate_collection(collection_id, lambda _current: changes)
 
     def replace_collection_documents(
         self, collection_id: str, document_ids: list[str]
     ) -> ResearchCollection:
-        collection = self.get_collection(collection_id)
-        if collection.document_ids == document_ids:
-            return collection
-        return self._save_collection(
-            collection.model_copy(
-                update={"document_ids": document_ids, "updated_at": utc_now()}
-            )
-        )
+        def replace(current: ResearchCollection) -> dict[str, Any] | None:
+            if current.document_ids == document_ids:
+                return None
+            return {"document_ids": list(document_ids)}
+
+        return self._mutate_collection(collection_id, replace)
 
     def add_collection_documents(
         self, collection_id: str, document_ids: list[str]
     ) -> ResearchCollection:
-        collection = self.get_collection(collection_id)
-        combined = list(dict.fromkeys([*collection.document_ids, *document_ids]))
-        return self.replace_collection_documents(collection_id, combined)
+        def add(current: ResearchCollection) -> dict[str, Any] | None:
+            combined = list(dict.fromkeys([*current.document_ids, *document_ids]))
+            if combined == current.document_ids:
+                return None
+            return {"document_ids": combined}
+
+        return self._mutate_collection(collection_id, add)
 
     def delete_collection(self, collection_id: str) -> ResearchCollection:
         with self._lock:
@@ -709,14 +725,19 @@ class WorkbenchStore:
         return collection
 
     def remove_document_from_collections(self, document_id: str) -> None:
+        def drop(current: ResearchCollection) -> dict[str, Any] | None:
+            if document_id not in current.document_ids:
+                return None
+            return {
+                "document_ids": [
+                    item for item in current.document_ids if item != document_id
+                ]
+            }
+
         with self._lock:
             for collection in self.list_collections():
-                if document_id not in collection.document_ids:
-                    continue
-                self.replace_collection_documents(
-                    collection.id,
-                    [item for item in collection.document_ids if item != document_id],
-                )
+                if document_id in collection.document_ids:
+                    self._mutate_collection(collection.id, drop)
 
     @staticmethod
     def _upload_receipt(
