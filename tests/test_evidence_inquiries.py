@@ -126,7 +126,7 @@ def test_brief_declares_reasoning_effort_for_current_llm_contract(monkeypatch) -
         "llm_client",
         SimpleNamespace(
             call_llm_structured=call_llm_structured,
-            get_model=lambda *_args, **_kwargs: "openrouter/openai/gpt-5.6-luna",
+            get_model=lambda *_args, **_kwargs: "openrouter/openai/gpt-6-luna",
             render_prompt=lambda *_args, **_kwargs: [{"role": "user", "content": "test"}],
         ),
     )
